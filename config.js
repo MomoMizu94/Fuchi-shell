@@ -84,6 +84,14 @@ const powerMenu = {
     confirmHeight: 220,
 }
 
+// Tray context menu (floating popup anchored to the clicked tray icon) sizing
+const trayMenu = {
+    width: 220,
+    rowHeight: 32,
+    padding: 8,
+    gap: 2,
+}
+
 // Volume menu (right-docked, hover-only panel) sizing
 const volumeMenu = {
     width: 160,

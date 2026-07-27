@@ -10,6 +10,7 @@ Bar Bar.qml
 Workspaces Bar/Workspaces.qml
 WorkspaceApps Bar/WorkspaceApps.qml
 Tray Bar/Tray.qml
+TrayMenu Bar/TrayMenu.qml
 Clock Bar/Clock.qml
 BluetoothIndicator Bar/BluetoothIndicator.qml
 NetSpeedIndicator Bar/NetSpeedIndicator.qml

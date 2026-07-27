@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import "../"
@@ -20,6 +21,10 @@ ColumnLayout {
             implicitWidth: Config.sidebar.trayIconSize
             implicitHeight: Config.sidebar.trayIconSize
 
+            // Bar's own PanelWindow is flush against the output's top-left
+            // corner (anchored top+bottom+left), so this window-local point
+            // doubles as the output-local position TrayMenu needs to line up
+            // with the icon from its own (separate, full-screen) window.
             readonly property point windowPos: trayItem.QsWindow.contentItem.mapFromItem(trayItem, 0, 0)
 
             IconImage {
@@ -27,14 +32,10 @@ ColumnLayout {
                 source: trayItem.modelData.icon
             }
 
-            QsMenuAnchor {
-                id: menuAnchor
-                menu: trayItem.modelData.hasMenu ? trayItem.modelData.menu : null
-                anchor.window: trayItem.QsWindow.window
-                anchor.rect.x: trayItem.windowPos.x
-                anchor.rect.y: trayItem.windowPos.y
-                anchor.rect.width: trayItem.width
-                anchor.rect.height: trayItem.height
+            Process {
+                id: openMenuProc
+                command: ["qs", "ipc", "call", "traymenu", "open", trayItem.modelData.id,
+                    String(Math.round(trayItem.windowPos.y + trayItem.height / 2))]
             }
 
             MouseArea {
@@ -44,7 +45,7 @@ ColumnLayout {
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.LeftButton) trayItem.modelData.activate()
                     else if (mouse.button === Qt.MiddleButton) trayItem.modelData.secondaryActivate()
-                    else if (mouse.button === Qt.RightButton && trayItem.modelData.hasMenu) menuAnchor.open()
+                    else if (mouse.button === Qt.RightButton && trayItem.modelData.hasMenu) openMenuProc.startDetached()
                 }
             }
         }

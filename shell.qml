@@ -14,6 +14,9 @@ Scope {
     property bool launcherOpen: false
     property bool powerMenuOpen: false
     property bool volumeMenuOpen: frame.volumeHovered || volumeMenu.panelHovered
+    property bool trayMenuOpen: false
+    property string trayMenuItemId: ""
+    property real trayMenuTargetY: 0
 
     ListModel { id: history }
 
@@ -82,6 +85,16 @@ Scope {
         function hide(): void { root.powerMenuOpen = false }
     }
 
+    IpcHandler {
+        target: "traymenu"
+        function open(id: string, y: string): void {
+            root.trayMenuItemId = id
+            root.trayMenuTargetY = Number(y)
+            root.trayMenuOpen = true
+        }
+        function hide(): void { root.trayMenuOpen = false }
+    }
+
     NotificationPopup {
         notifModel: server.trackedNotifications
         dndEnabled: dash.dndEnabled
@@ -131,6 +144,14 @@ Scope {
     VolumeMenu {
         id: volumeMenu
         open: root.volumeMenuOpen
+    }
+
+    TrayMenu {
+        id: trayMenu
+        open: root.trayMenuOpen
+        itemId: root.trayMenuItemId
+        targetY: root.trayMenuTargetY
+        onCloseRequested: root.trayMenuOpen = false
     }
 
     FrameReserve {}
