@@ -12,6 +12,8 @@ Scope {
 
     property bool centerOpen: false
     property bool launcherOpen: false
+    property bool powerMenuOpen: false
+    property bool volumeMenuOpen: frame.volumeHovered || volumeMenu.panelHovered
 
     ListModel { id: history }
 
@@ -73,9 +75,34 @@ Scope {
         function hide(): void { root.launcherOpen = false }
     }
 
+    IpcHandler {
+        target: "powermenu"
+        function toggle(): void { root.powerMenuOpen = !root.powerMenuOpen }
+        function show(): void { root.powerMenuOpen = true }
+        function hide(): void { root.powerMenuOpen = false }
+    }
+
     NotificationPopup {
         notifModel: server.trackedNotifications
         dndEnabled: dash.dndEnabled
+    }
+
+    // Grace period between the top hover-zone (blocked from receiving further
+    // hover events the instant Dashboard's own full-screen surface maps, since
+    // that surface — unlike VolumeMenu's — has no input mask, so it captures
+    // the whole screen for click-away-to-close) and the panel's own hover
+    // reaching the cursor as it slides into view. Without this, "hovered
+    // nothing" would be briefly true right as Dashboard opens and it would
+    // close itself before ever becoming visible.
+    Timer {
+        id: dashboardCloseTimer
+        // Comfortably longer than the slide-in animation so panelHovered has
+        // a chance to pick up the cursor before this can fire — otherwise a
+        // hover-in that starts the timer immediately (see onDashboardHoveredChanged
+        // below) could close Dashboard mid-slide, before it's even reached
+        // the cursor's position.
+        interval: Config.anim.slide + 200
+        onTriggered: if (!frame.dashboardHovered && !dash.panelHovered) root.centerOpen = false
     }
 
     Dashboard {
@@ -83,6 +110,10 @@ Scope {
         open: root.centerOpen
         historyModel: history
         onCloseRequested: root.centerOpen = false
+        onPanelHoveredChanged: {
+            if (panelHovered) dashboardCloseTimer.stop()
+            else if (root.centerOpen) dashboardCloseTimer.restart()
+        }
     }
 
     AppLauncher {
@@ -91,10 +122,26 @@ Scope {
         onCloseRequested: root.launcherOpen = false
     }
 
+    PowerMenu {
+        id: powerMenu
+        open: root.powerMenuOpen
+        onCloseRequested: root.powerMenuOpen = false
+    }
+
+    VolumeMenu {
+        id: volumeMenu
+        open: root.volumeMenuOpen
+    }
+
     FrameReserve {}
     FrameShape {
+        id: frame
         onHoverOpenRequested: root.centerOpen = true
         onLauncherHoverRequested: root.launcherOpen = true
+        onDashboardHoveredChanged: {
+            if (dashboardHovered) dashboardCloseTimer.stop()
+            else if (root.centerOpen) dashboardCloseTimer.restart()
+        }
     }
     Bar {}
 }

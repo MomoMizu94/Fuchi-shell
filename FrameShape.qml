@@ -14,6 +14,12 @@ PanelWindow {
     signal hoverOpenRequested()
     signal launcherHoverRequested()
 
+    // Continuous (not fire-once) hover state — VolumeMenu/Dashboard bind to
+    // these directly so they can auto-close shortly after the cursor leaves,
+    // unlike the signal-based zones below whose targets only ever open.
+    property bool volumeHovered: false
+    property bool dashboardHovered: false
+
     anchors {
         top: true
         bottom: true
@@ -98,7 +104,10 @@ PanelWindow {
         y: 0
 
         HoverHandler {
-            onHoveredChanged: if (hovered) root.hoverOpenRequested()
+            onHoveredChanged: {
+                root.dashboardHovered = hovered
+                if (hovered) root.hoverOpenRequested()
+            }
         }
     }
 
@@ -113,6 +122,20 @@ PanelWindow {
 
         HoverHandler {
             onHoveredChanged: if (hovered) root.launcherHoverRequested()
+        }
+    }
+
+    // Right-center hover hot-zone that spawns the volume menu. Same reasoning
+    // as the other two zones — the right border strip (x: width-thin..width)
+    // is the last part of this surface `mask` doesn't subtract.
+    Item {
+        width: Config.frame.thin
+        height: 600
+        anchors.verticalCenter: parent.verticalCenter
+        x: root.width - Config.frame.thin
+
+        HoverHandler {
+            onHoveredChanged: root.volumeHovered = hovered
         }
     }
 }

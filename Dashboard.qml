@@ -20,6 +20,7 @@ PanelWindow {
 
     property bool open: false
     property bool closing: false
+    property bool panelHovered: false
     visible: open || closing
     onOpenChanged: closing = !open
 
@@ -478,6 +479,9 @@ PanelWindow {
         }
 
         MouseArea { anchors.fill: parent }
+        HoverHandler {
+            onHoveredChanged: dashboard.panelHovered = hovered
+        }
 
         Rectangle {
             anchors.fill: parent

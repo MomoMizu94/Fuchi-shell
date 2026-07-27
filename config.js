@@ -75,6 +75,28 @@ const launcher = {
     galleryLabelHeight: 56,
 }
 
+// Power menu (right-docked panel) sizing
+const powerMenu = {
+    width: 140,
+    buttonSize: 84,
+    gap: 16,
+    padding: 16,
+    confirmHeight: 220,
+}
+
+// Volume menu (right-docked, hover-only panel) sizing
+const volumeMenu = {
+    width: 160,
+    sliderTrackWidth: 48,
+    sliderHeight: 220,
+    deviceButtonSize: 64,
+    deviceRowHeight: 36,
+    gap: 16,
+    padding: 16,
+    maxVolume: 1.5,
+    snapBand: 0.06,
+}
+
 const timer = {
     interval: 1000,              // general UI tick (clock, progress displays)
     weatherRefresh: 600000,      // 10 min

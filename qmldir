@@ -1,6 +1,8 @@
 singleton Colors Colors.qml
 Dashboard Dashboard.qml
 AppLauncher AppLauncher.qml
+PowerMenu PowerMenu.qml
+VolumeMenu VolumeMenu.qml
 NotificationPopup NotificationPopup.qml
 FrameReserve FrameReserve.qml
 FrameShape FrameShape.qml

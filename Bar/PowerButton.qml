@@ -12,7 +12,7 @@ Item {
 
     Process {
         id: proc
-        command: ["bash", Quickshell.env("HOME") + "/.config/rofi/powermenu/powermenu.sh"]
+        command: ["qs", "ipc", "call", "powermenu", "toggle"]
     }
 
     Text {
