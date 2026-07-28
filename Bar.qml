@@ -46,7 +46,7 @@ PanelWindow {
         Tray {}
         Clock {}
         BluetoothIndicator {}
-        NetSpeedIndicator {}
+        NetworkIndicator {}
         PowerButton {}
     }
 }

@@ -17,6 +17,12 @@ Scope {
     property bool trayMenuOpen: false
     property string trayMenuItemId: ""
     property real trayMenuTargetY: 0
+    property bool bluetoothMenuOpen: false
+    property real bluetoothMenuTargetY: 0
+    property bool calendarMenuOpen: false
+    property real calendarMenuTargetY: 0
+    property bool networkMenuOpen: false
+    property real networkMenuTargetY: 0
 
     ListModel { id: history }
 
@@ -95,6 +101,33 @@ Scope {
         function hide(): void { root.trayMenuOpen = false }
     }
 
+    IpcHandler {
+        target: "bluetoothmenu"
+        function toggle(y: string): void {
+            root.bluetoothMenuTargetY = Number(y)
+            root.bluetoothMenuOpen = !root.bluetoothMenuOpen
+        }
+        function hide(): void { root.bluetoothMenuOpen = false }
+    }
+
+    IpcHandler {
+        target: "calendarmenu"
+        function toggle(y: string): void {
+            root.calendarMenuTargetY = Number(y)
+            root.calendarMenuOpen = !root.calendarMenuOpen
+        }
+        function hide(): void { root.calendarMenuOpen = false }
+    }
+
+    IpcHandler {
+        target: "networkmenu"
+        function toggle(y: string): void {
+            root.networkMenuTargetY = Number(y)
+            root.networkMenuOpen = !root.networkMenuOpen
+        }
+        function hide(): void { root.networkMenuOpen = false }
+    }
+
     NotificationPopup {
         notifModel: server.trackedNotifications
         dndEnabled: dash.dndEnabled
@@ -152,6 +185,27 @@ Scope {
         itemId: root.trayMenuItemId
         targetY: root.trayMenuTargetY
         onCloseRequested: root.trayMenuOpen = false
+    }
+
+    BluetoothMenu {
+        id: bluetoothMenu
+        open: root.bluetoothMenuOpen
+        targetY: root.bluetoothMenuTargetY
+        onCloseRequested: root.bluetoothMenuOpen = false
+    }
+
+    CalendarMenu {
+        id: calendarMenu
+        open: root.calendarMenuOpen
+        targetY: root.calendarMenuTargetY
+        onCloseRequested: root.calendarMenuOpen = false
+    }
+
+    NetworkMenu {
+        id: networkMenu
+        open: root.networkMenuOpen
+        targetY: root.networkMenuTargetY
+        onCloseRequested: root.networkMenuOpen = false
     }
 
     FrameReserve {}

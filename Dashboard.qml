@@ -1,6 +1,8 @@
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
+import Quickshell.Bluetooth
+import Quickshell.Networking
 import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
@@ -72,8 +74,8 @@ PanelWindow {
     property string sysWm: Quickshell.env("XDG_CURRENT_DESKTOP")
     property string sysUptime: ""
 
-    property bool wifiEnabled: false
-    property bool bluetoothEnabled: false
+    readonly property bool wifiEnabled: Networking.wifiEnabled
+    readonly property bool bluetoothEnabled: Bluetooth.defaultAdapter !== null && Bluetooth.defaultAdapter.enabled
     property bool dndEnabled: false
     property bool nightEnabled: false
 
@@ -81,44 +83,6 @@ PanelWindow {
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ]
-
-    function isoWeek(year, month, day) {
-        const d = new Date(year, month - 1, day)
-        const dow = d.getDay() || 7
-        d.setDate(d.getDate() + 4 - dow)
-        const yearStart = new Date(d.getFullYear(), 0, 1)
-        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
-    }
-
-    function calendarDays() {
-        const fw      = (new Date(calYear, calMonth - 1, 1).getDay() + 6) % 7
-        const dim     = new Date(calYear, calMonth, 0).getDate()
-        const prevDim = new Date(calYear, calMonth - 1, 0).getDate()
-        const days = []
-        for (let i = fw - 1; i >= 0; i--)
-            days.push({ d: prevDim - i, cur: false })
-        for (let i = 1; i <= dim; i++)
-            days.push({ d: i, cur: true })
-        const rem = (7 - days.length % 7) % 7
-        for (let i = 1; i <= rem; i++)
-            days.push({ d: i, cur: false })
-
-        // Interleave a week-number sentinel at the start of each 7-day row
-        const result = []
-        const rows = days.length / 7
-        for (let row = 0; row < rows; row++) {
-            const slice = days.slice(row * 7, row * 7 + 7)
-            let wy = calYear, wm = calMonth, wd = slice[0].d
-            for (const c of slice) { if (c.cur) { wd = c.d; break } }
-            if (!slice.some(c => c.cur)) {
-                if (row === 0) { wm = calMonth === 1 ? 12 : calMonth - 1; wy = calMonth === 1 ? calYear - 1 : calYear }
-                else           { wm = calMonth === 12 ? 1 : calMonth + 1; wy = calMonth === 12 ? calYear + 1 : calYear }
-            }
-            result.push({ type: 'week', num: isoWeek(wy, wm, wd) })
-            for (const c of slice) result.push(c)
-        }
-        return result
-    }
 
     anchors { left: true; right: true; top: true; bottom: true }
     color: "transparent"
@@ -218,18 +182,6 @@ PanelWindow {
         onExited: dashboard.sysUptime = uptimeOut.text.trim()
     }
     Process {
-        id: wifiCheckProc
-        command: ["bash", "-c", "nmcli radio wifi"]
-        stdout: StdioCollector { id: wifiCheckOut }
-        onExited: dashboard.wifiEnabled = wifiCheckOut.text.trim() === "enabled"
-    }
-    Process {
-        id: btCheckProc
-        command: ["bash", "-c", "bluetoothctl show | grep 'Powered:' | awk '{print $2}'"]
-        stdout: StdioCollector { id: btCheckOut }
-        onExited: dashboard.bluetoothEnabled = btCheckOut.text.trim() === "yes"
-    }
-    Process {
         id: nightCheckProc
         command: ["bash", "-c", "pgrep -x wlsunset > /dev/null && echo yes || echo no"]
         stdout: StdioCollector { id: nightCheckOut }
@@ -241,8 +193,6 @@ PanelWindow {
         osProc.running = true
         kernelProc.running = true
         uptimeProc.running = true
-        wifiCheckProc.running = true
-        btCheckProc.running = true
         nightCheckProc.running = true
         if (dashboard.weatherLat === 0 || dashboard.weatherLon === 0)
             locProc.running = true
@@ -409,18 +359,11 @@ PanelWindow {
     }
 
     function toggleWifi() {
-        actionProc.command = wifiEnabled
-            ? ["nmcli", "radio", "wifi", "off"]
-            : ["nmcli", "radio", "wifi", "on"]
-        actionProc.startDetached()
-        wifiEnabled = !wifiEnabled
+        Networking.wifiEnabled = !Networking.wifiEnabled
     }
     function toggleBluetooth() {
-        actionProc.command = bluetoothEnabled
-            ? ["bluetoothctl", "power", "off"]
-            : ["bluetoothctl", "power", "on"]
-        actionProc.startDetached()
-        bluetoothEnabled = !bluetoothEnabled
+        if (Bluetooth.defaultAdapter)
+            Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter.enabled
     }
     function toggleNight() {
         actionProc.command = nightEnabled

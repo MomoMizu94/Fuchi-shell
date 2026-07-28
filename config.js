@@ -92,6 +92,31 @@ const trayMenu = {
     gap: 2,
 }
 
+// Bluetooth menu (slides from the bar like trayMenu) sizing
+const bluetoothMenu = {
+    width: 280,
+    rowHeight: 36,
+    padding: 8,
+    gap: 2,
+}
+
+// Network menu (slides from the bar at the network indicator) sizing
+const networkMenu = {
+    width: 320,
+    rowHeight: 36,
+    padding: 8,
+    gap: 2,
+}
+
+// Calendar menu (slides from the bar at the clock) sizing
+const calendarMenu = {
+    width: 360,
+    rowHeight: 30,
+    cellSize: 34,
+    padding: 12,
+    gap: 4,
+}
+
 // Volume menu (right-docked, hover-only panel) sizing
 const volumeMenu = {
     width: 160,
@@ -113,6 +138,5 @@ const timer = {
     mapPrefetchStagger: 1200,    // precip map: gap between warming each radar frame
     radarFrameAdvance: 650,      // radar loop: ms per frame
     radarFrameDwell: 2200,       // radar loop: dwell on the newest frame before looping
-    bluetoothRefresh: 5000,      // sidebar bluetooth status poll
     netRefresh: 3000,            // sidebar net up/down poll
 }

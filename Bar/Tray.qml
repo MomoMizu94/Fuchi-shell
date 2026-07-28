@@ -21,22 +21,12 @@ ColumnLayout {
             implicitWidth: Config.sidebar.trayIconSize
             implicitHeight: Config.sidebar.trayIconSize
 
-            // Bar's own PanelWindow is flush against the output's top-left
-            // corner (anchored top+bottom+left), so this window-local point
-            // doubles as the output-local position TrayMenu needs to line up
-            // with the icon from its own (separate, full-screen) window.
-            readonly property point windowPos: trayItem.QsWindow.contentItem.mapFromItem(trayItem, 0, 0)
-
             IconImage {
                 anchors.fill: parent
                 source: trayItem.modelData.icon
             }
 
-            Process {
-                id: openMenuProc
-                command: ["qs", "ipc", "call", "traymenu", "open", trayItem.modelData.id,
-                    String(Math.round(trayItem.windowPos.y + trayItem.height / 2))]
-            }
+            Process { id: openMenuProc; command: ["echo"] }
 
             MouseArea {
                 anchors.fill: parent
@@ -45,7 +35,18 @@ ColumnLayout {
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.LeftButton) trayItem.modelData.activate()
                     else if (mouse.button === Qt.MiddleButton) trayItem.modelData.secondaryActivate()
-                    else if (mouse.button === Qt.RightButton && trayItem.modelData.hasMenu) openMenuProc.startDetached()
+                    else if (mouse.button === Qt.RightButton && trayItem.modelData.hasMenu) {
+                        // Mapped at click time, not in a property binding: the
+                        // binding would freeze at its creation-time result
+                        // (mapFromItem registers no dependencies), going stale
+                        // when the tray column reorders. Bar's window is flush
+                        // at the output's top-left, so window-local ==
+                        // output-local for the separate-window TrayMenu.
+                        const pos = trayItem.QsWindow.contentItem.mapFromItem(trayItem, 0, 0)
+                        openMenuProc.command = ["qs", "ipc", "call", "traymenu", "open",
+                            trayItem.modelData.id, String(Math.round(pos.y + trayItem.height / 2))]
+                        openMenuProc.startDetached()
+                    }
                 }
             }
         }

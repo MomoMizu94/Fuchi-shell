@@ -1,4 +1,6 @@
 singleton Colors Colors.qml
+singleton Events Events.qml
+CalendarGrid CalendarGrid.qml
 Dashboard Dashboard.qml
 AppLauncher AppLauncher.qml
 PowerMenu PowerMenu.qml
@@ -11,9 +13,12 @@ Workspaces Bar/Workspaces.qml
 WorkspaceApps Bar/WorkspaceApps.qml
 Tray Bar/Tray.qml
 TrayMenu Bar/TrayMenu.qml
+BluetoothMenu Bar/BluetoothMenu.qml
+CalendarMenu Bar/CalendarMenu.qml
 Clock Bar/Clock.qml
 BluetoothIndicator Bar/BluetoothIndicator.qml
-NetSpeedIndicator Bar/NetSpeedIndicator.qml
+NetworkIndicator Bar/NetworkIndicator.qml
+NetworkMenu Bar/NetworkMenu.qml
 PowerButton Bar/PowerButton.qml
 DashboardTab Tabs/DashboardTab.qml
 CalendarTab Tabs/CalendarTab.qml

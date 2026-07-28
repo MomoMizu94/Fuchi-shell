@@ -29,10 +29,10 @@ PanelWindow {
 
     readonly property var actions: [
         { id: "logout",   icon: "󰍃", tint: true },
-        { id: "shutdown", icon: "⏻" },
+        { id: "lock",     icon: "󰌾" },
         { id: "suspend",  icon: "󰤄" },
         { id: "restart",  icon: "󰜉" },
-        { id: "lock",     icon: "󰌾" }
+        { id: "shutdown", icon: "⏻" }
     ]
     readonly property var destructiveIds: ["logout", "shutdown", "restart"]
 
