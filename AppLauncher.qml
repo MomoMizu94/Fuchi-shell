@@ -42,6 +42,39 @@ PanelWindow {
     ]
     property var wallpaperFiles: []   // populated once by wallpaperFolderModel below
 
+    // Subsequence fuzzy match: query characters must appear in `text` in
+    // order, not necessarily contiguously. Returns -1 for no match, otherwise
+    // a score where higher = better (bonuses for word-boundary starts,
+    // consecutive runs, and an early first-match position).
+    function fuzzyScore(query, text) {
+        if (query === "") return 0
+        const q = query.toLowerCase()
+        const t = text.toLowerCase()
+        let qi = 0, score = 0, consecutive = 0, firstMatch = -1
+        for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+            if (t[ti] !== q[qi]) { consecutive = 0; continue }
+            if (firstMatch === -1) firstMatch = ti
+            const prev = ti > 0 ? t[ti - 1] : ""
+            const atBoundary = ti === 0 || /[\s\-_.]/.test(prev)
+            score += 1 + consecutive * 2 + (atBoundary ? 4 : 0)
+            consecutive++
+            qi++
+        }
+        if (qi < q.length) return -1   // not all query chars found in order
+        return score + Math.max(0, 8 - firstMatch)
+    }
+
+    // Best score across several optional fields (e.g. name + genericName + keywords).
+    function bestFieldScore(query, fields) {
+        let best = -1
+        for (const f of fields) {
+            if (!f) continue
+            const s = fuzzyScore(query, f)
+            if (s > best) best = s
+        }
+        return best
+    }
+
     function parseCommand() {
         const rest = query.slice(1)
         const sp = rest.indexOf(" ")
@@ -58,7 +91,14 @@ PanelWindow {
 
     function filteredWallpapers(filter) {
         const f = filter.trim().toLowerCase()
-        return f === "" ? wallpaperFiles : wallpaperFiles.filter(w => w.name.toLowerCase().includes(f))
+        if (f === "") return wallpaperFiles
+        const scored = []
+        for (const w of wallpaperFiles) {
+            const score = fuzzyScore(f, w.name)
+            if (score >= 0) scored.push({ file: w, score })
+        }
+        scored.sort((a, b) => b.score - a.score || a.file.name.localeCompare(b.file.name))
+        return scored.map(s => s.file)
     }
     function buildCommandEntries() {
         if (parsedCommand.word === "")
@@ -74,13 +114,18 @@ PanelWindow {
     }
 
     function filteredApps() {
+        const apps = allApps()
         const q = query.trim().toLowerCase()
-        const apps = allApps().slice().sort((a, b) => a.name.localeCompare(b.name))
-        if (q === "") return apps
-        return apps.filter(e => {
-            const hay = [e.name, e.genericName, ...(e.keywords || [])].join(" ").toLowerCase()
-            return hay.includes(q)
-        })
+        if (q === "")
+            return apps.slice().sort((a, b) =>
+                launchCount(b.id) - launchCount(a.id) || a.name.localeCompare(b.name))
+        const scored = []
+        for (const e of apps) {
+            const score = bestFieldScore(q, [e.name, e.genericName, ...(e.keywords || [])])
+            if (score >= 0) scored.push({ entry: e, score: score + frecencyBonus(e.id) })
+        }
+        scored.sort((a, b) => b.score - a.score || a.entry.name.localeCompare(b.entry.name))
+        return scored.map(s => s.entry)
     }
 
     readonly property var results: commandMode ? commandEntries : filteredApps()
@@ -110,6 +155,7 @@ PanelWindow {
             }
             return   // unknown/unmatched command word: no-op
         }
+        recordLaunch(item.id)
         item.execute()
         launcher.closeRequested()
     }
@@ -120,6 +166,36 @@ PanelWindow {
     }
 
     Process { id: wallpaperProc; command: ["echo"] }
+
+    // Persistent per-app launch counts, driving frecency ranking — same
+    // FileView+JsonAdapter+Quickshell.statePath pattern Dashboard.qml uses
+    // for todos.json.
+    FileView {
+        id: launchStatsFile
+        path: Quickshell.statePath("launcher-stats.json")
+        watchChanges: false
+        JsonAdapter {
+            id: launchStatsData
+            property var counts: ({})   // { [DesktopEntry.id]: launchCount }
+        }
+        onLoadFailed: error => {
+            if (error === FileViewError.FileNotFound) writeAdapter()
+        }
+    }
+
+    function launchCount(id) {
+        return launchStatsData.counts[id] || 0
+    }
+    function recordLaunch(id) {
+        const counts = launchStatsData.counts
+        counts[id] = (counts[id] || 0) + 1
+        launchStatsData.counts = counts
+        launchStatsFile.writeAdapter()
+    }
+    // Capped so frecency nudges ranking rather than overriding strong text matches.
+    function frecencyBonus(id) {
+        return Math.min(launchCount(id), 20) * 3
+    }
 
     // Resolution lookup via ImageMagick's `identify` (reads just the image
     // header, not a full decode — matters since some wallpapers are 46MB+).
