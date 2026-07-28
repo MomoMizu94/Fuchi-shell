@@ -35,7 +35,8 @@ const radius = {
     lg: 8,   // toggle tiles, inset panels
     xl: 10,  // primary cards
     xxl: 12, // larger cards (Tab 2 media card)
-    hero: 32 // Outside border
+    hero: 32,  // Outside border
+    fillet: 32 // concave frame-junction fillet on popups (matches hero)
 }
 
 

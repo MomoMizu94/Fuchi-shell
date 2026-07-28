@@ -8,6 +8,7 @@ VolumeMenu VolumeMenu.qml
 NotificationPopup NotificationPopup.qml
 FrameReserve FrameReserve.qml
 FrameShape FrameShape.qml
+CornerFillet CornerFillet.qml
 Bar Bar.qml
 Workspaces Bar/Workspaces.qml
 WorkspaceApps Bar/WorkspaceApps.qml

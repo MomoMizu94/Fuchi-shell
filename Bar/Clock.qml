@@ -43,7 +43,7 @@ Item {
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: "󰥔"
+            text: "󰃭"
             color: Colors.text
             font.family: Config.bar.fontFamily
             font.pixelSize: Config.sidebar.iconSize

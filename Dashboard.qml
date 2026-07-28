@@ -426,6 +426,21 @@ PanelWindow {
             onHoveredChanged: dashboard.panelHovered = hovered
         }
 
+        // Concave fillets melting the panel's top corners into the frame's
+        // inner edge (thin px below the screen edge the panel is flush with).
+        CornerFillet {
+            anchors.right: parent.left
+            anchors.top: parent.top
+            anchors.topMargin: Config.frame.thin
+            solidCorner: "topRight"
+        }
+        CornerFillet {
+            anchors.left: parent.right
+            anchors.top: parent.top
+            anchors.topMargin: Config.frame.thin
+            solidCorner: "topLeft"
+        }
+
         Rectangle {
             anchors.fill: parent
             topLeftRadius: 0

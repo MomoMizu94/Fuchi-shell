@@ -271,6 +271,21 @@ PanelWindow {
 
         MouseArea { anchors.fill: parent }
 
+        // Concave fillets melting the panel's bottom corners into the frame's
+        // inner edge (thin px above the screen edge the panel is flush with).
+        CornerFillet {
+            anchors.right: parent.left
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Config.frame.thin
+            solidCorner: "bottomRight"
+        }
+        CornerFillet {
+            anchors.left: parent.right
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Config.frame.thin
+            solidCorner: "bottomLeft"
+        }
+
         Rectangle {
             anchors.fill: parent
             topLeftRadius: Config.radius.hero

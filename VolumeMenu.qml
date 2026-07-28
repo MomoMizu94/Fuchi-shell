@@ -130,6 +130,21 @@ PanelWindow {
             onHoveredChanged: volumeMenu.panelHovered = hovered
         }
 
+        // Concave fillets melting the panel's right corners into the frame's
+        // inner edge (thin px left of the screen edge the panel is flush with).
+        CornerFillet {
+            anchors.right: parent.right
+            anchors.rightMargin: Config.frame.thin
+            anchors.bottom: parent.top
+            solidCorner: "bottomRight"
+        }
+        CornerFillet {
+            anchors.right: parent.right
+            anchors.rightMargin: Config.frame.thin
+            anchors.top: parent.bottom
+            solidCorner: "topRight"
+        }
+
         Rectangle {
             anchors.fill: parent
             topLeftRadius: Config.radius.hero

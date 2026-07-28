@@ -73,11 +73,11 @@ PanelWindow {
 
         anchors.left: parent.left
         anchors.top: parent.top
-        // Center on the clock's y, clamped so the panel never runs off the
-        // top/bottom of the screen.
+        // Center on the clock's y, clamped so the panel — plus its corner
+        // fillets — never runs off the top/bottom of the frame.
         anchors.topMargin: Math.max(
-            Config.gap.sm,
-            Math.min(calMenu.targetY - height / 2, parent.height - height - Config.gap.sm)
+            Config.frame.thin + Config.radius.fillet,
+            Math.min(calMenu.targetY - height / 2, parent.height - height - Config.frame.thin - Config.radius.fillet)
         )
         // Open: docked flush against the sidebar's inner edge; closed: fully
         // off-screen left.
@@ -91,6 +91,19 @@ PanelWindow {
         }
 
         MouseArea { anchors.fill: parent }
+
+        // Concave fillets melting the panel's left corners into the sidebar's
+        // inner edge (which the panel docks flush against).
+        CornerFillet {
+            anchors.left: parent.left
+            anchors.bottom: parent.top
+            solidCorner: "bottomLeft"
+        }
+        CornerFillet {
+            anchors.left: parent.left
+            anchors.top: parent.bottom
+            solidCorner: "topLeft"
+        }
 
         Rectangle {
             anchors.fill: parent

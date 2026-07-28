@@ -13,25 +13,38 @@ PanelWindow {
     property bool dndEnabled: false
     visible: !dndEnabled
 
+    // Docked into the frame's top-right corner so the first card melts into
+    // both the top and right strips, and the cards below melt into the right
+    // strip, via corner fillets like every other popup.
     anchors { top: true; right: true }
-    margins { top: 18; right: 18 }
+    margins { top: Config.frame.thin; right: Config.frame.thin }
 
-    implicitWidth: 560
-    implicitHeight: Math.max(1, column.implicitHeight)
+    // Fillet clearance left of the first card and below the last — the window
+    // must be larger than the column or the fillets would be clipped at the
+    // surface edge. Height collapses to 1px when there are no cards so the
+    // invisible surface doesn't linger as a click-eating strip.
+    implicitWidth: 560 + Config.radius.fillet
+    implicitHeight: column.implicitHeight > 0 ? column.implicitHeight + Config.radius.fillet : 1
     color: "transparent"
 
     exclusionMode: ExclusionMode.Normal
 
     ColumnLayout {
         id: column
-        width: parent.width
-        spacing: Config.gap.md
+        width: 560
+        anchors.right: parent.right
+        // No spacing: stacked cards butt together and read as one continuous
+        // panel — only the stack's outer silhouette is shaped (corner dock at
+        // the top, rounding + fillet at the bottom).
+        spacing: 0
 
         Repeater {
+            id: repeater
             model: notifModel
             delegate: Rectangle {
                 id: card
                 required property var modelData
+                required property int index
 
                 Timer {
                     running: card.modelData.urgency !== NotificationUrgency.Critical
@@ -41,16 +54,57 @@ PanelWindow {
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: layout.implicitHeight + 28
-                radius: Config.radius.xl
+                topLeftRadius: 0
+                bottomLeftRadius: card.index === repeater.count - 1 ? Config.radius.hero : 0
+                topRightRadius: 0
+                bottomRightRadius: 0
                 color: Colors.surface
-                border.width: Config.gap.xs
-                border.color: modelData.urgency === NotificationUrgency.Critical
-                ? Colors.error : Colors.border
+
+                // Urgency accent — a left-edge stripe instead of the old full
+                // outline, which would have drawn a visible seam along the
+                // frame-docked right edge.
+                Rectangle {
+                    id: urgencyStripe
+                    width: 6
+                    anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                    // Keep clear of the stack's shaped ends: stop above the
+                    // bottom corner rounding (a straight strip would poke
+                    // outside the curve) and start below the first card's
+                    // frame dock at the top.
+                    anchors.topMargin: card.index === 0 ? Config.radius.hero : 0
+                    anchors.bottomMargin: card.bottomLeftRadius
+                    color: card.modelData.urgency === NotificationUrgency.Critical
+                        ? Colors.error : Colors.border
+                }
+
+                // Concave fillets melting the card's right corners into the
+                // frame strip it docks against. The first card sits flush in
+                // the frame's top-right corner, so instead of a fillet above
+                // its right edge it gets one left of its top edge, melting
+                // into the top strip (same geometry as Dashboard's).
+                CornerFillet {
+                    visible: card.index > 0
+                    anchors.right: parent.right
+                    anchors.bottom: parent.top
+                    solidCorner: "bottomRight"
+                }
+                CornerFillet {
+                    visible: card.index === 0
+                    anchors.right: parent.left
+                    anchors.top: parent.top
+                    solidCorner: "topRight"
+                }
+                CornerFillet {
+                    anchors.right: parent.right
+                    anchors.top: parent.bottom
+                    solidCorner: "topRight"
+                }
 
                 RowLayout {
                     id: layout
                     anchors.fill: parent
                     anchors.margins: Config.gap.md
+                    anchors.leftMargin: Config.gap.md + urgencyStripe.width
                     spacing: Config.gap.md
 
                     Item {
