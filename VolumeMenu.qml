@@ -34,13 +34,18 @@ PanelWindow {
         height: panel.height
     }
 
+    // A node's `.audio` volume/mute is only populated and writable while the
+    // node is bound by a tracker — tracking just the defaults left every
+    // stream row reading 0% and silently dropping writes (verified live:
+    // wpctl reported spotify-player at 1.00 while our rows showed 0), so the
+    // per-app lists must be tracked too, not only the master sink/source.
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource]
+            .concat(volumeMenu.playbackList)
+            .concat(volumeMenu.recordingList)
     }
 
-    property string expandedList: ""   // "" | "output" | "input"
-    property var outputList: []
-    property var inputList: []
+    property string expandedList: ""   // "" | "output" | "input" | "apps" | "recording"
 
     function isEasyEffects(n) {
         return ((n.description || n.name || "") + "").toLowerCase().includes("easy effects")
@@ -55,15 +60,41 @@ PanelWindow {
     function computeInputList() {
         return Pipewire.nodes.values.filter(n => n.properties["media.class"] === "Audio/Source" && !isEasyEffects(n))
     }
-    function refreshLists() {
-        outputList = computeOutputList()
-        inputList = computeInputList()
+    // Streams need a different classification technique from devices above:
+    // verified live that a stream node's `properties` map is permanently
+    // empty ({}) — never populates media.class/application.name at all,
+    // unlike device nodes. The only usable signal is `type`, but it's NOT a
+    // set of independent single-bit flags — verified live that OBS's capture
+    // stream reports type 13, and `PwNodeType.AudioInStream`/`AudioOutStream`
+    // are 13/21 respectively, i.e. composite category values (Audio|Stream|Source
+    // vs Audio|Stream|Sink) that share bits. A bitwise-AND check (the same
+    // mistake that previously broke device-source switching) matches BOTH for
+    // a pure input stream like OBS's — exact equality is what actually
+    // distinguishes them.
+    function computePlaybackList() {
+        return Pipewire.nodes.values.filter(n => n.isStream && n.type === PwNodeType.AudioOutStream)
     }
-    Component.onCompleted: refreshLists()
-    Connections {
-        target: Pipewire.nodes
-        function onValuesChanged() { volumeMenu.refreshLists() }
+    function computeRecordingList() {
+        return Pipewire.nodes.values.filter(n => n.isStream && n.type === PwNodeType.AudioInStream)
     }
+    function streamLabel(n) {
+        return n.description || n.name
+    }
+
+    // Declarative bindings, not one-shot snapshots. A node's `properties` map
+    // (media.class, application.name, ...) populates asynchronously shortly
+    // AFTER the node itself is added — `Pipewire.nodes.valuesChanged` (node
+    // added/removed) had already fired by then, so a list computed once via
+    // Component.onCompleted/valuesChanged got permanently stuck seeing
+    // `undefined` for media.class (confirmed live: every node read back
+    // media.class as undefined in the same tick it was added). Declaring
+    // these as real property bindings makes QML auto-track every node's
+    // `properties` read during the filter pass, so each list re-evaluates
+    // the moment propertiesChanged fires for any of them.
+    readonly property var outputList: computeOutputList()
+    readonly property var inputList: computeInputList()
+    readonly property var playbackList: computePlaybackList()
+    readonly property var recordingList: computeRecordingList()
 
     function selectOutput(node) {
         Pipewire.preferredDefaultAudioSink = node
@@ -93,17 +124,26 @@ PanelWindow {
     }
 
     readonly property int percentRowHeight: 22
+    readonly property int masterLabelHeight: 18
     readonly property int outputBlockHeight: expandedList === "output"
         ? Config.volumeMenu.deviceButtonSize + outputList.length * Config.volumeMenu.deviceRowHeight
         : Config.volumeMenu.deviceButtonSize
     readonly property int inputBlockHeight: expandedList === "input"
         ? Config.volumeMenu.deviceButtonSize + inputList.length * Config.volumeMenu.deviceRowHeight
         : Config.volumeMenu.deviceButtonSize
+    readonly property int appsBlockHeight: expandedList === "apps"
+        ? Config.volumeMenu.deviceButtonSize + Math.min(playbackList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
+        : Config.volumeMenu.deviceButtonSize
+    readonly property int recordingBlockHeight: expandedList === "recording"
+        ? Config.volumeMenu.deviceButtonSize + Math.min(recordingList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
+        : Config.volumeMenu.deviceButtonSize
 
     Item {
         id: panel
         width: Config.volumeMenu.width
         height: Config.volumeMenu.padding * 2
+            + volumeMenu.masterLabelHeight
+            + Config.volumeMenu.gap
             + Config.volumeMenu.deviceButtonSize
             + Config.volumeMenu.gap
             + Config.volumeMenu.sliderHeight
@@ -113,6 +153,10 @@ PanelWindow {
             + volumeMenu.outputBlockHeight
             + Config.volumeMenu.gap
             + volumeMenu.inputBlockHeight
+            + Config.volumeMenu.gap
+            + volumeMenu.appsBlockHeight
+            + Config.volumeMenu.gap
+            + volumeMenu.recordingBlockHeight
         Behavior on height { NumberAnimation { duration: Config.anim.popup; easing.type: Easing.OutCubic } }
 
         anchors.right: parent.right
@@ -158,6 +202,17 @@ PanelWindow {
                 anchors.fill: parent
                 anchors.margins: Config.volumeMenu.padding
                 spacing: Config.volumeMenu.gap
+
+                Text {
+                    Layout.preferredHeight: volumeMenu.masterLabelHeight
+                    Layout.alignment: Qt.AlignHCenter
+                    text: "MASTER"
+                    color: Colors.subtext
+                    font.family: Config.bar.fontFamily
+                    font.pixelSize: Config.type.micro
+                    font.bold: true
+                    font.letterSpacing: 1
+                }
 
                 Rectangle {
                     Layout.preferredWidth: Config.volumeMenu.deviceButtonSize
@@ -471,6 +526,232 @@ PanelWindow {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: volumeMenu.selectInput(inRow.modelData)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: volumeMenu.appsBlockHeight
+                    radius: Config.radius.xl
+                    color: "transparent"
+                    clip: true
+
+                    Column {
+                        anchors.fill: parent
+
+                        Rectangle {
+                            width: parent.width
+                            height: Config.volumeMenu.deviceButtonSize
+                            radius: Config.radius.xl
+                            color: appsHeaderHover.hovered ? Colors.card : "transparent"
+
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                width: parent.width - Config.gap.xs
+
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "󰀻"
+                                    color: Colors.text
+                                    font.family: Config.bar.fontFamily
+                                    font.pixelSize: Config.type.lg
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    horizontalAlignment: Text.AlignHCenter
+                                    text: "Apps"
+                                    elide: Text.ElideRight
+                                    color: Colors.subtext
+                                    font.family: Config.bar.fontFamily
+                                    font.pixelSize: Config.type.micro
+                                }
+                            }
+
+                            HoverHandler { id: appsHeaderHover }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: volumeMenu.expandedList = volumeMenu.expandedList === "apps" ? "" : "apps"
+                            }
+                        }
+
+                        ListView {
+                            width: parent.width
+                            height: Math.min(volumeMenu.playbackList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
+                            clip: true
+                            model: volumeMenu.expandedList === "apps" ? volumeMenu.playbackList : []
+
+                            delegate: Column {
+                                id: playRow
+                                required property var modelData
+                                width: ListView.view.width
+                                height: Config.volumeMenu.appRowHeight
+                                spacing: 2
+
+                                RowLayout {
+                                    width: parent.width
+                                    spacing: Config.gap.xs
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                        text: volumeMenu.streamLabel(playRow.modelData)
+                                        color: Colors.text
+                                        font.family: Config.bar.fontFamily
+                                        font.pixelSize: Config.type.micro
+                                    }
+                                    Text {
+                                        text: (playRow.modelData.audio && playRow.modelData.audio.muted) ? "󰝟" : "󰕾"
+                                        color: (playRow.modelData.audio && playRow.modelData.audio.muted) ? Colors.error : Colors.subtext
+                                        font.family: Config.bar.fontFamily
+                                        font.pixelSize: Config.type.sm
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: if (playRow.modelData.audio) playRow.modelData.audio.muted = !playRow.modelData.audio.muted
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    id: playTrack
+                                    width: parent.width
+                                    height: 10
+                                    radius: 5
+                                    color: Colors.inset
+                                    border.width: 1
+                                    border.color: Colors.border
+
+                                    Rectangle {
+                                        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                                        width: parent.width * Math.max(0, Math.min(1, playRow.modelData.audio ? playRow.modelData.audio.volume : 0))
+                                        radius: 5
+                                        color: Colors.accent
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onPressed: mouse => { if (playRow.modelData.audio) playRow.modelData.audio.volume = Math.max(0, Math.min(1, mouse.x / playTrack.width)) }
+                                        onPositionChanged: mouse => { if (pressed && playRow.modelData.audio) playRow.modelData.audio.volume = Math.max(0, Math.min(1, mouse.x / playTrack.width)) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: volumeMenu.recordingBlockHeight
+                    radius: Config.radius.xl
+                    color: "transparent"
+                    clip: true
+
+                    Column {
+                        anchors.fill: parent
+
+                        Rectangle {
+                            width: parent.width
+                            height: Config.volumeMenu.deviceButtonSize
+                            radius: Config.radius.xl
+                            color: recHeaderHover.hovered ? Colors.card : "transparent"
+
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: 2
+                                width: parent.width - Config.gap.xs
+
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "󰑊"
+                                    color: Colors.text
+                                    font.family: Config.bar.fontFamily
+                                    font.pixelSize: Config.type.lg
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    horizontalAlignment: Text.AlignHCenter
+                                    text: "Recording"
+                                    elide: Text.ElideRight
+                                    color: Colors.subtext
+                                    font.family: Config.bar.fontFamily
+                                    font.pixelSize: Config.type.micro
+                                }
+                            }
+
+                            HoverHandler { id: recHeaderHover }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: volumeMenu.expandedList = volumeMenu.expandedList === "recording" ? "" : "recording"
+                            }
+                        }
+
+                        ListView {
+                            width: parent.width
+                            height: Math.min(volumeMenu.recordingList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
+                            clip: true
+                            model: volumeMenu.expandedList === "recording" ? volumeMenu.recordingList : []
+
+                            delegate: Column {
+                                id: recRow
+                                required property var modelData
+                                width: ListView.view.width
+                                height: Config.volumeMenu.appRowHeight
+                                spacing: 2
+
+                                RowLayout {
+                                    width: parent.width
+                                    spacing: Config.gap.xs
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                        text: volumeMenu.streamLabel(recRow.modelData)
+                                        color: Colors.text
+                                        font.family: Config.bar.fontFamily
+                                        font.pixelSize: Config.type.micro
+                                    }
+                                    Text {
+                                        text: (recRow.modelData.audio && recRow.modelData.audio.muted) ? "󰝟" : "󰍬"
+                                        color: (recRow.modelData.audio && recRow.modelData.audio.muted) ? Colors.error : Colors.subtext
+                                        font.family: Config.bar.fontFamily
+                                        font.pixelSize: Config.type.sm
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: if (recRow.modelData.audio) recRow.modelData.audio.muted = !recRow.modelData.audio.muted
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    id: recTrack
+                                    width: parent.width
+                                    height: 10
+                                    radius: 5
+                                    color: Colors.inset
+                                    border.width: 1
+                                    border.color: Colors.border
+
+                                    Rectangle {
+                                        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                                        width: parent.width * Math.max(0, Math.min(1, recRow.modelData.audio ? recRow.modelData.audio.volume : 0))
+                                        radius: 5
+                                        color: Colors.accent
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onPressed: mouse => { if (recRow.modelData.audio) recRow.modelData.audio.volume = Math.max(0, Math.min(1, mouse.x / recTrack.width)) }
+                                        onPositionChanged: mouse => { if (pressed && recRow.modelData.audio) recRow.modelData.audio.volume = Math.max(0, Math.min(1, mouse.x / recTrack.width)) }
+                                    }
                                 }
                             }
                         }

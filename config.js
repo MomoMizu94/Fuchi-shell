@@ -125,6 +125,8 @@ const volumeMenu = {
     sliderHeight: 220,
     deviceButtonSize: 64,
     deviceRowHeight: 36,
+    appRowHeight: 40,
+    maxVisibleAppRows: 5,
     gap: 16,
     padding: 16,
     maxVolume: 1.5,

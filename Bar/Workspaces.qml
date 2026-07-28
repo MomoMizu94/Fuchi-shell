@@ -51,7 +51,7 @@ ColumnLayout {
                 cursorShape: Qt.PointingHandCursor
                 onEntered: chip.hovered = true
                 onExited: chip.hovered = false
-                onClicked: Hyprland.dispatch("workspace " + chip.modelData.id)
+                onClicked: Hyprland.dispatch("hl.dsp.focus({workspace = " + chip.modelData.id + "})")
             }
         }
     }
