@@ -69,6 +69,24 @@ PanelWindow {
     property var radarFrames: []
     property int radarIdx: 0
 
+    // Finance tab. financeSymbols/RangeIdx/Focused are persisted (finance.json);
+    // financeSeries is the live fetch result and is deliberately not cached to
+    // disk — a stale price shown as current is worse than "Loading…".
+    // Seed watchlist comes from secrets.js (gitignored) — what you track is
+    // personal. Guarded with typeof so a secrets.js predating this setting
+    // degrades to the config fallback instead of taking the dashboard down.
+    readonly property var financeSeedSymbols: {
+        const s = (typeof Secrets.financeSymbols !== "undefined") ? Secrets.financeSymbols : null
+        const list = (s && s.length > 0) ? s : Config.finance.fallbackSymbols
+        return list.slice(0, Config.finance.maxSymbols)
+    }
+    property var financeSymbols: financeSeedSymbols
+    property int financeRangeIdx: Config.finance.defaultRangeIdx
+    property int financeFocused: 0
+    property var financeSeries: []
+    property bool financeLoading: false
+    property string financeUpdated: ""
+
     property string sysOs: ""
     property string sysKernel: ""
     property string sysWm: Quickshell.env("XDG_CURRENT_DESKTOP")
@@ -313,6 +331,116 @@ PanelWindow {
         }
     }
 
+    // ── Finance ──
+    // Symbols are passed as separate argv entries, never concatenated into a
+    // shell string: they come from a text field the user types into, and the
+    // `bash -c "curl '...'"` shape used for weather above would be injectable.
+    Process {
+        id: financeProc
+        command: ["bash", Quickshell.env("HOME") + "/.config/quickshell/scripts/fetch-quotes.sh",
+                  Config.finance.ranges[dashboard.financeRangeIdx].range,
+                  Config.finance.ranges[dashboard.financeRangeIdx].interval]
+                 .concat(dashboard.financeSymbols)
+        stdout: StdioCollector { id: financeOut }
+        onExited: {
+            try {
+                const d = JSON.parse(financeOut.text)
+                dashboard.financeSeries = d.series
+                dashboard.financeUpdated = Qt.formatTime(new Date(), "h:mm AP")
+            } catch (e) {}
+            dashboard.financeLoading = false
+        }
+    }
+
+    function refreshFinance() {
+        if (financeProc.running) return
+        dashboard.financeLoading = true
+        financeProc.running = true
+    }
+
+    Timer {
+        interval: Config.timer.financeRefresh
+        running: dashboard.visible && dashboard.activeTab === 2
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: dashboard.refreshFinance()
+    }
+
+    // Persistent watchlist: ~/.local/state/quickshell/finance.json
+    FileView {
+        id: financeFile
+        path: Quickshell.statePath("finance.json")
+        watchChanges: false
+        JsonAdapter {
+            id: financeData
+            property var symbols: dashboard.financeSeedSymbols
+            property int rangeIdx: Config.finance.defaultRangeIdx
+            property int focused: 0
+        }
+        onLoaded: {
+            if (financeData.symbols && financeData.symbols.length > 0)
+                dashboard.financeSymbols = financeData.symbols.slice(0, Config.finance.maxSymbols)
+            dashboard.financeRangeIdx = Math.max(0, Math.min(financeData.rangeIdx, Config.finance.ranges.length - 1))
+            dashboard.financeFocused = Math.max(0, Math.min(financeData.focused, dashboard.financeSymbols.length - 1))
+        }
+        onLoadFailed: error => {
+            if (error === FileViewError.FileNotFound) writeAdapter()
+        }
+    }
+
+    // JsonAdapter `var` properties only signal on reassignment, so the whole
+    // array is always replaced rather than mutated in place.
+    function saveFinance() {
+        financeData.symbols = dashboard.financeSymbols
+        financeData.rangeIdx = dashboard.financeRangeIdx
+        financeData.focused = dashboard.financeFocused
+        financeFile.writeAdapter()
+    }
+
+    function setFinanceRange(idx) {
+        if (idx === dashboard.financeRangeIdx) return
+        dashboard.financeRangeIdx = idx
+        dashboard.financeSeries = []   // drop stale candles so the chart can't mix ranges
+        saveFinance()
+        refreshFinance()
+    }
+
+    function setFinanceFocus(idx) {
+        if (idx < 0 || idx >= dashboard.financeSymbols.length) return
+        dashboard.financeFocused = idx
+        saveFinance()
+    }
+
+    function addFinanceSymbol(raw) {
+        const sym = raw.trim().toUpperCase()
+        if (sym === "") return "empty"
+        if (!/^[A-Z0-9.\-=^]{1,15}$/.test(sym)) return "invalid"
+        if (dashboard.financeSymbols.indexOf(sym) !== -1) return "duplicate"
+        if (dashboard.financeSymbols.length >= Config.finance.maxSymbols) return "full"
+        dashboard.financeSymbols = dashboard.financeSymbols.concat([sym])
+        saveFinance()
+        refreshFinance()
+        return "ok"
+    }
+
+    function removeFinanceSymbol(idx) {
+        if (dashboard.financeSymbols.length <= 1) return   // never leave the tab empty
+        const arr = dashboard.financeSymbols.slice()
+        arr.splice(idx, 1)
+        dashboard.financeSymbols = arr
+        if (dashboard.financeFocused >= arr.length) dashboard.financeFocused = arr.length - 1
+        dashboard.financeSeries = dashboard.financeSeries.filter(s => arr.indexOf(s.sym) !== -1)
+        saveFinance()
+        refreshFinance()
+    }
+
+    // Series for a symbol, or null while loading / if that ticker failed.
+    function financeSeriesFor(sym) {
+        for (const s of dashboard.financeSeries)
+            if (s.sym === sym) return s
+        return null
+    }
+
     ListModel { id: todoListModel }
     property alias todoList: todoListModel
 
@@ -466,7 +594,7 @@ PanelWindow {
                     model: [
                         { icon: "󰕮", label: "Dashboard"     },
                         { icon: "󰃭", label: "Calendar"      },
-                        { icon: "󰝚", label: "Media"         },
+                        { icon: "󰄪", label: "Finance"       },
                         { icon: "󰓅", label: "Performance"   }
                     ]
                     delegate: Item {
@@ -547,7 +675,10 @@ PanelWindow {
                     }
                 }
 
-                MediaTab {
+                // MediaTab.qml is still on disk and registered in qmldir — swap
+                // it back in here to re-enable the full-size player. MPRIS
+                // control lives on the Dashboard tab via MusicMiniCard either way.
+                FinanceTab {
                     y: 0
                     width: contentArea.width
                     height: contentArea.height

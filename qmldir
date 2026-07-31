@@ -24,6 +24,7 @@ PowerButton Bar/PowerButton.qml
 DashboardTab Tabs/DashboardTab.qml
 CalendarTab Tabs/CalendarTab.qml
 MediaTab Tabs/MediaTab.qml
+FinanceTab Tabs/FinanceTab.qml
 PerformanceTab Tabs/PerformanceTab.qml
 GreetingCard Widgets/GreetingCard.qml
 SystemInfoCard Widgets/SystemInfoCard.qml
@@ -32,3 +33,4 @@ MusicMiniCard Widgets/MusicMiniCard.qml
 HardwareCard Widgets/HardwareCard.qml
 WeatherCard Widgets/WeatherCard.qml
 NotificationHistoryCard Widgets/NotificationHistoryCard.qml
+PriceChart Widgets/PriceChart.qml

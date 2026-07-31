@@ -142,4 +142,27 @@ const timer = {
     radarFrameAdvance: 650,      // radar loop: ms per frame
     radarFrameDwell: 2200,       // radar loop: dwell on the newest frame before looping
     netRefresh: 3000,            // sidebar net up/down poll
+    financeRefresh: 60000,       // Finance tab quote poll (1 min, gated on the tab being open)
+}
+
+// Finance tab - asset watchlist and price charts
+const finance = {
+    maxSymbols: 5,          // watchlist cap: 1 focused chart + 4 in the strip
+    minCandles: 8,          // zoom floor — never show fewer candles than this
+    candleMinWidth: 3,      // px/candle below which the big chart falls back to a line
+    stripHeight: 150,       // height of the four secondary chart cards
+    // Yahoo range/interval pairs. Both values are passed straight to
+    // scripts/fetch-quotes.sh; every pair here is verified against the endpoint.
+    ranges: [
+        { label: "1D", range: "1d",  interval: "5m"  },
+        { label: "5D", range: "5d",  interval: "15m" },
+        { label: "1M", range: "1mo", interval: "1d"  },
+        { label: "6M", range: "6mo", interval: "1d"  },
+        { label: "1Y", range: "1y",  interval: "1d"  },
+        { label: "5Y", range: "5y",  interval: "1wk" },
+    ],
+    defaultRangeIdx: 4,     // 1Y
+    // The watchlist itself lives in secrets.js (gitignored) — what you track is
+    // personal. This is only the last-resort fallback when that's unset.
+    fallbackSymbols: ["^GSPC"],
 }
