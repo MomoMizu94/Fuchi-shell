@@ -7,6 +7,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import "config.js" as Config
+import "calc.js" as Calc
 
 PanelWindow {
     id: launcher
@@ -38,7 +39,8 @@ PanelWindow {
     // array entry + one branch in buildCommandEntries()/executeSelected(),
     // not a new framework.
     readonly property var commandDefs: [
-        { name: "wallpaper", label: "Wallpaper" }
+        { name: "wallpaper", label: "Wallpaper" },
+        { name: "calc", label: "Calculator" }
     ]
     property var wallpaperFiles: []   // populated once by wallpaperFolderModel below
 
@@ -105,6 +107,10 @@ PanelWindow {
             return commandDefs.map(c => ({ kind: "menu", name: c.label, comment: "", command: c.name }))
         if (!activeCommand) return []
         if (activeCommand.name === "wallpaper") return filteredWallpapers(parsedCommand.filter)
+        if (activeCommand.name === "calc") {
+            const entry = Calc.entry(parsedCommand.filter)
+            return entry ? [entry] : []
+        }
         return []
     }
     readonly property var commandEntries: commandMode ? buildCommandEntries() : []
@@ -128,7 +134,33 @@ PanelWindow {
         return scored.map(s => s.entry)
     }
 
-    readonly property var results: commandMode ? commandEntries : filteredApps()
+    // A bare expression typed into normal search mode (no ">" prefix) pins a
+    // calc row above the app matches, so `6*7` needs no prefix at all.
+    // Calc.looksLikeMath is a cheap gate; anything that slips past it — app
+    // names like "7-zip" or "gimp-2.10" — fails to parse and yields null.
+    function autoCalcEntry() {
+        const q = query.trim()
+        return Calc.looksLikeMath(q) ? Calc.entry(q) : null
+    }
+    function normalEntries() {
+        const apps = filteredApps()
+        const entry = autoCalcEntry()
+        return entry ? [entry].concat(apps) : apps
+    }
+
+    readonly property var results: commandMode ? commandEntries : normalEntries()
+
+    // Shown centred in the results area when nothing matched. "calc" needs its
+    // own branch — the generic wording would read "No matching calculators".
+    readonly property string emptyStateText: {
+        if (!commandMode) return "No matching apps"
+        if (!activeCommand) return "Unknown command “>" + parsedCommand.word + "”"
+        if (activeCommand.name === "calc")
+            return parsedCommand.filter.trim() === ""
+                ? "Type an expression, e.g. (2+3)*4"
+                : "Not a valid expression"
+        return "No matching " + activeCommand.label.toLowerCase() + "s"
+    }
 
     function scrollSelectedIntoView(idx) {
         const view = wallpaperGridMode ? wallpaperGrid : resultsList
@@ -143,6 +175,18 @@ PanelWindow {
     function executeSelected() {
         if (results.length === 0) return
         const item = results[selectedIndex]
+        // Kind-first: a calc row reaches here from either ">calc" or a bare
+        // expression in app-search mode. DesktopEntry has no `kind`, so this
+        // is safely undefined for apps.
+        if (item.kind === "calc") {
+            // "--" matters: without it a negative result like "-5" would be
+            // read as wl-copy options. Argv-supplied text is copied verbatim
+            // with no trailing newline, so nothing else is needed here.
+            clipboardProc.command = ["wl-copy", "--", item.name]
+            clipboardProc.startDetached()
+            launcher.closeRequested()
+            return
+        }
         if (commandMode) {
             if (item.kind === "menu") {
                 launcher.query = ">" + item.command + " "   // drill in, stay open
@@ -166,6 +210,7 @@ PanelWindow {
     }
 
     Process { id: wallpaperProc; command: ["echo"] }
+    Process { id: clipboardProc; command: ["echo"] }
 
     // Persistent per-app launch counts, driving frecency ranking — same
     // FileView+JsonAdapter+Quickshell.statePath pattern Dashboard.qml uses
@@ -390,10 +435,29 @@ PanelWindow {
                             anchors.margins: Config.gap.sm
                             spacing: Config.gap.md
 
-                            IconImage {
+                            // Apps carry a themed icon name; synthetic rows
+                            // (the calculator) carry a Nerd Font glyph, which
+                            // renders regardless of whether an icon theme is
+                            // configured — themed names outside hicolor
+                            // resolve to "" here and would leave a blank slot.
+                            Item {
                                 Layout.preferredWidth: Config.launcher.iconSize
                                 Layout.preferredHeight: Config.launcher.iconSize
-                                source: row.modelData.icon ? Quickshell.iconPath(row.modelData.icon, true) : ""
+
+                                IconImage {
+                                    anchors.fill: parent
+                                    visible: !row.modelData.glyph
+                                    source: row.modelData.icon ? Quickshell.iconPath(row.modelData.icon, true) : ""
+                                }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: !!row.modelData.glyph
+                                    text: row.modelData.glyph || ""
+                                    color: Colors.text
+                                    font.family: Config.bar.fontFamily
+                                    font.pixelSize: Config.sidebar.iconSize
+                                }
                             }
 
                             ColumnLayout {
@@ -524,11 +588,7 @@ PanelWindow {
                     visible: launcher.results.length === 0
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    text: !launcher.commandMode
-                        ? "No matching apps"
-                        : (!launcher.activeCommand
-                            ? "Unknown command “>" + launcher.parsedCommand.word + "”"
-                            : "No matching " + launcher.activeCommand.label.toLowerCase() + "s")
+                    text: launcher.emptyStateText
                     color: Colors.subtext
                     font.family: Config.bar.fontFamily
                     font.pixelSize: Config.type.base
