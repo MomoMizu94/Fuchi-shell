@@ -424,8 +424,9 @@ ColumnLayout {
                                         MouseArea {
                                             anchors.fill: parent
                                             onClicked: {
-                                                dashboard.todoList.remove(index, 1)
-                                                dashboard.saveTodos()
+                                                const dash = dashboard
+                                                dash.todoList.remove(index, 1)
+                                                dash.saveTodos()
                                             }
                                         }
                                     }
