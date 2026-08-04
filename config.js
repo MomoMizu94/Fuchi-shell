@@ -41,7 +41,8 @@ const radius = {
 
 
 const notifications = {
-    timeout: 7000
+    timeout: 7000,
+    historyLimit: 200
 }
 
 const frame = {

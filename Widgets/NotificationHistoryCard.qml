@@ -146,10 +146,6 @@ Flickable {
                                 onClicked: dashboard.historyModel.remove(index, 1)
                             }
                         }
-                        Component.onCompleted: {
-                            console.log("Dashboard image:", image)
-                            console.log("Dashboard appIcon:", appIcon)
-                        }
                     }
                 }
             }

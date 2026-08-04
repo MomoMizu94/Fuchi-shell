@@ -10,6 +10,8 @@ import "config.js" as Config
 Scope {
     id: root
 
+    // Open-state for every popup/menu — each flag is toggled via its
+    // matching IpcHandler and drives the matching component further down
     property bool centerOpen: false
     property bool launcherOpen: false
     property bool powerMenuOpen: false
@@ -24,6 +26,7 @@ Scope {
     property bool networkMenuOpen: false
     property real networkMenuTargetY: 0
 
+    // Notification history
     ListModel { id: history }
 
     // Silence music apps from notification sounds
@@ -39,11 +42,14 @@ Scope {
         return !silentApps.includes(app);
     }
 
+    // Plays the notification sound; triggered by onNotification
     Process {
         id: soundPlayer
         command: ["paplay", "/usr/share/sounds/freedesktop/stereo/message.oga"]
     }
 
+    // Listens for system notifications: feeds the popup via trackedNotifications
+    // and appends each one to the history
     NotificationServer {
         id: server
         actionsSupported: true
@@ -64,12 +70,14 @@ Scope {
                 ),
                 appIcon: n.appIcon.startsWith("/") ? "" : (n.appIcon || "")
             })
-            console.log("Stored image:", history.get(0).image)
-            console.log("Stored appIcon:", history.get(0).appIcon)
+            // History cap
+            if (history.count > Config.notifications.historyLimit)
+                history.remove(Config.notifications.historyLimit, history.count - Config.notifications.historyLimit)
             n.tracked = true
         }
     }
 
+    // IPC handlers
     IpcHandler {
         target: "notifications"
         function toggle(): void { root.centerOpen = !root.centerOpen }
@@ -128,29 +136,23 @@ Scope {
         function hide(): void { root.networkMenuOpen = false }
     }
 
+    // On-screen popup for incoming notifications
     NotificationPopup {
         notifModel: server.trackedNotifications
         dndEnabled: dash.dndEnabled
     }
 
-    // Grace period between the top hover-zone (blocked from receiving further
-    // hover events the instant Dashboard's own full-screen surface maps, since
-    // that surface — unlike VolumeMenu's — has no input mask, so it captures
-    // the whole screen for click-away-to-close) and the panel's own hover
-    // reaching the cursor as it slides into view. Without this, "hovered
-    // nothing" would be briefly true right as Dashboard opens and it would
-    // close itself before ever becoming visible.
+    // Grace period between the top hover-zone and the panel's own hover
+    // reaching the cursor as it slides into view
     Timer {
         id: dashboardCloseTimer
         // Comfortably longer than the slide-in animation so panelHovered has
-        // a chance to pick up the cursor before this can fire — otherwise a
-        // hover-in that starts the timer immediately (see onDashboardHoveredChanged
-        // below) could close Dashboard mid-slide, before it's even reached
-        // the cursor's position.
+        // a chance to pick up the cursor before this can fire
         interval: Config.anim.slide + 200
         onTriggered: if (!frame.dashboardHovered && !dash.panelHovered) root.centerOpen = false
     }
 
+    // Every popup/menu wired to its open-flag
     Dashboard {
         id: dash
         open: root.centerOpen
@@ -208,6 +210,8 @@ Scope {
         onCloseRequested: root.networkMenuOpen = false
     }
 
+    // Reserved screen-edge space, the hover-sensitive frame,
+    // and the bar itself
     FrameReserve {}
     FrameShape {
         id: frame
