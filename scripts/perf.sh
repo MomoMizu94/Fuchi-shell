@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Consolidated performance snapshot, polled by the Performance tab and by
 # the Overview tab's hardware mini-chart (see Dashboard.qml).
-# Samples /proc/stat and /proc/net/dev 0.5s apart, emits one JSON line.
+# Samples /proc/stat and /proc/net/dev 0.5s apart, emits one JSON line
 
 s1=$(grep '^cpu' /proc/stat)
 n1=$(awk '/:/{gsub(":","",$1); if($1!="lo"){rx+=$2; tx+=$10}} END{print rx+0, tx+0}' /proc/net/dev)

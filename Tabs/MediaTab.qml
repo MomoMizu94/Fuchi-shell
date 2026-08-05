@@ -5,6 +5,9 @@ import Quickshell.Services.Mpris
 import "../"
 import "../config.js" as Config
 
+// Full-size MPRIS player view. Currently a spare tab — not wired into
+// Dashboard.qml's tab bar. Playback controls stay available on the Overview tab via
+// Widgets/MusicMiniCard.qml if this spare tab is switched with another tab
 ColumnLayout {
     id: root
     required property var dashboard
@@ -32,8 +35,7 @@ ColumnLayout {
             property var player: modelData
 
             // Optimistic play/pause: flips instantly on click, reconciles with the
-            // real MPRIS state once the player confirms (spotify_player's Spotify
-            // Connect round trip can take ~1s)
+            // real MPRIS state once the player confirms
             property bool optimisticPlaying: player ? player.isPlaying : false
             onPlayerChanged: optimisticPlaying = player ? player.isPlaying : false
             Connections {
@@ -72,7 +74,7 @@ ColumnLayout {
                 anchors.fill: parent
                 spacing: 0
 
-                // ── Left: album art + rotating radial rays ──
+                // -- Left: album art + rotating radial rays --
                 Item {
                     id: artArea
                     Layout.preferredWidth: Math.round(mediaCard.width * 0.32)
@@ -147,7 +149,7 @@ ColumnLayout {
                     }
                 }
 
-                // ── Center: info + controls + progress ──
+                // -- Center: info + controls + progress --
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -273,7 +275,7 @@ ColumnLayout {
                     Item { Layout.fillHeight: true }
                 }
 
-                // ── Right: GIF ──
+                // -- Right: GIF --
                 Item {
                     Layout.preferredWidth: Math.round(mediaCard.width * 0.16)
                     Layout.fillHeight: true

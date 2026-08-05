@@ -3,16 +3,17 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
+// Performance tab: CPU/RAM/GPU donut gauges, per-core bars, and
+// network/disk/process stats
 ColumnLayout {
     id: root
     required property var dashboard
 
     spacing: 14
 
-    // ── Top: CPU / RAM / GPU donut gauges ──
+    // -- Top: CPU / RAM / GPU donut gauges --
     RowLayout {
         Layout.fillWidth: true
-        //Layout.preferredHeight: Math.round(root.height * 0.48)
         spacing: 14
 
         Repeater {
@@ -136,7 +137,7 @@ ColumnLayout {
         }
     }
 
-    // ── Bottom: per-core bars + network/disk/process info ──
+    // -- Bottom: per-core bars + network/disk/process info --
     RowLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true

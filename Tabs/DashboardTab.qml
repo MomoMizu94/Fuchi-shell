@@ -3,6 +3,8 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
+// Overview tab: greeting/system-info/quick-toggles row, music/hardware/weather
+// row, then notification history — just composes the Widgets/* cards
 ColumnLayout {
     id: root
     required property var dashboard
@@ -13,10 +15,9 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Config.gap.lg
 
-        // QuickToggles is the height reference for this row (matches original
-        // implicitHeight: quicktoggleContent.implicitHeight + 24 behavior) —
+        // QuickToggles is the height reference for this row.
         // Greeting/SystemInfo are forced to match it exactly, not just fillHeight,
-        // so their own content can never stretch the row taller than intended.
+        // so their own content can never stretch the row taller than intended
         GreetingCard { dashboard: root.dashboard; Layout.preferredHeight: quickToggles.implicitHeight }
         SystemInfoCard { dashboard: root.dashboard; Layout.preferredHeight: quickToggles.implicitHeight }
         QuickTogglesCard { id: quickToggles; dashboard: root.dashboard }
@@ -26,9 +27,8 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Config.gap.lg
 
-        // MusicMini is the height reference for this row (matches original
-        // implicitHeight: musicCard.implicitHeight / musicContent.implicitHeight + 32
-        // behavior) — Hardware/Weather are forced to match it exactly.
+        // MusicMini is the height reference for this row. 
+        // Hardware/Weather are forced to match it exactly
         MusicMiniCard { id: musicMini; dashboard: root.dashboard }
         HardwareCard { dashboard: root.dashboard; Layout.preferredHeight: musicMini.implicitHeight }
         WeatherCard { dashboard: root.dashboard; Layout.preferredHeight: musicMini.implicitHeight }

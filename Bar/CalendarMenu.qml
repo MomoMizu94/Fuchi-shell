@@ -22,7 +22,7 @@ PanelWindow {
             const now = new Date()
             calYear = now.getFullYear()
             calMonth = now.getMonth() + 1
-            selectedDate = isoToday()
+            selectedDate = Events.isoToday()
             eventInput.text = ""
             eventInput.forceActiveFocus()
         }
@@ -40,24 +40,10 @@ PanelWindow {
 
     property int calYear: new Date().getFullYear()
     property int calMonth: new Date().getMonth() + 1
-    property string selectedDate: isoToday()
-
-    readonly property var monthNames: [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ]
-    readonly property var dayNames: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
-    function isoToday() {
-        const n = new Date()
-        return n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0")
-            + "-" + String(n.getDate()).padStart(2, "0")
-    }
+    property string selectedDate: Events.isoToday()
 
     function selectedHeading() {
-        const p = selectedDate.split("-")
-        const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]))
-        return dayNames[d.getDay()] + " " + d.getDate() + " " + monthNames[d.getMonth()]
+        return Events.headingFor(selectedDate)
     }
 
     MouseArea {
@@ -143,7 +129,7 @@ PanelWindow {
                     }
                     Text {
                         Layout.fillWidth: true
-                        text: calMenu.monthNames[calMenu.calMonth - 1] + "  " + calMenu.calYear
+                        text: Events.monthNames[calMenu.calMonth - 1] + "  " + calMenu.calYear
                         color: Colors.textStrong
                         font.family: Config.bar.fontFamily
                         font.pixelSize: Config.type.md

@@ -3,32 +3,31 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
+// Calendar tab: full-size month grid + per-day events and a to-do
+// list. Compact-popup counterpart is Bar/CalendarMenu.qml — the two
+// share date logic via the Events singleton but are separate layouts
 ColumnLayout {
     id: root
     required property var dashboard
 
     spacing: 6
 
-    property string selectedDate: isoToday()
-
-    function isoToday() {
-        const n = new Date()
-        return n.getFullYear() + "-" + String(n.getMonth() + 1).padStart(2, "0")
-            + "-" + String(n.getDate()).padStart(2, "0")
-    }
+    property string selectedDate: Events.isoToday()
 
     function selectedHeading() {
-        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        const p = selectedDate.split("-")
-        const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]))
-        return dayNames[d.getDay()] + " " + d.getDate() + " " + dashboard.monthNames[d.getMonth()]
+        return Events.headingFor(root.selectedDate)
     }
 
-    // Fresh selection every time the dashboard opens
+    // Fresh view every time the dashboard opens: current month, today selected
     Connections {
         target: root.dashboard
         function onOpenChanged() {
-            if (root.dashboard.open) root.selectedDate = root.isoToday()
+            if (root.dashboard.open) {
+                const now = new Date()
+                root.dashboard.calYear = now.getFullYear()
+                root.dashboard.calMonth = now.getMonth() + 1
+                root.selectedDate = Events.isoToday()
+            }
         }
     }
 
@@ -51,7 +50,7 @@ ColumnLayout {
         }
         Text {
             Layout.fillWidth: true
-            text: dashboard.monthNames[dashboard.calMonth - 1] + "  " + dashboard.calYear
+            text: Events.monthNames[dashboard.calMonth - 1] + "  " + dashboard.calYear
             color: Colors.text
             font.family: Config.bar.fontFamily
             font.pixelSize: Config.bar.fontSize + 20
@@ -74,7 +73,7 @@ ColumnLayout {
         }
     }
 
-    // Shared month grid (also used compact by Bar/CalendarMenu.qml)
+    // Shared month grid
     CalendarGrid {
         Layout.fillWidth: true
         Layout.bottomMargin: 100
@@ -91,11 +90,12 @@ ColumnLayout {
         Layout.fillHeight: true
         spacing: 14
 
-        // ── Events for the selected day ──
+        // -- Events for the selected day --
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredWidth: 4   // 40/60 split with the to-do card
+            // 40/60 split with the to-do card
+            Layout.preferredWidth: 4
             radius: Config.radius.xl
             color: Colors.card
 
@@ -194,7 +194,7 @@ ColumnLayout {
 
                         Repeater {
                             // Rebuilt via Events.revision: eventsFor() results
-                            // carry no change notifications of their own.
+                            // carry no change notifications of their own
                             model: Events.revision >= 0 ? Events.eventsFor(root.selectedDate) : []
                             delegate: Rectangle {
                                 id: eventRow
@@ -257,11 +257,12 @@ ColumnLayout {
             }
         }
 
-        // ── To-do list ──
+        // -- To-do list --
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredWidth: 6   // 40/60 split with the events card
+            // 40/60 split with the events card
+            Layout.preferredWidth: 6
             radius: Config.radius.xl
             color: Colors.card
 
@@ -368,8 +369,7 @@ ColumnLayout {
                                 required property bool done
 
                                 Layout.fillWidth: true
-                                // Grows with wrapped task text; 38 = original
-                                // single-line row height.
+                                // Grows with wrapped task text
                                 Layout.preferredHeight: Math.max(38, taskRow.implicitHeight + 12)
                                 radius: Config.radius.lg
                                 color: done ? Qt.rgba(1,1,1,0.03) : Qt.rgba(1,1,1,0.07)

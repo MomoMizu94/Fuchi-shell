@@ -3,6 +3,9 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
+// Finance tab: a focused candlestick chart for one watched asset plus a
+// strip of line-chart cards for the rest. Watchlist/range/focus state and
+// the fetch itself live on Dashboard.qml; this file is display + input only!
 ColumnLayout {
     id: root
     required property var dashboard
@@ -14,7 +17,7 @@ ColumnLayout {
 
     // Change over the *displayed range*: Yahoo's chartPreviousClose is the
     // baseline at the start of the requested range, so this reads as "1Y change"
-    // on the 1Y preset and collapses to the familiar daily change on 1D.
+    // on the 1Y preset and collapses to the familiar daily change on 1D
     function pctChange(s) {
         if (!s || !s.ok || !s.prev) return 0
         return (s.price - s.prev) / s.prev * 100
@@ -22,19 +25,19 @@ ColumnLayout {
     function fmtPrice(v, cur) {
         const a = Math.abs(v)
         const n = a >= 1000 ? v.toFixed(2) : a >= 1 ? v.toFixed(2) : v.toFixed(4)
-        // Thousands separators for readability on things like BTC and indices.
+        // Thousands separators for readability on things like BTC and indices
         const parts = n.split(".")
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ")
         return parts.join(".")
     }
     // The arrow is not decoration: Colors.ok and Colors.error both come from
     // pywal and can land on near-identical hues, so direction must survive
-    // colour alone.
+    // colour alone
     function arrow(p) { return p > 0 ? "▲" : p < 0 ? "▼" : "─" }
     function changeColor(p) { return p > 0 ? Colors.ok : p < 0 ? Colors.error : Colors.subtext }
     function fmtPct(p) { return (p > 0 ? "+" : "") + p.toFixed(2) + "%" }
 
-    // ══ Focused asset ══
+    // -- Focused asset --
     Rectangle {
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -46,7 +49,7 @@ ColumnLayout {
             anchors.margins: Config.gap.lg
             spacing: Config.gap.md
 
-            // ── header ──
+            // -- Header --
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Config.gap.lg
@@ -75,7 +78,7 @@ ColumnLayout {
 
                 Item { Layout.fillWidth: true }
 
-                // price + change
+                // Price + change
                 ColumnLayout {
                     spacing: 0
                     visible: root.focusedSeries && root.focusedSeries.ok
@@ -116,7 +119,7 @@ ColumnLayout {
                 }
             }
 
-            // ── range presets ──
+            // -- Range presets --
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Config.gap.sm
@@ -174,7 +177,7 @@ ColumnLayout {
                 }
             }
 
-            // ── the chart ──
+            // -- The chart --
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -203,10 +206,10 @@ ColumnLayout {
         }
     }
 
-    // ══ Watchlist strip ══
+    // -- Watchlist strip --
     // fillHeight must be explicitly false: a layout nested inside another
     // layout defaults it to true, which lets the strip swallow the whole
-    // content area and collapse the focused chart above it.
+    // content area and collapse the focused chart above it
     RowLayout {
         Layout.fillWidth: true
         Layout.fillHeight: false
@@ -252,8 +255,7 @@ ColumnLayout {
                             Layout.fillWidth: true
                         }
 
-                        // Remove — hidden at one symbol, since the tab needs at
-                        // least one asset to show.
+                        // Remove — hidden at one symbol, since the tab needs at least one asset to show
                         Text {
                             visible: removeArea.containsMouse || cardHover.hovered
                             text: "󰅖"
@@ -332,7 +334,7 @@ ColumnLayout {
             }
         }
 
-        // ── add-symbol slot, only while there's room ──
+        // -- Add-symbol slot, only while there's room --
         Rectangle {
             visible: root.dashboard.financeSymbols.length < Config.finance.maxSymbols
             Layout.fillWidth: true

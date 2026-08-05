@@ -78,7 +78,7 @@ PanelWindow {
 
     // Seed watchlist comes from secrets.js - since what you track is personal.
     // Guarded with typeof so a secrets.js predating this setting
-    // degrades to the config fallback instead of taking the dashboard down.
+    // degrades to the config fallback instead of taking the dashboard down
     readonly property var financeSeedSymbols: {
         const s = (typeof Secrets.financeSymbols !== "undefined") ? Secrets.financeSymbols : null
         const list = (s && s.length > 0) ? s : Config.finance.fallbackSymbols
@@ -102,11 +102,6 @@ PanelWindow {
     readonly property bool bluetoothEnabled: Bluetooth.defaultAdapter !== null && Bluetooth.defaultAdapter.enabled
     property bool dndEnabled: false
     property bool nightEnabled: false
-
-    readonly property var monthNames: [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ]
 
     anchors { left: true; right: true; top: true; bottom: true }
     color: "transparent"
