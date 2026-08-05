@@ -9,7 +9,6 @@ import "config.js" as Config
 
 Scope {
     id: root
-
     // Open-state for every popup/menu — each flag is toggled via its
     // matching IpcHandler and drives the matching component further down
     property bool centerOpen: false

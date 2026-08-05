@@ -29,6 +29,8 @@ PanelWindow {
     property int calYear: new Date().getFullYear()
     property int calMonth: new Date().getMonth() + 1
 
+    // 0-100 percentages for the Overview tab's HardwareCard;
+    // (populated by perfProc below
     property real cpuValue: 0
     property real ramValue: 0
     property real diskValue: 0
@@ -48,12 +50,14 @@ PanelWindow {
     property real diskTotalGb: 0
     property int processCount: 0
 
-    // For clock
+    // Clock
     property string currentTime: Qt.formatTime(new Date(), "h:mm AP")
     property string currentDate: Qt.formatDate(new Date(), "dddd, d MMMM yyyy")
 
+    // GreetingCard
     property string userName: Quickshell.env("USER")
 
+    // WeatherCard
     property string weatherTemp: "--"
     property string weatherDesc: ""
     property string weatherLocation: ""
@@ -69,11 +73,11 @@ PanelWindow {
     property var radarFrames: []
     property int radarIdx: 0
 
-    // Finance tab. financeSymbols/RangeIdx/Focused are persisted (finance.json);
-    // financeSeries is the live fetch result and is deliberately not cached to
-    // disk — a stale price shown as current is worse than "Loading…".
-    // Seed watchlist comes from secrets.js (gitignored) — what you track is
-    // personal. Guarded with typeof so a secrets.js predating this setting
+    // Finance tab - financeSymbols/RangeIdx/Focused are persisted (finance.json);
+    // financeSeries is the live fetch result and is deliberately not cached to disk
+
+    // Seed watchlist comes from secrets.js - since what you track is personal.
+    // Guarded with typeof so a secrets.js predating this setting
     // degrades to the config fallback instead of taking the dashboard down.
     readonly property var financeSeedSymbols: {
         const s = (typeof Secrets.financeSymbols !== "undefined") ? Secrets.financeSymbols : null
@@ -87,11 +91,13 @@ PanelWindow {
     property bool financeLoading: false
     property string financeUpdated: ""
 
+    // SystemInfoCard
     property string sysOs: ""
     property string sysKernel: ""
     property string sysWm: Quickshell.env("XDG_CURRENT_DESKTOP")
     property string sysUptime: ""
 
+    // QuickTogglesCard
     readonly property bool wifiEnabled: Networking.wifiEnabled
     readonly property bool bluetoothEnabled: Bluetooth.defaultAdapter !== null && Bluetooth.defaultAdapter.enabled
     property bool dndEnabled: false
@@ -107,35 +113,11 @@ PanelWindow {
     exclusionMode: ExclusionMode.Normal
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-    // ── System stats processes ──
-    Process {
-        id: cpuProc
-        command: ["bash", "-c", "top -bn1 | grep '^%Cpu' | awk '{printf \"%d\", $2+$4}'"]
-        stdout: StdioCollector { id: cpuOut }
-        onExited: { var v = parseFloat(cpuOut.text.trim()); if (!isNaN(v)) dashboard.cpuValue = v }
-    }
-
-    Process {
-        id: ramProc
-        command: ["bash", "-c", "free -m | awk 'NR==2{printf \"%d\", $3*100/$2}'"]
-        stdout: StdioCollector { id: ramOut }
-        onExited: { var v = parseFloat(ramOut.text.trim()); if (!isNaN(v)) dashboard.ramValue = v }
-    }
-
-    Process {
-        id: diskProc
-        command: ["bash", "-c", "df / | awk 'NR==2{print $5}' | tr -d '%'"]
-        stdout: StdioCollector { id: diskOut }
-        onExited: { var v = parseFloat(diskOut.text.trim()); if (!isNaN(v)) dashboard.diskValue = v }
-    }
-
-    Process {
-        id: gpuProc
-        command: ["bash", "-c", "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits"]
-        stdout: StdioCollector { id: gpuOut }
-        onExited: { var v = parseFloat(gpuOut.text.trim()); if (!isNaN(v)) dashboard.gpuValue = v }
-    }
-
+    // -- System stats --
+    // Single source of truth for CPU/RAM/disk/GPU: perf.sh feeds both the
+    // Overview tab's mini-chart (see the hardwareRefresh Timer below) and the
+    // Performance tab (see the Config.timer.interval Timer below), each at
+    // its own cadence, gated on whichever tab is actually visible
     Process {
         id: perfProc
         command: ["bash", Quickshell.env("HOME") + "/.config/quickshell/scripts/perf.sh"]
@@ -155,6 +137,7 @@ PanelWindow {
                 dashboard.ramTotalGb = d.ramT
                 dashboard.netUpMbs = d.up
                 dashboard.netDownMbs = d.down
+                dashboard.diskValue = d.diskT > 0 ? 100 * d.diskU / d.diskT : 0
                 dashboard.diskUsedGb = d.diskU
                 dashboard.diskTotalGb = d.diskT
                 dashboard.processCount = d.procs
@@ -180,7 +163,7 @@ PanelWindow {
         }
     }
 
-    // ── System info ──
+    // -- System info (for SystemInfoCard) --
     Process {
         id: osProc
         command: ["bash", "-c", "grep PRETTY_NAME /etc/os-release | cut -d'\"' -f2"]
@@ -205,6 +188,7 @@ PanelWindow {
         stdout: StdioCollector { id: nightCheckOut }
         onExited: dashboard.nightEnabled = nightCheckOut.text.trim() === "yes"
     }
+    // Scratch process for toggleNight below; command is reassigned before use
     Process { id: actionProc; command: ["echo"] }
 
     Component.onCompleted: {
@@ -216,7 +200,7 @@ PanelWindow {
             locProc.running = true
     }
 
-    // ── Weather ──
+    // -- Weather --
     // Resolve location by IP unless secrets.js pins a fixed lat/lon
     Process {
         id: locProc
@@ -235,13 +219,18 @@ PanelWindow {
 
     Process {
         id: weatherProc
+        // Key goes through $OWM_API_KEY (env) rather than being interpolated
+        // straight into the command string — an argv-embedded key sits in
+        // plain sight in `ps`/`/proc/<pid>/cmdline` for as long as curl runs.
+        environment: ({ OWM_API_KEY: Secrets.owmApiKey })
         command: ["bash", "-c",
             "echo \"{\\\"cur\\\":$(curl -sf 'https://api.openweathermap.org/data/2.5/weather?lat="
             + dashboard.weatherLat + "&lon=" + dashboard.weatherLon
-            + "&units=metric&appid=" + Secrets.owmApiKey
-            + "'),\\\"fc\\\":$(curl -sf 'https://api.openweathermap.org/data/2.5/forecast?lat="
+            + "&units=metric&appid='\"$OWM_API_KEY\""
+            + "),\\\"fc\\\":$(curl -sf 'https://api.openweathermap.org/data/2.5/forecast?lat="
             + dashboard.weatherLat + "&lon=" + dashboard.weatherLon
-            + "&units=metric&appid=" + Secrets.owmApiKey + "')}\""]
+            + "&units=metric&appid='\"$OWM_API_KEY\""
+            + ")}\""]
         stdout: StdioCollector { id: weatherOut }
         onExited: {
             try {
@@ -323,18 +312,11 @@ PanelWindow {
         running: dashboard.visible && dashboard.activeTab === 0
         repeat: true
         triggeredOnStart: true
-        onTriggered: {
-            if (!cpuProc.running)  cpuProc.running  = true
-            if (!ramProc.running)  ramProc.running  = true
-            if (!diskProc.running) diskProc.running = true
-            if (!gpuProc.running)  gpuProc.running  = true
-        }
+        onTriggered: if (!perfProc.running) perfProc.running = true
     }
 
-    // ── Finance ──
-    // Symbols are passed as separate argv entries, never concatenated into a
-    // shell string: they come from a text field the user types into, and the
-    // `bash -c "curl '...'"` shape used for weather above would be injectable.
+    // -- Finance (for FinanceTab) --
+    // Symbols are passed as separate argv entries, never concatenated into a shell string
     Process {
         id: financeProc
         command: ["bash", Quickshell.env("HOME") + "/.config/quickshell/scripts/fetch-quotes.sh",
@@ -389,7 +371,7 @@ PanelWindow {
     }
 
     // JsonAdapter `var` properties only signal on reassignment, so the whole
-    // array is always replaced rather than mutated in place.
+    // array is always replaced rather than mutated in place
     function saveFinance() {
         financeData.symbols = dashboard.financeSymbols
         financeData.rangeIdx = dashboard.financeRangeIdx
@@ -400,7 +382,8 @@ PanelWindow {
     function setFinanceRange(idx) {
         if (idx === dashboard.financeRangeIdx) return
         dashboard.financeRangeIdx = idx
-        dashboard.financeSeries = []   // drop stale candles so the chart can't mix ranges
+        // drop stale candles so the chart can't mix ranges
+        dashboard.financeSeries = []   
         saveFinance()
         refreshFinance()
     }
@@ -424,7 +407,8 @@ PanelWindow {
     }
 
     function removeFinanceSymbol(idx) {
-        if (dashboard.financeSymbols.length <= 1) return   // never leave the tab empty
+        // never leave the tab empty
+        if (dashboard.financeSymbols.length <= 1) return
         const arr = dashboard.financeSymbols.slice()
         arr.splice(idx, 1)
         dashboard.financeSymbols = arr
@@ -434,13 +418,14 @@ PanelWindow {
         refreshFinance()
     }
 
-    // Series for a symbol, or null while loading / if that ticker failed.
+    // Series for a symbol, or null while loading / if that ticker failed
     function financeSeriesFor(sym) {
         for (const s of dashboard.financeSeries)
             if (s.sym === sym) return s
         return null
     }
 
+    // Backing list for CalendarTab's to-do widget
     ListModel { id: todoListModel }
     property alias todoList: todoListModel
 
@@ -529,11 +514,13 @@ PanelWindow {
         return ""
     }
 
+    // Click-outside-to-close, catching clicks anywhere outside the panel below
     MouseArea {
         anchors.fill: parent
         onClicked: dashboard.closeRequested()
     }
 
+    // The dashboard panel itself — slides down from the top edge when open
     Item {
         id: hero
         anchors.horizontalCenter: parent.horizontalCenter
@@ -555,7 +542,7 @@ PanelWindow {
         }
 
         // Concave fillets melting the panel's top corners into the frame's
-        // inner edge (thin px below the screen edge the panel is flush with).
+        // inner edge (thin px below the screen edge the panel is flush with)
         CornerFillet {
             anchors.right: parent.left
             anchors.top: parent.top
@@ -576,131 +563,129 @@ PanelWindow {
             bottomLeftRadius: Config.radius.hero
             bottomRightRadius: Config.radius.hero
             color: Colors.surface
-        //border.width: 8
-        //border.color: Colors.border
-        clip: true
+            clip: true
 
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: Config.gap.xl
-            spacing: 8
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Config.gap.xl
+                spacing: 8
 
-            // ══ Tab bar ══
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
+                // -- Tab bar --
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
 
-                Repeater {
-                    model: [
-                        { icon: "󰕮", label: "Dashboard"     },
-                        { icon: "󰃭", label: "Calendar"      },
-                        { icon: "󰄪", label: "Finance"       },
-                        { icon: "󰓅", label: "Performance"   }
-                    ]
-                    delegate: Item {
-                        required property var modelData
-                        required property int index
-                        Layout.fillWidth: true
-                        height: 50
+                    Repeater {
+                        model: [
+                            { icon: "󰕮", label: "Dashboard"     },
+                            { icon: "󰃭", label: "Calendar"      },
+                            { icon: "󰄪", label: "Finance"       },
+                            { icon: "󰓅", label: "Performance"   }
+                        ]
+                        delegate: Item {
+                            required property var modelData
+                            required property int index
+                            Layout.fillWidth: true
+                            height: 50
 
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: Config.radius.md
-                            color: dashboard.activeTab === index
-                                ? Qt.rgba(0.29, 0.33, 0.42, 0.12)
-                                : "transparent"
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: Config.radius.md
+                                color: dashboard.activeTab === index
+                                    ? Qt.rgba(0.29, 0.33, 0.42, 0.12)
+                                    : "transparent"
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.icon
+                                color: dashboard.activeTab === index
+                                    ? Colors.textStrong : Colors.border
+                                font.family: Config.bar.fontFamily
+                                font.pixelSize: Config.type.display
+                            }
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width * 0.5
+                                height: 4
+                                radius: Config.radius.sm
+                                color: Colors.subtext
+                                visible: dashboard.activeTab === index
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: dashboard.activeTab = index
+                            }
                         }
+                    }
+                }
 
-                        Text {
-                            anchors.centerIn: parent
-                            Layout.alignment: Qt.AlignHCenter
-                            text: modelData.icon
-                            color: dashboard.activeTab === index
-                                ? Colors.textStrong : Colors.border
-                            font.family: Config.bar.fontFamily
-                            font.pixelSize: Config.type.display
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 4
+                    color: Colors.border
+                    opacity: 0.75
+                }
+
+                // -- Content area --
+                Item {
+                    id: contentArea
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+
+                    // Any of these dashboard tabs can be replaced with MediaTab if you prefer
+                    // Necessary MPRIS functionality already lives on Dashboard.qml due to MusicMiniCard.qml
+
+                    DashboardTab {
+                        y: 0
+                        width: contentArea.width
+                        height: contentArea.height
+                        x: (0 - dashboard.activeTab) * contentArea.width
+                        dashboard: dashboard
+                        Behavior on x {
+                            NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
                         }
+                    }
 
-                        Rectangle {
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: parent.width * 0.5
-                            height: 4
-                            radius: Config.radius.sm
-                            color: Colors.subtext
-                            visible: dashboard.activeTab === index
+                    CalendarTab {
+                        y: 0
+                        width: contentArea.width
+                        height: contentArea.height
+                        x: (1 - dashboard.activeTab) * contentArea.width
+                        dashboard: dashboard
+                        Behavior on x {
+                            NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
                         }
+                    }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: dashboard.activeTab = index
+                    FinanceTab {
+                        y: 0
+                        width: contentArea.width
+                        height: contentArea.height
+                        x: (2 - dashboard.activeTab) * contentArea.width
+                        dashboard: dashboard
+                        Behavior on x {
+                            NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
+                        }
+                    }
+
+                    PerformanceTab {
+                        y: 0
+                        width: contentArea.width
+                        height: contentArea.height
+                        x: (3 - dashboard.activeTab) * contentArea.width
+                        dashboard: dashboard
+                        Behavior on x {
+                            NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
                         }
                     }
                 }
             }
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 4
-                color: Colors.border
-                opacity: 0.75
-            }
-
-            // ══ Content area ══
-            Item {
-                id: contentArea
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-
-                DashboardTab {
-                    y: 0
-                    width: contentArea.width
-                    height: contentArea.height
-                    x: (0 - dashboard.activeTab) * contentArea.width
-                    dashboard: dashboard
-                    Behavior on x {
-                        NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
-                    }
-                }
-
-                CalendarTab {
-                    y: 0
-                    width: contentArea.width
-                    height: contentArea.height
-                    x: (1 - dashboard.activeTab) * contentArea.width
-                    dashboard: dashboard
-                    Behavior on x {
-                        NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
-                    }
-                }
-
-                // MediaTab.qml is still on disk and registered in qmldir — swap
-                // it back in here to re-enable the full-size player. MPRIS
-                // control lives on the Dashboard tab via MusicMiniCard either way.
-                FinanceTab {
-                    y: 0
-                    width: contentArea.width
-                    height: contentArea.height
-                    x: (2 - dashboard.activeTab) * contentArea.width
-                    dashboard: dashboard
-                    Behavior on x {
-                        NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
-                    }
-                }
-
-                PerformanceTab {
-                    y: 0
-                    width: contentArea.width
-                    height: contentArea.height
-                    x: (3 - dashboard.activeTab) * contentArea.width
-                    dashboard: dashboard
-                    Behavior on x {
-                        NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
-                    }
-                }
-            }
-        }
         }
     }
 }

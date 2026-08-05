@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Consolidated performance snapshot for the dashboard's Performance tab.
+# Consolidated performance snapshot, polled by the Performance tab and by
+# the Overview tab's hardware mini-chart (see Dashboard.qml).
 # Samples /proc/stat and /proc/net/dev 0.5s apart, emits one JSON line.
 
 s1=$(grep '^cpu' /proc/stat)
