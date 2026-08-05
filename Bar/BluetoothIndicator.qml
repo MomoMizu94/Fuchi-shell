@@ -6,6 +6,8 @@ import Quickshell.Io
 import "../"
 import "../config.js" as Config
 
+// Sidebar Bluetooth icon, accented when the default adapter is powered on.
+// Clicking it opens BluetoothMenu via IPC (see openMenuProc below)
 Item {
     id: root
     Layout.alignment: Qt.AlignHCenter
@@ -33,7 +35,7 @@ Item {
             // mapFromItem registers no dependencies, so a binding would stay
             // frozen at its first result forever. Bar's window sits flush at
             // the output's top-left, so window-local == output-local for the
-            // (separate-window) BluetoothMenu.
+            // (separate-window) BluetoothMenu
             const pos = root.QsWindow.contentItem.mapFromItem(root, 0, 0)
             openMenuProc.command = ["qs", "ipc", "call", "bluetoothmenu", "toggle",
                 String(Math.round(pos.y + root.height / 2))]

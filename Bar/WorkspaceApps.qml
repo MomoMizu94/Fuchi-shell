@@ -5,10 +5,8 @@ import Quickshell.Widgets
 import "../"
 import "../config.js" as Config
 
-// Lists every app open on the currently active workspace (not just the
-// focused one), with the truly-focused window highlighted. Plain Column
-// (not ColumnLayout) — its docs guarantee invisible children are excluded
-// from positioning, which is what skips windows on other workspaces.
+// Lists every app open on the currently active workspace,
+// with the focused window highlighted
 Column {
     id: root
     spacing: Config.gap.sm
@@ -38,14 +36,20 @@ Column {
 
         delegate: Item {
             required property var modelData
+            // Native Wayland windows expose appId directly; XWayland/X11
+            // windows don't -> fallback to class name
             readonly property string appId: (modelData.wayland ? modelData.wayland.appId
                 : (modelData.lastIpcObject ? modelData.lastIpcObject.class : "")) || ""
+            // entriesGeneration read here is what forces a re-lookup once the
+            // async .desktop scan has data
             readonly property var entry: (appId && root.entriesGeneration >= 0) ? DesktopEntries.heuristicLookup(appId) : null
 
+            // Only show windows on the currently workspace
             visible: modelData.workspace && modelData.workspace.active
             width: Config.sidebar.workspaceAppIconSize + Config.gap.sm
             height: width
 
+            // Tinted background for the focused window
             Rectangle {
                 anchors.fill: parent
                 radius: Config.radius.md
@@ -56,6 +60,8 @@ Column {
                 anchors.centerIn: parent
                 width: Config.sidebar.workspaceAppIconSize
                 height: Config.sidebar.workspaceAppIconSize
+                // Desktop-entry icon when the lookup succeeded, otherwise a
+                // best-effort guess straight from the raw appId
                 source: entry ? Quickshell.iconPath(entry.icon, true)
                     : (appId ? Quickshell.iconPath(appId, true) : "")
             }

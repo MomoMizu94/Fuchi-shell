@@ -7,6 +7,9 @@ import Quickshell.Wayland
 import "../"
 import "../config.js" as Config
 
+// Network panel opened from NetworkIndicator: Wi-Fi toggle, current
+// connection details, live up/down speed, and the scan/connect/forget flow
+// for nearby Wi-Fi networks
 PanelWindow {
     id: netMenu
     signal closeRequested()
@@ -22,7 +25,7 @@ PanelWindow {
             pskTarget = null
             probeProc.running = true
         } else {
-            // Don't leave the radio scanning after the menu goes away.
+            // Don't leave the radio scanning after the menu goes away
             if (wifiDev) wifiDev.scannerEnabled = false
         }
     }
@@ -60,8 +63,8 @@ PanelWindow {
     property string errorText: ""
     property var pskTarget: null   // WifiNetwork awaiting a password
 
-    // Frequency (module doesn't expose it) + IPv4, fetched when the menu
-    // opens and when the active connection changes.
+    // Frequency + IPv4, fetched when the menu
+    // opens and when the active connection changes
     property string freq: ""
     property string ipAddr: ""
     Process {
@@ -82,8 +85,7 @@ PanelWindow {
     onWiredUpChanged: if (open) probeProc.running = true
     onActiveWifiNetworkChanged: if (open) probeProc.running = true
 
-    // Live up/down speeds — polled only while the menu is open (this used to
-    // run forever on the bar).
+    // Live up/down speeds — polled only while the menu is open
     property real up: 0
     property real down: 0
     Process {
@@ -130,21 +132,20 @@ PanelWindow {
     Item {
         id: panel
         width: Config.networkMenu.width
-        // Height and vertical position snap instantly (no Behaviors): they
-        // must both be settled before the slide-in starts — animating them
-        // makes the panel drift after spawning (see TrayMenu).
+        // Height and vertical position snap instantly: they
+        // must both be settled before the slide-in starts
         height: column.implicitHeight + Config.networkMenu.padding * 2
 
         anchors.left: parent.left
         anchors.top: parent.top
         // Center on the indicator's y, clamped so the panel — plus its corner
-        // fillets — never runs off the top/bottom of the frame.
+        // fillets — never runs off the top/bottom of the frame
         anchors.topMargin: Math.max(
             Config.frame.thin + Config.radius.fillet,
             Math.min(netMenu.targetY - height / 2, parent.height - height - Config.frame.thin - Config.radius.fillet)
         )
         // Open: docked flush against the sidebar's inner edge; closed: fully
-        // off-screen left.
+        // off-screen left
         anchors.leftMargin: netMenu.open ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
@@ -156,8 +157,7 @@ PanelWindow {
 
         MouseArea { anchors.fill: parent }
 
-        // Concave fillets melting the panel's left corners into the sidebar's
-        // inner edge (which the panel docks flush against).
+        // Concave fillets melting the panel's left corners into the sidebar
         CornerFillet {
             anchors.left: parent.left
             anchors.bottom: parent.top
@@ -184,7 +184,7 @@ PanelWindow {
                 anchors.margins: Config.networkMenu.padding
                 spacing: Config.networkMenu.gap
 
-                // ── Header: title + wifi toggle ──
+                // -- Header: title + wifi toggle --
                 Item {
                     Layout.fillWidth: true
                     implicitHeight: Config.networkMenu.rowHeight
@@ -257,7 +257,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Current connection ──
+                // -- Current connection --
                 ColumnLayout {
                     visible: netMenu.wiredUp || netMenu.wifiUp
                     Layout.fillWidth: true
@@ -308,7 +308,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Live speeds ──
+                // -- Live speeds --
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.leftMargin: Config.gap.sm
@@ -330,7 +330,7 @@ PanelWindow {
                     Item { Layout.fillWidth: true }
                 }
 
-                // ── Wired device (LAN half of LAN↔WLAN switching) ──
+                // -- Wired device (LAN half of LAN↔WLAN switching) --
                 Item {
                     visible: netMenu.wiredDev !== null
                     Layout.fillWidth: true
@@ -384,7 +384,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Wi-Fi scan toggle ──
+                // -- Wi-Fi scan toggle --
                 Item {
                     visible: netMenu.wifiDev !== null && Networking.wifiEnabled
                     Layout.fillWidth: true
@@ -426,7 +426,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Wi-Fi networks ──
+                // -- Wi-Fi networks --
                 Repeater {
                     model: netMenu.wifiDev && Networking.wifiEnabled
                         ? [...netMenu.wifiDev.networks.values].sort((a, b) => b.signalStrength - a.signalStrength)
@@ -488,7 +488,7 @@ PanelWindow {
                                     font.pixelSize: Config.type.sm
                                 }
 
-                                // Forget, revealed on hover for known networks
+                                // Forget network, revealed on hover for known networks
                                 Text {
                                     visible: rowHover.hovered && netRow.modelData.known
                                     text: "󰅖"
@@ -530,7 +530,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Password prompt for a secured, unknown network ──
+                // -- Password prompt for a secured, unknown network --
                 ColumnLayout {
                     visible: netMenu.pskTarget !== null
                     Layout.fillWidth: true

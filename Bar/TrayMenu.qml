@@ -7,6 +7,8 @@ import Quickshell.Services.SystemTray
 import "../"
 import "../config.js" as Config
 
+// Floating context menu for a right-clicked tray icon (Bar/Tray.qml), sliding
+// out from the sidebar next to the icon that was clicked
 PanelWindow {
     id: trayMenu
     signal closeRequested()
@@ -20,18 +22,15 @@ PanelWindow {
 
     anchors { left: true; right: true; top: true; bottom: true }
     color: "transparent"
-    // Ignore (not Normal): with Normal this full-screen surface gets inset by
-    // FrameReserve's exclusive zones, shifting our coordinate origin off the
-    // output's corner — the panel would land frame.thick too far right and the
-    // icon-y handed over from Bar (whose window ignores zones, so it spans the
-    // real output) would be misaligned by the top frame strip as well.
+    // Ignore (not Normal) keeps this window's coordinates lined up with Bar's:
+    // both windows then span the full screen, so the icon y-position Bar
+    // hands over lands in the right spot here too
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-    // Tray icons live in the (separate-window) left sidebar, so the item
-    // clicked is handed over as a stable id via IPC rather than a direct
-    // object reference — looked back up here against the same global
-    // SystemTray.items model Bar/Tray.qml renders from.
+    // Bar/Tray.qml lives in a different window, so it can't hand this menu
+    // the clicked item directly — just its id, over IPC. Look the actual
+    // item back up here, in the same global list Bar/Tray.qml uses
     readonly property var activeItem: {
         for (const it of SystemTray.items.values)
             if (it.id === trayMenu.itemId) return it
@@ -43,11 +42,9 @@ PanelWindow {
         menu: trayMenu.activeItem ? trayMenu.activeItem.menu : null
     }
 
-    // Menu entries arrive asynchronously (DBus layout fetch kicked off when
-    // `menu` binds above), so an open request usually lands before the data.
-    // The slide-in is gated on this: sliding out immediately would show a
-    // near-empty panel that then grows and re-centers itself against the icon
-    // a beat later — a visible drift into place.
+    // The menu's entries load in the background and usually aren't ready the
+    // instant this opens. Wait for them before sliding in, otherwise the
+    // panel appears near-empty and visibly grows once the entries arrive.
     readonly property bool ready: opener.children.values.length > 0
 
     MouseArea {
@@ -58,9 +55,8 @@ PanelWindow {
     Item {
         id: panel
         width: Config.trayMenu.width
-        // Height and vertical position snap instantly (no Behaviors): they
-        // must both be settled before the slide-in starts, and animating them
-        // was exactly what made the panel drift after spawning.
+        // Height snaps instantly, not animated — animating it is what
+        // caused the growing/drifting panel described above.
         height: column.implicitHeight + Config.trayMenu.padding * 2
 
         anchors.left: parent.left
@@ -84,8 +80,8 @@ PanelWindow {
 
         MouseArea { anchors.fill: parent }
 
-        // Concave fillets melting the panel's left corners into the sidebar's
-        // inner edge (which the panel docks flush against).
+        // Curves the panel's left corners inward so they blend into the
+        // sidebar's edge
         CornerFillet {
             anchors.left: parent.left
             anchors.bottom: parent.top

@@ -7,6 +7,8 @@ import Quickshell.Widgets
 import "../"
 import "../config.js" as Config
 
+// System tray icons in the sidebar. Left/middle click activate the item
+// directly; right click opens TrayMenu via IPC (see openMenuProc below)
 ColumnLayout {
     Layout.alignment: Qt.AlignHCenter
     spacing: Config.gap.sm

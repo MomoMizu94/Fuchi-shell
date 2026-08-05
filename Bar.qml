@@ -4,13 +4,10 @@ import QtQuick
 import QtQuick.Layouts
 import "config.js" as Config
 
-// The actual status bar content, living in the left strip that FrameReserve
-// reserves and FrameShape paints. Its own window/own concern, same split as
-// FrameReserve (space) vs FrameShape (frame drawing).
+// Status bar content, living in the left strip that
+// FrameReserve reserves and FrameShape paints
 PanelWindow {
     color: "transparent"
-    // FrameReserve already owns the exclusive zone for this strip — reserving
-    // again here would double the gap. Same reasoning as FrameShape.
     exclusionMode: ExclusionMode.Ignore
 
     anchors {
@@ -21,6 +18,7 @@ PanelWindow {
 
     implicitWidth: Config.frame.thick
 
+    // Workspace icons
     ColumnLayout {
         anchors.top: parent.top
         anchors.left: parent.left
@@ -31,11 +29,13 @@ PanelWindow {
         Workspaces {}
     }
 
+    // Apps launched in current workspace
     WorkspaceApps {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
     }
 
+    // Rest of the bar: tray, clock, bluetooth etc.
     ColumnLayout {
         anchors.bottom: parent.bottom
         anchors.left: parent.left

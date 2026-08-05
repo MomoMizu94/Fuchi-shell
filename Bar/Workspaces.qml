@@ -9,8 +9,7 @@ ColumnLayout {
     Layout.alignment: Qt.AlignHCenter
     spacing: Config.gap.sm
 
-    // Same per-workspace glyphs as hyprland/workspaces.format-icons in
-    // ~/.config/waybar/config.jsonc. Falls back to the plain number for any
+    // Per-workspace icons; falls back to the plain number for any
     // workspace outside this map.
     readonly property var icons: ({
         1: "󰣇",
@@ -45,12 +44,14 @@ ColumnLayout {
                 font.pixelSize: Config.sidebar.iconSize
             }
 
+            // Click functionality to switch workspaces
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onEntered: chip.hovered = true
                 onExited: chip.hovered = false
+                // Lua config style
                 onClicked: Hyprland.dispatch("hl.dsp.focus({workspace = " + chip.modelData.id + "})")
             }
         }

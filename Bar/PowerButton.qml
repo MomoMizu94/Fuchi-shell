@@ -5,6 +5,7 @@ import Quickshell.Io
 import "../"
 import "../config.js" as Config
 
+// Sidebar power button. Opens PowerMenu via IPC
 Item {
     Layout.alignment: Qt.AlignHCenter
     Layout.preferredWidth: Config.sidebar.iconSize + Config.gap.md

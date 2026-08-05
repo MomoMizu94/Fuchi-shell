@@ -5,6 +5,8 @@ import Quickshell.Wayland
 import "../"
 import "../config.js" as Config
 
+// Calendar panel opened from Clock: month grid navigation, day selection,
+// and simple text-based events (backed by the Events singleton)
 PanelWindow {
     id: calMenu
     signal closeRequested()
@@ -16,7 +18,7 @@ PanelWindow {
     onOpenChanged: {
         closing = !open
         if (open) {
-            // Fresh view every time: current month, today selected.
+            // Fresh view every time: current month, today selected
             const now = new Date()
             calYear = now.getFullYear()
             calMonth = now.getMonth() + 1
@@ -32,7 +34,7 @@ PanelWindow {
     // FrameReserve's exclusive zones, shifting our coordinate origin off the
     // output's corner — the panel would land frame.thick too far right and the
     // icon-y handed over from Bar (whose window ignores zones, so it spans the
-    // real output) would be misaligned by the top frame strip as well.
+    // real output) would be misaligned by the top frame strip as well
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
@@ -66,21 +68,19 @@ PanelWindow {
     Item {
         id: panel
         width: Config.calendarMenu.width
-        // Height and vertical position snap instantly (no Behaviors): they
-        // must both be settled before the slide-in starts — animating them
-        // makes the panel drift after spawning (see TrayMenu).
+        // Height and vertical position snap instantly
         height: column.implicitHeight + Config.calendarMenu.padding * 2
 
         anchors.left: parent.left
         anchors.top: parent.top
         // Center on the clock's y, clamped so the panel — plus its corner
-        // fillets — never runs off the top/bottom of the frame.
+        // fillets — never runs off the top/bottom of the frame
         anchors.topMargin: Math.max(
             Config.frame.thin + Config.radius.fillet,
             Math.min(calMenu.targetY - height / 2, parent.height - height - Config.frame.thin - Config.radius.fillet)
         )
         // Open: docked flush against the sidebar's inner edge; closed: fully
-        // off-screen left.
+        // off-screen left
         anchors.leftMargin: calMenu.open ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
@@ -92,8 +92,7 @@ PanelWindow {
 
         MouseArea { anchors.fill: parent }
 
-        // Concave fillets melting the panel's left corners into the sidebar's
-        // inner edge (which the panel docks flush against).
+        // Concave fillets melting the panel's left corners into the sidebar
         CornerFillet {
             anchors.left: parent.left
             anchors.bottom: parent.top
@@ -120,7 +119,7 @@ PanelWindow {
                 anchors.margins: Config.calendarMenu.padding
                 spacing: Config.calendarMenu.gap
 
-                // ── Month navigation ──
+                // -- Month navigation --
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.leftMargin: Config.gap.sm
@@ -169,7 +168,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Compact month grid ──
+                // -- Compact month grid --
                 CalendarGrid {
                     Layout.fillWidth: true
                     Layout.leftMargin: Config.gap.sm
@@ -200,7 +199,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Selected day: heading + events ──
+                // -- Selected day: heading + events --
                 Text {
                     Layout.fillWidth: true
                     Layout.leftMargin: Config.gap.sm
@@ -214,7 +213,7 @@ PanelWindow {
 
                 Repeater {
                     // Rebuilt via Events.revision: eventsFor() results carry
-                    // no change notifications of their own.
+                    // no change notifications of their own
                     model: Events.revision >= 0 ? Events.eventsFor(calMenu.selectedDate) : []
 
                     delegate: Item {
@@ -285,7 +284,7 @@ PanelWindow {
                     font.pixelSize: Config.type.sm
                 }
 
-                // ── Add event ──
+                // -- Add event --
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.topMargin: Config.gap.xs

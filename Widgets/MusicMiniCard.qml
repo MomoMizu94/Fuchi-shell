@@ -202,9 +202,10 @@ Rectangle {
         // ── GIF visualizer ──
         AnimatedImage {
             Layout.alignment: Qt.AlignHCenter
-            source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/assets/bongocat.gif"
+            source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/assets/record.gif"
             playing: musicCard.player && musicCard.optimisticPlaying
-            width: 80; height: 32
+            Layout.preferredWidth: 160
+            Layout.preferredHeight: 160
             fillMode: Image.PreserveAspectFit
         }
     }

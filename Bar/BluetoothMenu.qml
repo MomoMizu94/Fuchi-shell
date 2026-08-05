@@ -7,6 +7,8 @@ import Quickshell.Widgets
 import "../"
 import "../config.js" as Config
 
+// Bluetooth panel opened from BluetoothIndicator: adapter power toggle,
+// paired-device list, and scan-to-pair for new devices
 PanelWindow {
     id: btMenu
     signal closeRequested()
@@ -17,7 +19,7 @@ PanelWindow {
     visible: open || closing
     onOpenChanged: {
         closing = !open
-        // Don't leave the radio scanning after the menu goes away.
+        // Don't leave the radio scanning after the menu goes away
         if (!open && adapter) adapter.discovering = false
     }
 
@@ -42,21 +44,19 @@ PanelWindow {
     Item {
         id: panel
         width: Config.bluetoothMenu.width
-        // Height and vertical position snap instantly (no Behaviors): they
-        // must both be settled before the slide-in starts — animating them
-        // makes the panel drift after spawning (see TrayMenu).
+        // Height and vertical position snap instantly
         height: column.implicitHeight + Config.bluetoothMenu.padding * 2
 
         anchors.left: parent.left
         anchors.top: parent.top
         // Center on the bar icon's y, clamped so the panel — plus its corner
-        // fillets — never runs off the top/bottom of the frame.
+        // fillets — never runs off the top/bottom of the frame
         anchors.topMargin: Math.max(
             Config.frame.thin + Config.radius.fillet,
             Math.min(btMenu.targetY - height / 2, parent.height - height - Config.frame.thin - Config.radius.fillet)
         )
         // Open: docked flush against the sidebar's inner edge (the left frame
-        // strip the indicator lives in); closed: fully off-screen left.
+        // strip the indicator lives in); closed: fully off-screen left
         anchors.leftMargin: btMenu.open && btMenu.ready ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
@@ -68,8 +68,7 @@ PanelWindow {
 
         MouseArea { anchors.fill: parent }
 
-        // Concave fillets melting the panel's left corners into the sidebar's
-        // inner edge (which the panel docks flush against).
+        // Concave fillets melting the panel's left corners into the sidebar
         CornerFillet {
             anchors.left: parent.left
             anchors.bottom: parent.top
@@ -96,7 +95,7 @@ PanelWindow {
                 anchors.margins: Config.bluetoothMenu.padding
                 spacing: Config.bluetoothMenu.gap
 
-                // ── Header: title + power toggle ──
+                // -- Header: title + power toggle --
                 Item {
                     Layout.fillWidth: true
                     implicitHeight: Config.bluetoothMenu.rowHeight
@@ -123,7 +122,7 @@ PanelWindow {
                             font.bold: true
                         }
 
-                        // Pill toggle for adapter power
+                        // Pill toggle for bluetooth on/off
                         Rectangle {
                             id: powerToggle
                             readonly property bool on: btMenu.adapter && btMenu.adapter.enabled
@@ -165,7 +164,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Bluetooth off hint ──
+                // -- Bluetooth off hint --
                 Item {
                     visible: !(btMenu.adapter && btMenu.adapter.enabled)
                     Layout.fillWidth: true
@@ -180,13 +179,13 @@ PanelWindow {
                     }
                 }
 
-                // ── Paired devices ──
+                // -- Paired devices --
                 Repeater {
                     model: Bluetooth.devices
 
                     // Per-delegate visibility (not a values.filter binding):
                     // the filter wouldn't re-run when one device's `paired`
-                    // flips, since only insert/remove notifies valuesChanged.
+                    // flips, since only insert/remove notifies valuesChanged
                     delegate: Item {
                         id: pairedRow
                         required property var modelData
@@ -271,7 +270,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Pair new device (scan toggle) ──
+                // -- Pair new device (scan toggle) --
                 Item {
                     visible: btMenu.adapter && btMenu.adapter.enabled
                     Layout.fillWidth: true
@@ -313,7 +312,7 @@ PanelWindow {
                     }
                 }
 
-                // ── Discovered (unpaired) devices, while scanning ──
+                // -- Discovered (unpaired) devices, while scanning --
                 Repeater {
                     model: Bluetooth.devices
 
@@ -366,7 +365,7 @@ PanelWindow {
                                 enabled: !foundRow.modelData.pairing
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    // Trust up front so it auto-reconnects later.
+                                    // Trust up front so it auto-reconnects later
                                     foundRow.modelData.trusted = true
                                     foundRow.modelData.pair()
                                 }
