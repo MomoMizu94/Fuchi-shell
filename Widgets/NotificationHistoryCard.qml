@@ -5,6 +5,8 @@ import Quickshell.Widgets
 import "../"
 import "../config.js" as Config
 
+// Overview tab card: scrollable notification history, backed by
+// dashboard.historyModel (see shell.qml's NotificationServer)
 ColumnLayout {
     required property var dashboard
     Layout.fillWidth: true

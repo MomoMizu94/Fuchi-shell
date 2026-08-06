@@ -4,6 +4,12 @@ const bar = {
     height: 30
 }
 
+// SystemInfoCard profile picture. Path is relative to $HOME — drop your own
+// photo there, or leave it missing to fall back to a generic icon.
+const systemInfo = {
+    profilePic: "Pictures/ProfilePics/avatar.jpg"
+}
+
 // Unified text-size scale (Tab 0 and onward)
 const type = {
     micro: 12,   // tiny meta text (map attribution, fine print)

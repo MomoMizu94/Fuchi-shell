@@ -5,6 +5,7 @@ import QtQuick.Effects
 import "../"
 import "../config.js" as Config
 
+// Overview tab card: profile picture + OS/kernel/WM/uptime stats
 Rectangle {
     required property var dashboard
     Layout.preferredWidth: 400
@@ -17,14 +18,15 @@ Rectangle {
         anchors.margins: Config.gap.md
         spacing: Config.gap.lg
 
-        // Profile picture
+        // Profile picture — path is configurable (Config.systemInfo.profilePic);
+        // falls back to an icon when image is not found via path
         Item {
             width: 140; height: 140
 
             Image {
                 id: profileImg
                 anchors.fill: parent
-                source: "file://" + Quickshell.env("HOME") + "/Pictures/ProfilePics/momo.jpg"
+                source: "file://" + Quickshell.env("HOME") + "/" + Config.systemInfo.profilePic
                 fillMode: Image.PreserveAspectCrop
                 layer.enabled: true
                 visible: false
@@ -45,6 +47,21 @@ Rectangle {
                 maskSource: circleMask
                 maskThresholdMin: 0.5
                 maskSpreadAtMin: 1.0
+                visible: profileImg.status === Image.Ready
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: width / 2
+                color: Colors.border
+                visible: profileImg.status !== Image.Ready
+                Text {
+                    anchors.centerIn: parent
+                    text: "󰀄"
+                    color: Colors.card
+                    font.family: Config.bar.fontFamily
+                    font.pixelSize: Config.type.display
+                }
             }
         }
 

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
+// Overview tab card: time-of-day greeting, clock, and date
 Rectangle {
     id: greetingCard
     required property var dashboard

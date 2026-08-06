@@ -3,9 +3,10 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
+// Overview tab card: CPU/GPU/RAM/disk mini fill-bars, fed by Dashboard.qml's
+// perfProc (see the hardwareRefresh Timer there)
 Rectangle {
     required property var dashboard
-    //Layout.fillWidth: true
     Layout.preferredWidth: 400
     radius: Config.radius.xl
     color: Colors.card
@@ -30,7 +31,6 @@ Rectangle {
             spacing: Config.gap.lg
 
             Repeater {
-                // Static data only — no live values in the model so delegates are never recreated
                 model: [
                     { icon: "", color: Colors.accentAlt   },
                     { icon: "󰾲", color: Colors.accent2 },

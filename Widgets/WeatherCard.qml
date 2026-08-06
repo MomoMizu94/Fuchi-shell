@@ -4,9 +4,10 @@ import Quickshell.Widgets
 import "../"
 import "../config.js" as Config
 
+// Overview tab card: current conditions, 3-day forecast, and an interactive
+// RainViewer precipitation radar map (pan/zoom/play-pause)
 Rectangle {
     required property var dashboard
-    //implicitWidth: weatherContent.implicitWidth + 24
     Layout.fillWidth: true
     radius: Config.radius.xl
     color: Colors.card
@@ -100,7 +101,7 @@ Rectangle {
                 Item { Layout.fillHeight: true }
             }
 
-            // ── Interactive radar map (drag to pan, wheel to zoom, dbl-click home) ──
+            // -- Interactive radar map (drag to pan, wheel to zoom, double-click home) --
             ClippingRectangle {
                 id: precipMap
                 Layout.fillHeight: true
@@ -148,7 +149,7 @@ Rectangle {
 
                 // Staggered prefetch: warm one radar frame (9 center tiles) at a
                 // time — gentle enough to stay under RainViewer's rate limit.
-                // The animation holds on the current frame until all are warm.
+                // The animation holds on the current frame until all are warm
                 Timer {
                     interval: Config.timer.mapPrefetchStagger
                     repeat: true

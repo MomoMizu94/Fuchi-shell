@@ -6,10 +6,11 @@ import Quickshell.Services.Mpris
 import "../"
 import "../config.js" as Config
 
+// Overview tab card: compact MPRIS player with album art + progress ring.
+// Full-size counterpart (unwired by default) is Tabs/MediaTab.qml
 Rectangle {
     id: musicCard
     required property var dashboard
-    //Layout.fillWidth: true
     Layout.preferredWidth: 400
     implicitHeight: musicContent.implicitHeight + 32
     radius: Config.radius.xl
@@ -57,7 +58,7 @@ Rectangle {
         anchors.margins: Config.gap.lg
         spacing: Config.gap.sm
 
-        // ── Album art with circular progress ring ──
+        // -- Album art with circular progress ring --
         Item {
             Layout.alignment: Qt.AlignHCenter
             width: 250; height: 250
@@ -138,7 +139,7 @@ Rectangle {
             }
         }
 
-        // ── Track info ──
+        // -- Track info --
         Text {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
@@ -169,7 +170,7 @@ Rectangle {
             visible: musicCard.player && musicCard.player.trackAlbum !== ""
         }
 
-        // ── Playback controls ──
+        // -- Playback controls --
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
             spacing: 28
@@ -199,7 +200,7 @@ Rectangle {
             }
         }
 
-        // ── GIF visualizer ──
+        // -- GIF visualizer --
         AnimatedImage {
             Layout.alignment: Qt.AlignHCenter
             source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/assets/record.gif"

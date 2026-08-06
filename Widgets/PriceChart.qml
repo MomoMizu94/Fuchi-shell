@@ -5,6 +5,7 @@ import "../config.js" as Config
 // Price chart over one symbol's OHLC series. Draws either candlesticks or a
 // close-price line, and pans/zooms purely over the already-fetched array —
 // nothing here triggers a refetch. Only the range presets do that.
+// Currently used by FinanceTab.qml
 Item {
     id: root
 
@@ -14,13 +15,13 @@ Item {
     property bool interactive: false
     property bool showAxis: false
 
-    // Viewport into `candles`. viewCount 0 means "everything".
+    // Viewport into `candles`. viewCount 0 means "everything"
     property int viewStart: 0
     property int viewCount: 0
 
     // Yahoo returns nulls inside the OHLC arrays (always on intraday ranges),
     // and drawing straight through them tears the chart — so filter once here
-    // rather than guarding at every draw site.
+    // rather than guarding at every draw site
     readonly property var candles: {
         const s = root.series
         if (!s || !s.ok || !s.t || s.t.length === 0) return []
@@ -41,7 +42,7 @@ Item {
         : Math.max(0, Math.min(viewStart, count - vCount))
     readonly property bool zoomed: vCount < count
 
-    // Palette pulled out as properties so a pywal retheme repaints the canvas.
+    // Palette pulled out as properties so a pywal retheme repaints the canvas
     readonly property color upColor: Colors.ok
     readonly property color downColor: Colors.error
     readonly property color axisColor: Colors.subtext
@@ -86,7 +87,7 @@ Item {
             const start = root.vStart
             const n = root.vCount
 
-            // Scale to the visible slice only, so zooming actually rescales.
+            // Scale to the visible slice only, so zooming actually rescales
             let lo = Infinity, hi = -Infinity
             for (let i = start; i < start + n; i++) {
                 const c = root.candles[i]
@@ -102,7 +103,7 @@ Item {
             function xAt(i) { return (i - start) * slot + slot / 2 }
             function yAt(p) { return padTop + plotH - ((p - lo) / (hi - lo)) * plotH }
 
-            // ── gridlines + price axis ──
+            // -- gridlines + price axis --
             ctx.lineWidth = 1
             ctx.strokeStyle = root.axisColor
             ctx.fillStyle = root.axisColor
@@ -130,7 +131,7 @@ Item {
             const seriesColor = rising ? root.upColor : root.downColor
 
             // Candles collapse into a smear once they're thinner than a few px,
-            // so fall back to the line renderer instead of drawing mush.
+            // so fall back to the line renderer instead of drawing mush
             const drawCandles = root.mode === "candle" && slot >= Config.finance.candleMinWidth
 
             if (drawCandles) {
@@ -150,7 +151,7 @@ Item {
 
                     const yO = yAt(c.o), yC = yAt(c.c)
                     const top = Math.min(yO, yC)
-                    // A doji would otherwise vanish entirely.
+                    // A doji would otherwise vanish entirely
                     const bh = Math.max(1, Math.abs(yC - yO))
                     ctx.fillStyle = col
                     ctx.fillRect(x - bodyW / 2, top, bodyW, bh)
@@ -168,7 +169,7 @@ Item {
                 ctx.stroke()
             }
 
-            // ── last-price marker ──
+            // -- last-price marker --
             const yLast = yAt(last.c)
             ctx.strokeStyle = seriesColor
             ctx.globalAlpha = 0.55
@@ -181,7 +182,7 @@ Item {
         }
     }
 
-    // ── pan / zoom (focused chart only) ──
+    // -- pan / zoom (focused chart only) --
     MouseArea {
         id: panArea
         anchors.fill: parent
@@ -200,7 +201,7 @@ Item {
             pressStart = root.vStart
             // Grab the current window explicitly: until the first drag the
             // viewport is "all candles" (viewCount 0), and panning that is a
-            // no-op unless it becomes a concrete count first.
+            // no-op unless it becomes a concrete count first
             if (root.viewCount <= 0) root.viewCount = root.count
         }
 
@@ -224,7 +225,7 @@ Item {
                          Math.min(root.count, Math.round(n * factor)))
             if (next === n) return
 
-            // Keep the candle under the pointer pinned while zooming.
+            // Keep the candle under the pointer pinned while zooming
             const frac = root.width > 0 ? Math.max(0, Math.min(1, event.x / root.width)) : 0.5
             const anchor = root.vStart + frac * n
             root.viewCount = next
@@ -235,7 +236,7 @@ Item {
 
     // Right-click anywhere on the chart snaps back to the full range. Declared
     // last so it sits above panArea; it only accepts the right button, so left
-    // presses fall through to the drag handler below it.
+    // presses fall through to the drag handler below it
     MouseArea {
         anchors.fill: parent
         enabled: root.interactive

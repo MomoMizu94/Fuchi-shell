@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
+// Overview tab card: Wi-Fi/Bluetooth/DND/night-light toggle tiles
 Rectangle {
     required property var dashboard
     Layout.fillWidth: true
