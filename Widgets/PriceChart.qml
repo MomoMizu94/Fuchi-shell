@@ -174,10 +174,15 @@ Item {
             ctx.strokeStyle = seriesColor
             ctx.globalAlpha = 0.55
             ctx.lineWidth = 1
+            ctx.setLineDash([6, 4])
             ctx.beginPath()
             ctx.moveTo(0, Math.round(yLast) + 0.5)
             ctx.lineTo(plotW, Math.round(yLast) + 0.5)
             ctx.stroke()
+            // Must reset: the dash pattern survives both clearRect and the end
+            // of this paint, so leaving it set would dash the gridlines and
+            // candles on every subsequent repaint.
+            ctx.setLineDash([])
             ctx.globalAlpha = 1.0
         }
     }

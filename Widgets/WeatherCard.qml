@@ -92,7 +92,7 @@ Rectangle {
                 }
 
                 Text {
-                    text: "Wind: " + dashboard.weatherWindSpeed + " m/s " + dashboard.weatherWindDir
+                    text: "Wind: " + dashboard.weatherWindSpeed + " km/h " + dashboard.weatherWindDir
                     color: Colors.subtext
                     font.family: Config.bar.fontFamily
                     font.pixelSize: Config.type.sm

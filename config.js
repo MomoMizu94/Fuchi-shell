@@ -1,3 +1,4 @@
+// Sidebar status bar font
 const bar = {
     fontFamily: "Mononoki Nerd Font",
     fontSize: 22,
@@ -5,12 +6,12 @@ const bar = {
 }
 
 // SystemInfoCard profile picture. Path is relative to $HOME — drop your own
-// photo there, or leave it missing to fall back to a generic icon.
+// photo there, or leave it missing to fall back to a generic icon
 const systemInfo = {
     profilePic: "Pictures/ProfilePics/avatar.jpg"
 }
 
-// Unified text-size scale (Tab 0 and onward)
+// Unified text-size scale (Dashbord's tab 0 and onward)
 const type = {
     micro: 12,   // tiny meta text (map attribution, fine print)
     label: 14,   // section headers: "HARDWARE", "WEATHER", "QUICK TOGGLES"
@@ -46,11 +47,13 @@ const radius = {
 }
 
 
+// Notification popup auto-dismiss timeout + history card cap
 const notifications = {
     timeout: 7000,
     historyLimit: 200
 }
 
+// Screen-edge frame strip widths (see FrameReserve.qml/FrameShape.qml)
 const frame = {
     thin: 8,
     thick: 64,
@@ -162,16 +165,18 @@ const finance = {
     stripHeight: 150,       // height of the four secondary chart cards
     // Yahoo range/interval pairs. Both values are passed straight to
     // scripts/fetch-quotes.sh; every pair here is verified against the endpoint.
+    // Intervals are chosen to keep the candle count comfortably above
+    // candleMinWidth — too many candles and the chart silently degrades to a line.
     ranges: [
-        { label: "1D", range: "1d",  interval: "5m"  },
-        { label: "5D", range: "5d",  interval: "15m" },
-        { label: "1M", range: "1mo", interval: "1d"  },
-        { label: "6M", range: "6mo", interval: "1d"  },
-        { label: "1Y", range: "1y",  interval: "1d"  },
-        { label: "5Y", range: "5y",  interval: "1wk" },
+        { label: "1D",  range: "1d",  interval: "5m"  },  // ~79 candles
+        { label: "7D",  range: "7d",  interval: "30m" },  // ~92
+        { label: "6M",  range: "6mo", interval: "1d"  },  // ~124
+        { label: "1Y",  range: "1y",  interval: "1d"  },  // ~251
+        { label: "4Y",  range: "4y",  interval: "1wk" },  // ~211
+        { label: "10Y", range: "10y", interval: "1mo" },  // ~121
     ],
-    defaultRangeIdx: 4,     // 1Y
+    defaultRangeIdx: 3,     // 1Y
     // The watchlist itself lives in secrets.js (gitignored) — what you track is
-    // personal. This is only the last-resort fallback when that's unset.
+    // personal. This is only the last-resort fallback when that's unset
     fallbackSymbols: ["^GSPC"],
 }

@@ -235,7 +235,8 @@ PanelWindow {
                 dashboard.weatherDesc = cur.weather[0].description
                 dashboard.weatherLocation = cur.name
                 dashboard.weatherHumidity = "" + cur.main.humidity
-                dashboard.weatherWindSpeed = cur.wind.speed.toFixed(1)
+                // OWM's units=metric reports wind in m/s; ×3.6 for km/h
+                dashboard.weatherWindSpeed = (cur.wind.speed * 3.6).toFixed(1)
                 dashboard.weatherWindDir = dashboard.windDir16(cur.wind.deg)
 
                 // Group the 3-hour forecast entries by date

@@ -27,7 +27,7 @@ Canvas {
         ctx.fillStyle = "" + color
         var w = width, h = height, r = Math.min(width, height)
         ctx.beginPath()
-        // Canvas angles: 0 = +x, increasing toward +y (visually clockwise).
+        // Canvas angles: 0 = +x, increasing toward +y (visually clockwise)
         if (solidCorner === "topLeft") {
             ctx.moveTo(0, 0)
             ctx.arc(w, h, r, Math.PI, 1.5 * Math.PI, false)
