@@ -6,6 +6,8 @@ import QtQuick.Layouts
 
 import "config.js" as Config
 
+// Right-docked, hover-only volume mixer: master output slider, output/input
+// device pickers, and per-app playback/recording volume via PipeWire
 PanelWindow {
     id: volumeMenu
 
@@ -24,9 +26,7 @@ PanelWindow {
 
     // Only the panel's own on-screen rect is input-active — without this a
     // PanelWindow captures full-screen input regardless of visible content
-    // (see FrameShape.qml's identical technique/comment). A couple of px of
-    // slop on the left keeps the input region continuous with FrameShape's
-    // fixed right-edge hover strip as the panel slides across it.
+    // (see FrameShape.qml's identical technique/comment)
     mask: Region {
         x: panel.x - 2
         y: panel.y
@@ -38,7 +38,7 @@ PanelWindow {
     // node is bound by a tracker — tracking just the defaults left every
     // stream row reading 0% and silently dropping writes (verified live:
     // wpctl reported spotify-player at 1.00 while our rows showed 0), so the
-    // per-app lists must be tracked too, not only the master sink/source.
+    // per-app lists must be tracked too, not only the master sink/source
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink, Pipewire.defaultAudioSource]
             .concat(volumeMenu.playbackList)
@@ -53,7 +53,6 @@ PanelWindow {
     // PipeWire's own media.class property ("Audio/Sink" / "Audio/Source") is a
     // stable, documented way to tell real devices from streams/filters — far
     // more reliable than guessing at Quickshell's internal PwNodeType bitflags
-    // (an earlier attempt at that crashed default-source switching outright).
     function computeOutputList() {
         return Pipewire.nodes.values.filter(n => n.properties["media.class"] === "Audio/Sink" && !isEasyEffects(n))
     }
@@ -67,10 +66,9 @@ PanelWindow {
     // set of independent single-bit flags — verified live that OBS's capture
     // stream reports type 13, and `PwNodeType.AudioInStream`/`AudioOutStream`
     // are 13/21 respectively, i.e. composite category values (Audio|Stream|Source
-    // vs Audio|Stream|Sink) that share bits. A bitwise-AND check (the same
-    // mistake that previously broke device-source switching) matches BOTH for
+    // vs Audio|Stream|Sink) that share bits. A bitwise-AND check matches BOTH for
     // a pure input stream like OBS's — exact equality is what actually
-    // distinguishes them.
+    // distinguishes them
     function computePlaybackList() {
         return Pipewire.nodes.values.filter(n => n.isStream && n.type === PwNodeType.AudioOutStream)
     }
@@ -86,11 +84,9 @@ PanelWindow {
     // AFTER the node itself is added — `Pipewire.nodes.valuesChanged` (node
     // added/removed) had already fired by then, so a list computed once via
     // Component.onCompleted/valuesChanged got permanently stuck seeing
-    // `undefined` for media.class (confirmed live: every node read back
-    // media.class as undefined in the same tick it was added). Declaring
-    // these as real property bindings makes QML auto-track every node's
+    // `undefined` for media.class. Declaring these as real property bindings makes QML auto-track every node's
     // `properties` read during the filter pass, so each list re-evaluates
-    // the moment propertiesChanged fires for any of them.
+    // the moment propertiesChanged fires for any of them
     readonly property var outputList: computeOutputList()
     readonly property var inputList: computeInputList()
     readonly property var playbackList: computePlaybackList()
@@ -115,7 +111,7 @@ PanelWindow {
 
     // Maps a drag/click Y position to a volume in [0, maxVolume], snapping to
     // exactly 1.0 within a small band so casually crossing 100% takes a
-    // deliberate push rather than an accidental brush.
+    // deliberate push rather than an accidental brush
     function setVolumeFromY(y) {
         const sink = Pipewire.defaultAudioSink
         if (!sink || !sink.audio) return
@@ -174,8 +170,8 @@ PanelWindow {
             onHoveredChanged: volumeMenu.panelHovered = hovered
         }
 
-        // Concave fillets melting the panel's right corners into the frame's
-        // inner edge (thin px left of the screen edge the panel is flush with).
+        // Curves the panel's right corners inward so they blend into the
+        // frame's inner edge instead of meeting it at a hard right angle
         CornerFillet {
             anchors.right: parent.right
             anchors.rightMargin: Config.frame.thin
@@ -259,10 +255,9 @@ PanelWindow {
                         readonly property real fillFraction: Math.max(0, Math.min(1, volume / Config.volumeMenu.maxVolume))
                         readonly property real unityFraction: Math.min(1, 1 / Config.volumeMenu.maxVolume)
                         // warn and accent resolve to the same pywal slot on some
-                        // palettes (verified: both map to color3 here), so the
-                        // hot end of the gradient can't rely on a different
+                        // palettes, so the hot end of the gradient can't rely on a different
                         // Colors role being visually distinct — lighten accent
-                        // instead, which guarantees contrast regardless of theme.
+                        // instead, which guarantees contrast regardless of theme
                         readonly property color mutedColor: Qt.darker(Colors.accent, 1.5)
                         readonly property color hotColor: Qt.lighter(Colors.accent, 1.7)
 
@@ -273,7 +268,7 @@ PanelWindow {
                         // (only one of the two had rounded corners). The inner
                         // Rectangle is always the track's full height so the
                         // gradient's colors stay pinned to absolute volume
-                        // positions; only the reveal window grows with volume.
+                        // positions; only the reveal window grows with volume
                         Item {
                             id: fillMask
                             anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
@@ -295,7 +290,7 @@ PanelWindow {
                         // 100% mark — small notches just outside the track's
                         // edges rather than a bright bar crossing the fill, so
                         // it reads as a reference mark without interrupting
-                        // the gradient.
+                        // the gradient
                         Rectangle {
                             x: -5; width: 3; height: 2; radius: 1
                             y: track.height * (1 - track.unityFraction) - 1
@@ -318,7 +313,7 @@ PanelWindow {
 
                     // Drag handle — sits outside `track` (which clips) so it
                     // can protrude past the track's width like a normal
-                    // slider knob instead of being cut off.
+                    // slider knob instead of being cut off
                     Rectangle {
                         id: handle
                         readonly property real size: Config.volumeMenu.sliderTrackWidth + 10

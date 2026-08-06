@@ -81,6 +81,8 @@ const launcher = {
     galleryCardWidth: 340,
     galleryCardHeight: 220,
     galleryLabelHeight: 56,
+    // Wallpaper picker's source folder, relative to $HOME
+    wallpaperFolder: "Pictures/Wallpapers",
 }
 
 // Power menu (right-docked panel) sizing

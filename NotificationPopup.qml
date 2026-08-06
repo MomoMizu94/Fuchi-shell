@@ -7,7 +7,9 @@ import Quickshell.Widgets
 
 import "config.js" as Config
 
-
+// On-screen notification popups, stacked top-right and auto-dismissed after
+// a timeout (except Critical urgency). Persistent history lives separately —
+// see Widgets/NotificationHistoryCard.qml
 PanelWindow {
     property var notifModel
     property bool dndEnabled: false
@@ -15,14 +17,14 @@ PanelWindow {
 
     // Docked into the frame's top-right corner so the first card melts into
     // both the top and right strips, and the cards below melt into the right
-    // strip, via corner fillets like every other popup.
+    // strip, via corner fillets like every other popup
     anchors { top: true; right: true }
     margins { top: Config.frame.thin; right: Config.frame.thin }
 
     // Fillet clearance left of the first card and below the last — the window
     // must be larger than the column or the fillets would be clipped at the
     // surface edge. Height collapses to 1px when there are no cards so the
-    // invisible surface doesn't linger as a click-eating strip.
+    // invisible surface doesn't linger as a click-eating strip
     implicitWidth: 560 + Config.radius.fillet
     implicitHeight: column.implicitHeight > 0 ? column.implicitHeight + Config.radius.fillet : 1
     color: "transparent"
@@ -35,7 +37,7 @@ PanelWindow {
         anchors.right: parent.right
         // No spacing: stacked cards butt together and read as one continuous
         // panel — only the stack's outer silhouette is shaped (corner dock at
-        // the top, rounding + fillet at the bottom).
+        // the top, rounding + fillet at the bottom)
         spacing: 0
 
         Repeater {
@@ -62,7 +64,7 @@ PanelWindow {
 
                 // Urgency accent — a left-edge stripe instead of the old full
                 // outline, which would have drawn a visible seam along the
-                // frame-docked right edge.
+                // frame-docked right edge
                 Rectangle {
                     id: urgencyStripe
                     width: 6
@@ -70,18 +72,19 @@ PanelWindow {
                     // Keep clear of the stack's shaped ends: stop above the
                     // bottom corner rounding (a straight strip would poke
                     // outside the curve) and start below the first card's
-                    // frame dock at the top.
+                    // frame dock at the top
                     anchors.topMargin: card.index === 0 ? Config.radius.hero : 0
                     anchors.bottomMargin: card.bottomLeftRadius
+                    radius: Config.radius.xs
                     color: card.modelData.urgency === NotificationUrgency.Critical
                         ? Colors.error : Colors.border
                 }
 
-                // Concave fillets melting the card's right corners into the
-                // frame strip it docks against. The first card sits flush in
-                // the frame's top-right corner, so instead of a fillet above
-                // its right edge it gets one left of its top edge, melting
-                // into the top strip (same geometry as Dashboard's).
+                // Curves the card's right corners inward so they blend into
+                // the frame strip it docks against. The first card sits flush
+                // in the frame's top-right corner, so instead of curving above
+                // its right edge it curves left of its top edge, blending into
+                // the top strip instead (same geometry as Dashboard's)
                 CornerFillet {
                     visible: card.index > 0
                     anchors.right: parent.right
@@ -127,15 +130,6 @@ PanelWindow {
                             source: Quickshell.iconPath(card.modelData.appIcon)
                         }
                     }
-
-                    Component.onCompleted: {
-                    console.log("=== Notification ===")
-                    console.log("image:", modelData.image)
-                    console.log("appIcon:", modelData.appIcon)
-                    console.log("desktopEntry:", modelData.desktopEntry)
-                    console.log("appName:", modelData.appName)
-                    console.log("summary:", modelData.summary)
-                }
 
                     ColumnLayout {
                         Layout.fillWidth: true

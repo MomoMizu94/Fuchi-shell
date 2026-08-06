@@ -9,6 +9,8 @@ import QtQuick.Layouts
 import "config.js" as Config
 import "calc.js" as Calc
 
+// Bottom-docked command palette: fuzzy app search, a ">" command mode
+// (just wallpaper picker, calculator for now), and a bare-expression calculator shortcut
 PanelWindow {
     id: launcher
     signal closeRequested()
@@ -37,7 +39,7 @@ PanelWindow {
 
     // One-line-per-command registry — adding another command later is one
     // array entry + one branch in buildCommandEntries()/executeSelected(),
-    // not a new framework.
+    // not a new framework
     readonly property var commandDefs: [
         { name: "wallpaper", label: "Wallpaper" },
         { name: "calc", label: "Calculator" }
@@ -66,7 +68,7 @@ PanelWindow {
         return score + Math.max(0, 8 - firstMatch)
     }
 
-    // Best score across several optional fields (e.g. name + genericName + keywords).
+    // Best score across several optional fields (e.g. name + genericName + keywords)
     function bestFieldScore(query, fields) {
         let best = -1
         for (const f of fields) {
@@ -137,7 +139,7 @@ PanelWindow {
     // A bare expression typed into normal search mode (no ">" prefix) pins a
     // calc row above the app matches, so `6*7` needs no prefix at all.
     // Calc.looksLikeMath is a cheap gate; anything that slips past it — app
-    // names like "7-zip" or "gimp-2.10" — fails to parse and yields null.
+    // names like "7-zip" or "gimp-2.10" — fails to parse and yields null
     function autoCalcEntry() {
         const q = query.trim()
         return Calc.looksLikeMath(q) ? Calc.entry(q) : null
@@ -151,7 +153,7 @@ PanelWindow {
     readonly property var results: commandMode ? commandEntries : normalEntries()
 
     // Shown centred in the results area when nothing matched. "calc" needs its
-    // own branch — the generic wording would read "No matching calculators".
+    // own branch — the generic wording would read "No matching calculators"
     readonly property string emptyStateText: {
         if (!commandMode) return "No matching apps"
         if (!activeCommand) return "Unknown command “>" + parsedCommand.word + "”"
@@ -177,11 +179,11 @@ PanelWindow {
         const item = results[selectedIndex]
         // Kind-first: a calc row reaches here from either ">calc" or a bare
         // expression in app-search mode. DesktopEntry has no `kind`, so this
-        // is safely undefined for apps.
+        // is safely undefined for apps
         if (item.kind === "calc") {
             // "--" matters: without it a negative result like "-5" would be
             // read as wl-copy options. Argv-supplied text is copied verbatim
-            // with no trailing newline, so nothing else is needed here.
+            // with no trailing newline, so nothing else is needed here
             clipboardProc.command = ["wl-copy", "--", item.name]
             clipboardProc.startDetached()
             launcher.closeRequested()
@@ -209,12 +211,15 @@ PanelWindow {
         onClicked: launcher.closeRequested()
     }
 
+    // Scratch processes for executeSelected below; command is reassigned
+    // before each use — wallpaperProc runs set-wallpaper.sh, clipboardProc
+    // copies a calculator result via wl-copy
     Process { id: wallpaperProc; command: ["echo"] }
     Process { id: clipboardProc; command: ["echo"] }
 
     // Persistent per-app launch counts, driving frecency ranking — same
     // FileView+JsonAdapter+Quickshell.statePath pattern Dashboard.qml uses
-    // for todos.json.
+    // for todos.json
     FileView {
         id: launchStatsFile
         path: Quickshell.statePath("launcher-stats.json")
@@ -237,16 +242,13 @@ PanelWindow {
         launchStatsData.counts = counts
         launchStatsFile.writeAdapter()
     }
-    // Capped so frecency nudges ranking rather than overriding strong text matches.
+    // Capped so frecency nudges ranking rather than overriding strong text matches
     function frecencyBonus(id) {
         return Math.min(launchCount(id), 20) * 3
     }
 
     // Resolution lookup via ImageMagick's `identify` (reads just the image
-    // header, not a full decode — matters since some wallpapers are 46MB+).
-    // `file`'s prose output was tried first but rejected: for JPEGs it prints
-    // a "density WxH" substring before the real dimensions, so a naive regex
-    // would grab the wrong numbers. `identify -format "%f %wx%h"` is unambiguous.
+    // header, not a full decode — matters since some wallpapers are 46MB+)
     Process {
         id: wallpaperInfoProc
         stdout: StdioCollector { id: wallpaperInfoOut }
@@ -263,7 +265,7 @@ PanelWindow {
 
     FolderListModel {
         id: wallpaperFolderModel
-        folder: "file://" + Quickshell.env("HOME") + "/Pictures/Wallpapers"
+        folder: "file://" + Quickshell.env("HOME") + "/" + Config.launcher.wallpaperFolder
         nameFilters: ["*.png", "*.jpg", "*.jpeg"]
         caseSensitive: false
         showDirs: false
@@ -285,8 +287,7 @@ PanelWindow {
         Behavior on width { NumberAnimation { duration: Config.anim.popup; easing.type: Easing.OutCubic } }
         // Chrome accounting must match the anchors below exactly (top margin,
         // two dividerGap gaps around the divider, the divider itself, and the
-        // bottom margin) — a mismatch here is what previously left the last
-        // result row clipped by a few px.
+        // bottom margin)
         readonly property int outerMargin: Config.gap.xl
         readonly property int dividerGap: Config.gap.md
         height: outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight +
@@ -300,7 +301,7 @@ PanelWindow {
         // open/close slide — when closed it pushes the panel fully below the
         // screen (-height); when open it's 0 (flush). Animating `y` and
         // `height` as two independent Behaviors previously let them drift out
-        // of sync mid-transition, visibly detaching the bottom edge.
+        // of sync mid-transition, visibly detaching the bottom edge
         anchors.bottom: parent.bottom
         anchors.bottomMargin: launcher.open ? 0 : -height
         Behavior on anchors.bottomMargin {
@@ -316,8 +317,8 @@ PanelWindow {
 
         MouseArea { anchors.fill: parent }
 
-        // Concave fillets melting the panel's bottom corners into the frame's
-        // inner edge (thin px above the screen edge the panel is flush with).
+        // Curves the panel's bottom corners inward so they blend into the
+        // frame's inner edge instead of meeting it at a hard right angle
         CornerFillet {
             anchors.right: parent.left
             anchors.bottom: parent.bottom
@@ -346,7 +347,7 @@ PanelWindow {
             // height` driven by resultsList.count, and Qt Quick Layouts does
             // not reliably re-stretch a fillHeight child once that animated
             // ancestor resizes after the initial layout pass — it gets stuck
-            // at a sliver. Anchoring each region directly sidesteps that.
+            // at a sliver. Anchoring each region directly sidesteps that
             Item {
                 id: searchBar
                 anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: Config.gap.xl }
@@ -439,7 +440,7 @@ PanelWindow {
                             // (the calculator) carry a Nerd Font glyph, which
                             // renders regardless of whether an icon theme is
                             // configured — themed names outside hicolor
-                            // resolve to "" here and would leave a blank slot.
+                            // resolve to "" here and would leave a blank slot
                             Item {
                                 Layout.preferredWidth: Config.launcher.iconSize
                                 Layout.preferredHeight: Config.launcher.iconSize
@@ -524,7 +525,7 @@ PanelWindow {
                         // the label), growing it pushes `thumb`'s top edge
                         // above `card`'s own top — which wallpaperGrid's
                         // `clip: true` then cuts off. A border-only highlight
-                        // avoids that class of bug entirely.
+                        // avoids that class of bug entirely
                         ClippingRectangle {
                             id: thumb
                             width: parent.width

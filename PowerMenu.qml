@@ -6,6 +6,8 @@ import QtQuick.Layouts
 
 import "config.js" as Config
 
+// Right-docked power menu: logout/lock/suspend/restart/shutdown, with a
+// confirm step for the destructive ones
 PanelWindow {
     id: powerMenu
     signal closeRequested()
@@ -37,7 +39,7 @@ PanelWindow {
     readonly property var destructiveIds: ["logout", "shutdown", "restart"]
 
     // Non-destructive actions run immediately; destructive ones set this and
-    // the panel content swaps to the confirm view (same chrome, no 2nd slide).
+    // the panel content swaps to the confirm view (same chrome, no 2nd slide)
     property var pendingAction: null
 
     property int selectedIndex: 0   // index into `actions`, active when pendingAction is null
@@ -65,6 +67,7 @@ PanelWindow {
         powerMenu.closeRequested()
     }
 
+    // Scratch process for runAction above; command is reassigned before use
     Process { id: actionProc; command: ["echo"] }
 
     MouseArea {
@@ -95,8 +98,8 @@ PanelWindow {
 
         MouseArea { anchors.fill: parent }
 
-        // Concave fillets melting the panel's right corners into the frame's
-        // inner edge (thin px left of the screen edge the panel is flush with).
+        // Curves the panel's right corners inward so they blend into the
+        // frame's inner edge instead of meeting it at a hard right angle
         CornerFillet {
             anchors.right: parent.right
             anchors.rightMargin: Config.frame.thin
