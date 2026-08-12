@@ -76,14 +76,10 @@ PanelWindow {
     // Finance tab - financeSymbols/RangeIdx/Focused are persisted (finance.json);
     // financeSeries is the live fetch result and is deliberately not cached to disk
 
-    // Seed watchlist comes from secrets.js - since what you track is personal.
-    // Guarded with typeof so a secrets.js predating this setting
-    // degrades to the config fallback instead of taking the dashboard down
-    readonly property var financeSeedSymbols: {
-        const s = (typeof Secrets.financeSymbols !== "undefined") ? Secrets.financeSymbols : null
-        const list = (s && s.length > 0) ? s : Config.finance.fallbackSymbols
-        return list.slice(0, Config.finance.maxSymbols)
-    }
+    // Starting watchlist, used only until finance.json exists (see below).
+    // Sliced so an over-long list in config.js can't exceed the tab's capacity
+    readonly property var financeSeedSymbols:
+        Config.finance.defaultSymbols.slice(0, Config.finance.maxSymbols)
     property var financeSymbols: financeSeedSymbols
     property int financeRangeIdx: Config.finance.defaultRangeIdx
     property int financeFocused: 0

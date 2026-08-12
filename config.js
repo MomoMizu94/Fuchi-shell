@@ -176,7 +176,8 @@ const finance = {
         { label: "10Y", range: "10y", interval: "1mo" },  // ~121
     ],
     defaultRangeIdx: 3,     // 1Y
-    // The watchlist itself lives in secrets.js (gitignored) — what you track is
-    // personal. This is only the last-resort fallback when that's unset
-    fallbackSymbols: ["^GSPC"],
+    // Watchlist shown the first time the Finance tab is opened. After that the
+    // list is edited in the dashboard and persists to finance.json meaning that changing this only affects a fresh install.
+    // Any Yahoo symbol works: stocks (AAPL), crypto (BTC-USD), FX (EURUSD=X), indices (^GSPC)
+    defaultSymbols: ["AAPL", "GC=F", "EURUSD=X", "^GSPC", "NVDA"],
 }

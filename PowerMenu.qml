@@ -34,7 +34,7 @@ PanelWindow {
         { id: "lock",     icon: "󰌾" },
         { id: "suspend",  icon: "󰤄" },
         { id: "restart",  icon: "󰜉" },
-        { id: "shutdown", icon: "⏻" }
+        { id: "shutdown", icon: "󰐥" }
     ]
     readonly property var destructiveIds: ["logout", "shutdown", "restart"]
 
