@@ -9,6 +9,7 @@ NotificationPopup NotificationPopup.qml
 FrameReserve FrameReserve.qml
 FrameShape FrameShape.qml
 CornerFillet CornerFillet.qml
+PillToggle PillToggle.qml
 Bar Bar.qml
 Workspaces Bar/Workspaces.qml
 WorkspaceApps Bar/WorkspaceApps.qml

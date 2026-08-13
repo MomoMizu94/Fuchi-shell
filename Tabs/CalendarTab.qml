@@ -274,13 +274,59 @@ ColumnLayout {
                 anchors.margins: 14
                 spacing: 10
 
-                Text {
-                    text: "TO-DO"
-                    color: Colors.subtext
-                    font.family: Config.bar.fontFamily
-                    font.pixelSize: Config.bar.fontSize - 8
-                    font.bold: true
-                    font.letterSpacing: 1.5
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    Text {
+                        text: "TO-DO"
+                        color: Colors.subtext
+                        font.family: Config.bar.fontFamily
+                        font.pixelSize: Config.bar.fontSize - 8
+                        font.bold: true
+                        font.letterSpacing: 1.5
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    // Bulk-remove for checked tasks; same tile as the add button
+                    // below, faded out and inert while nothing is checked off
+                    Rectangle {
+                        readonly property bool armed: dashboard.todoDoneCount > 0
+
+                        width: 34; height: 34
+                        radius: Config.radius.lg
+                        color: Colors.error
+                        opacity: armed ? 1 : 0.35
+
+                        Text {
+                            id: clearIcon
+                            anchors.centerIn: parent
+                            // The trash-can glyph's ink is wider than the advance
+                            // cell the Text item is sized to, and overhangs to the
+                            // right, so plain centering leaves it visibly off
+                            anchors.horizontalCenterOffset:
+                                clearIcon.width / 2 - (clearIconMetrics.tightBoundingRect.x
+                                                       + clearIconMetrics.tightBoundingRect.width / 2)
+                            text: "󰩹"
+                            color: Colors.onAccent
+                            font.family: Config.bar.fontFamily
+                            font.pixelSize: Config.bar.fontSize + 2
+                            font.bold: true
+
+                            TextMetrics {
+                                id: clearIconMetrics
+                                font: clearIcon.font
+                                text: clearIcon.text
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: parent.armed
+                            onClicked: dashboard.clearDoneTodos()
+                        }
+                    }
                 }
 
                 RowLayout {

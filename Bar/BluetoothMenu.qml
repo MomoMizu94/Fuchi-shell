@@ -123,31 +123,9 @@ PanelWindow {
                         }
 
                         // Pill toggle for bluetooth on/off
-                        Rectangle {
-                            id: powerToggle
-                            readonly property bool on: btMenu.adapter && btMenu.adapter.enabled
-                            implicitWidth: 40
-                            implicitHeight: 20
-                            radius: height / 2
-                            color: powerToggle.on
-                                ? Colors.accent
-                                : Colors.inset
-
-                            Rectangle {
-                                width: 14
-                                height: 14
-                                radius: 7
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: powerToggle.on ? parent.width - width - 3 : 3
-                                Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                color: powerToggle.on ? Colors.onAccent : Colors.subtext
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: if (btMenu.adapter) btMenu.adapter.enabled = !btMenu.adapter.enabled
-                            }
+                        PillToggle {
+                            on: btMenu.adapter !== null && btMenu.adapter.enabled
+                            onToggled: if (btMenu.adapter) btMenu.adapter.enabled = !btMenu.adapter.enabled
                         }
                     }
                 }

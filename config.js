@@ -149,11 +149,14 @@ const timer = {
     interval: 1000,              // general UI tick (clock, progress displays)
     weatherRefresh: 600000,      // 10 min
     hardwareRefresh: 2000,       // Tab 0 hardware mini-chart polling
+    uptimeRefresh: 60000,        // SystemInfoCard uptime poll (1 min, gated on tab 0 being open)
     mapSettle: 500,              // precip map: pause after pan/zoom before prefetching
     mapPrefetchStagger: 1200,    // precip map: gap between warming each radar frame
     radarFrameAdvance: 650,      // radar loop: ms per frame
     radarFrameDwell: 2200,       // radar loop: dwell on the newest frame before looping
     netRefresh: 3000,            // sidebar net up/down poll
+    vpnRefresh: 3000,            // Mullvad status poll while the network menu is open
+    vpnBusyRefresh: 700,         // faster poll while a tunnel state change is in flight
     financeRefresh: 60000,       // Finance tab quote poll (1 min, gated on the tab being open)
 }
 

@@ -108,6 +108,82 @@ PanelWindow {
         onTriggered: if (!speedProc.running) speedProc.running = true
     }
 
+    // -- Mullvad VPN --
+    property bool vpnAvailable: false     // false hides the whole section
+    property string vpnState: ""          // connected | connecting | disconnecting | disconnected | error
+    property string vpnLocation: ""       // relay hostname, else "City, Country"
+    property bool vpnLockdown: false
+    property bool vpnBusy: false          // connect/disconnect issued, daemon hasn't caught up yet
+
+    readonly property bool vpnUp: vpnState === "connected"
+    readonly property bool vpnPending: vpnBusy || vpnState === "connecting" || vpnState === "disconnecting"
+
+    Process {
+        id: vpnProc
+        command: ["bash", "-c",
+            "command -v mullvad >/dev/null || { printf '{\"have\":false}\\n'; exit 0; }; " +
+            "st=$(mullvad status -j 2>/dev/null); " +
+            "lk=$(mullvad lockdown-mode get 2>/dev/null | grep -oE '(on|off)$'); " +
+            "printf '{\"have\":true,\"status\":%s,\"lockdown\":\"%s\"}\\n' \"${st:-null}\" \"$lk\""]
+        stdout: StdioCollector { id: vpnOut }
+        onExited: {
+            try {
+                const j = JSON.parse(vpnOut.text)
+                netMenu.vpnAvailable = j.have && j.status !== null
+                if (!netMenu.vpnAvailable) return
+                netMenu.vpnState = j.status.state
+                netMenu.vpnLockdown = j.lockdown === "on"
+                // `details` only carries a location once the daemon knows one;
+                // an errored tunnel has a different shape entirely
+                const loc = j.status.details ? j.status.details.location : null
+                netMenu.vpnLocation = loc
+                    ? (loc.hostname || [loc.city, loc.country].filter(Boolean).join(", "))
+                    : ""
+            } catch (e) {}
+        }
+    }
+
+    Timer {
+        interval: netMenu.vpnPending ? Config.timer.vpnBusyRefresh : Config.timer.vpnRefresh
+        running: netMenu.open
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: if (!vpnProc.running) vpnProc.running = true
+    }
+
+    // Shared by both VPN toggles; command is reassigned before each use
+    Process {
+        id: vpnActionProc
+        command: ["true"]
+        onExited: {
+            netMenu.vpnBusy = false
+            vpnProc.running = true
+        }
+    }
+
+    function toggleVpn() {
+        if (vpnActionProc.running) return
+        netMenu.vpnBusy = true
+        vpnActionProc.command = ["mullvad", netMenu.vpnUp ? "disconnect" : "connect"]
+        vpnActionProc.running = true
+    }
+
+    function toggleLockdown() {
+        if (vpnActionProc.running) return
+        vpnActionProc.command = ["mullvad", "lockdown-mode", "set", netMenu.vpnLockdown ? "off" : "on"]
+        vpnActionProc.running = true
+    }
+
+    function vpnStatusLabel() {
+        switch (netMenu.vpnState) {
+            case "connected":     return netMenu.vpnLocation !== "" ? "Connected · " + netMenu.vpnLocation : "Connected"
+            case "connecting":    return "Connecting…"
+            case "disconnecting": return "Disconnecting…"
+            case "error":         return "Tunnel error"
+            default:              return netMenu.vpnLockdown ? "Disconnected · traffic blocked" : "Disconnected"
+        }
+    }
+
     function signalGlyph(strength) {
         if (strength > 0.75) return "󰤨"
         if (strength > 0.5) return "󰤥"
@@ -218,29 +294,9 @@ PanelWindow {
                             font.pixelSize: Config.type.micro
                         }
 
-                        Rectangle {
-                            id: wifiToggle
-                            readonly property bool on: Networking.wifiEnabled
-                            implicitWidth: 40
-                            implicitHeight: 20
-                            radius: height / 2
-                            color: wifiToggle.on ? Colors.accent : Colors.inset
-
-                            Rectangle {
-                                width: 14
-                                height: 14
-                                radius: 7
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: wifiToggle.on ? parent.width - width - 3 : 3
-                                Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                color: wifiToggle.on ? Colors.onAccent : Colors.subtext
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: Networking.wifiEnabled = !Networking.wifiEnabled
-                            }
+                        PillToggle {
+                            on: Networking.wifiEnabled
+                            onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
                         }
                     }
                 }
@@ -328,6 +384,122 @@ PanelWindow {
                         font.pixelSize: Config.type.micro
                     }
                     Item { Layout.fillWidth: true }
+                }
+
+                // -- Mullvad VPN --
+                Item {
+                    visible: netMenu.vpnAvailable
+                    Layout.fillWidth: true
+                    implicitHeight: Config.gap.xs * 2 + 1
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 1
+                        color: Colors.border
+                    }
+                }
+
+                Item {
+                    visible: netMenu.vpnAvailable
+                    Layout.fillWidth: true
+                    implicitHeight: Config.networkMenu.rowHeight
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Config.gap.sm
+                        anchors.rightMargin: Config.gap.sm
+                        spacing: Config.gap.sm
+
+                        Text {
+                            text: "󰖂"
+                            color: netMenu.vpnUp ? Colors.accent : Colors.text
+                            font.family: Config.bar.fontFamily
+                            font.pixelSize: Config.type.md
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Mullvad VPN"
+                            color: netMenu.vpnUp ? Colors.accent : Colors.text
+                            font.family: Config.bar.fontFamily
+                            font.pixelSize: Config.type.sm
+                        }
+
+                        Text {
+                            visible: netMenu.vpnPending
+                            text: "…"
+                            color: Colors.subtext
+                            font.family: Config.bar.fontFamily
+                            font.pixelSize: Config.type.sm
+                        }
+
+                        PillToggle {
+                            on: netMenu.vpnUp
+                            onToggled: netMenu.toggleVpn()
+                        }
+                    }
+                }
+
+                Text {
+                    visible: netMenu.vpnAvailable
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Config.gap.sm
+                    Layout.rightMargin: Config.gap.sm
+                    text: netMenu.vpnStatusLabel()
+                    // Lockdown while the tunnel is down really does block
+                    // everything, so it gets the warning color, not the muted one
+                    color: netMenu.vpnState === "error" ? Colors.error
+                         : (netMenu.vpnLockdown && !netMenu.vpnUp ? Colors.warn : Colors.subtext)
+                    font.family: Config.bar.fontFamily
+                    font.pixelSize: Config.type.micro
+                    elide: Text.ElideRight
+                }
+
+                Item {
+                    visible: netMenu.vpnAvailable
+                    Layout.fillWidth: true
+                    implicitHeight: Config.networkMenu.rowHeight
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Config.gap.sm
+                        anchors.rightMargin: Config.gap.sm
+                        spacing: Config.gap.sm
+
+                        Text {
+                            text: "󰦝"
+                            color: netMenu.vpnLockdown ? Colors.accent : Colors.text
+                            font.family: Config.bar.fontFamily
+                            font.pixelSize: Config.type.md
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Kill switch"
+                            color: netMenu.vpnLockdown ? Colors.accent : Colors.text
+                            font.family: Config.bar.fontFamily
+                            font.pixelSize: Config.type.sm
+                        }
+
+                        PillToggle {
+                            on: netMenu.vpnLockdown
+                            onToggled: netMenu.toggleLockdown()
+                        }
+                    }
+                }
+
+                Item {
+                    visible: netMenu.vpnAvailable
+                    Layout.fillWidth: true
+                    implicitHeight: Config.gap.xs * 2 + 1
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        height: 1
+                        color: Colors.border
+                    }
                 }
 
                 // -- Wired device (LAN half of LAN↔WLAN switching) --

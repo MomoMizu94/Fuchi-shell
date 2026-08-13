@@ -173,6 +173,13 @@ PanelWindow {
         stdout: StdioCollector { id: uptimeOut }
         onExited: dashboard.sysUptime = uptimeOut.text.trim()
     }
+    Timer {
+        interval: Config.timer.uptimeRefresh
+        running: dashboard.visible && dashboard.activeTab === 0
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: if (!uptimeProc.running) uptimeProc.running = true
+    }
     Process {
         id: nightCheckProc
         command: ["bash", "-c", "pgrep -x wlsunset > /dev/null && echo yes || echo no"]
@@ -185,7 +192,6 @@ PanelWindow {
     Component.onCompleted: {
         osProc.running = true
         kernelProc.running = true
-        uptimeProc.running = true
         nightCheckProc.running = true
         if (dashboard.weatherLat === 0 || dashboard.weatherLon === 0)
             locProc.running = true
@@ -421,6 +427,10 @@ PanelWindow {
     ListModel { id: todoListModel }
     property alias todoList: todoListModel
 
+    // Checked-off task count, kept fresh by refreshTodoDoneCount() below —
+    // ListModel.setProperty() doesn't retrigger bindings, so this can't be one
+    property int todoDoneCount: 0
+
     // Persistent to-do storage: ~/.local/state/quickshell/todos.json
     FileView {
         id: todoFile
@@ -434,6 +444,7 @@ PanelWindow {
             todoListModel.clear()
             for (const t of todoData.todos)
                 todoListModel.append({ taskText: t.taskText, done: t.done })
+            dashboard.refreshTodoDoneCount()
         }
         onLoadFailed: error => {
             if (error === FileViewError.FileNotFound) writeAdapter()
@@ -448,6 +459,22 @@ PanelWindow {
         }
         todoData.todos = arr
         todoFile.writeAdapter()
+        refreshTodoDoneCount()
+    }
+
+    function refreshTodoDoneCount() {
+        let n = 0
+        for (let i = 0; i < todoListModel.count; i++)
+            if (todoListModel.get(i).done) n++
+        dashboard.todoDoneCount = n
+    }
+
+    // Drop every checked-off task at once; iterate backwards so the
+    // indices of the not-yet-visited items stay valid as rows are removed
+    function clearDoneTodos() {
+        for (let i = todoListModel.count - 1; i >= 0; i--)
+            if (todoListModel.get(i).done) todoListModel.remove(i, 1)
+        saveTodos()
     }
 
     function greeting() {
