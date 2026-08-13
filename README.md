@@ -6,7 +6,20 @@ My personal desktop shell for [Hyprland](https://hyprland.org/), built with [Qui
 
 *(video coming soon)*
 
+<!--
+To add the demo video:
+  1. Keep the file under 10 MB (GitHub's free-plan limit; 100 MB on paid plans).
+  2. On github.com, open a comment box on any issue/PR/discussion in this repo —
+     a draft you never submit.
+  3. Drag the video in. GitHub uploads it and inserts a URL of the form
+     https://github.com/user-attachments/assets/<uuid>
+  4. Copy that URL, discard the draft, and paste the URL below this comment as a
+     BARE URL ON ITS OWN LINE.
 
+Do not wrap it in image syntax — ![demo](url) renders as a broken image, not a
+player. Note the video lives on GitHub's CDN, so it won't appear in clones or on
+other Git hosts; for that, commit a GIF to assets/ and use ![demo](assets/demo.gif).
+-->
 
 ## Features
 
@@ -46,6 +59,8 @@ My personal desktop shell for [Hyprland](https://hyprland.org/), built with [Qui
 
 - `nvidia-smi` — GPU stats (skipped gracefully if absent/non-NVIDIA)
 - `wlsunset` — night-light toggle in the dashboard
+- [`mullvad`](https://mullvad.net/) (Mullvad VPN CLI) — VPN toggle and kill switch in the network
+  menu; the section is hidden if the binary is absent
 - `mpc` (MPD client) — paused on suspend, only relevant if you run MPD
 - [ImageMagick](https://imagemagick.org/) (`identify`) — reads wallpaper dimensions for the
   picker's resolution labels
