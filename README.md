@@ -7,6 +7,7 @@ My personal desktop shell for [Hyprland](https://hyprland.org/), built with [Qui
 
 [![Demo](https://github.com/user-attachments/assets/a202ed55-45ec-45c7-b7eb-e2eb312926b4)](https://www.youtube.com/watch?v=PkDNhuNavrk)
 
+*Click for a full YT video*
 
 ## Features
 
