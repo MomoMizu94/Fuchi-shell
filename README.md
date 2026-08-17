@@ -1,25 +1,12 @@
-# quickshell-config
+# Fuchi-shell
+
 
 My personal desktop shell for [Hyprland](https://hyprland.org/), built with [Quickshell](https://quickshell.outfoxxed.me/). It replaces a traditional bar/notification-daemon/launcher stack with a single QML shell: a status bar, a slide-out dashboard with widgets, an app launcher, notification popups + history and a power menu — all themed live from [pywal](https://github.com/dylanaraps/pywal).
 
 ## Demo
 
-*(video coming soon)*
+[![Demo](https://img.youtube.com/vi/PkDNhuNavrk/maxresdefault.jpg)](https://www.youtube.com/watch?v=PkDNhuNavrk)
 
-<!--
-To add the demo video:
-  1. Keep the file under 10 MB (GitHub's free-plan limit; 100 MB on paid plans).
-  2. On github.com, open a comment box on any issue/PR/discussion in this repo —
-     a draft you never submit.
-  3. Drag the video in. GitHub uploads it and inserts a URL of the form
-     https://github.com/user-attachments/assets/<uuid>
-  4. Copy that URL, discard the draft, and paste the URL below this comment as a
-     BARE URL ON ITS OWN LINE.
-
-Do not wrap it in image syntax — ![demo](url) renders as a broken image, not a
-player. Note the video lives on GitHub's CDN, so it won't appear in clones or on
-other Git hosts; for that, commit a GIF to assets/ and use ![demo](assets/demo.gif).
--->
 
 ## Features
 
