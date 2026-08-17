@@ -5,7 +5,7 @@ My personal desktop shell for [Hyprland](https://hyprland.org/), built with [Qui
 
 ## Demo
 
-[![Demo](https://img.youtube.com/vi/PkDNhuNavrk/maxresdefault.jpg)](https://www.youtube.com/watch?v=PkDNhuNavrk)
+[![Demo](<img width="960" height="540" alt="Image" src="https://github.com/user-attachments/assets/a202ed55-45ec-45c7-b7eb-e2eb312926b4" />)](https://www.youtube.com/watch?v=PkDNhuNavrk)
 
 
 ## Features
