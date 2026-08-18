@@ -56,22 +56,26 @@ Scope {
         imageSupported: true
 
         onNotification: n => {
-            if (!dash.dndEnabled && root.playNotificationSound(n))
+            // Support for transient notifications
+            if (!dash.dndEnabled && !n.transient && root.playNotificationSound(n))
                 soundPlayer.startDetached()
-            history.insert(0, {
-                summary: n.summary,
-                body: n.body,
-                appName: n.appName,
-                urgency: n.urgency,
-                time: Qt.formatDateTime(new Date(), "HH:mm"),
-                image: n.image ? n.image.toString() : (
-                    n.appIcon.startsWith("/") ? n.appIcon : ""
-                ),
-                appIcon: n.appIcon.startsWith("/") ? "" : (n.appIcon || "")
-            })
-            // History cap
-            if (history.count > Config.notifications.historyLimit)
-                history.remove(Config.notifications.historyLimit, history.count - Config.notifications.historyLimit)
+
+            if (!n.transient) {
+                history.insert(0, {
+                    summary: n.summary,
+                    body: n.body,
+                    appName: n.appName,
+                    urgency: n.urgency,
+                    time: Qt.formatDateTime(new Date(), "HH:mm"),
+                    image: n.image ? n.image.toString() : (
+                        n.appIcon.startsWith("/") ? n.appIcon : ""
+                    ),
+                    appIcon: n.appIcon.startsWith("/") ? "" : (n.appIcon || "")
+                })
+                // History cap
+                if (history.count > Config.notifications.historyLimit)
+                    history.remove(Config.notifications.historyLimit, history.count - Config.notifications.historyLimit)
+            }
             n.tracked = true
         }
     }
