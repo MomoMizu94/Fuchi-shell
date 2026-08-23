@@ -24,6 +24,12 @@ Scope {
     property real calendarMenuTargetY: 0
     property bool networkMenuOpen: false
     property real networkMenuTargetY: 0
+    property bool layoutMenuOpen: false
+    property real layoutMenuTargetY: 0
+    // Current tiling layout as its dwm label ("tile", "bstack", ...). hyprland.lua pushes this
+    // in on every change (see PublishLayout there). Both the bar indicator and
+    // the layout menu read it
+    property string currentLayout: ""
 
     // Notification history
     ListModel { id: history }
@@ -139,6 +145,37 @@ Scope {
         function hide(): void { root.networkMenuOpen = false }
     }
 
+    IpcHandler {
+        target: "layoutmenu"
+        function toggle(y: string): void {
+            root.layoutMenuTargetY = Number(y)
+            root.layoutMenuOpen = !root.layoutMenuOpen
+        }
+        function hide(): void { root.layoutMenuOpen = false }
+    }
+
+    // Pushed in by hyprland.lua on every layout change
+    IpcHandler {
+        target: "layout"
+        function set(name: string): void { root.currentLayout = name }
+    }
+
+    // Ask Lua for the current label at startup: the shell can be restarted
+    // independently of the compositor, and nothing would push until the next
+    // layout change otherwise. `hyprctl eval` runs in the config's own global Lua
+    // state, which is how PublishLayout is reachable at all
+    Process { id: layoutProbe; command: ["hyprctl", "eval", "PublishLayout()"] }
+    Component.onCompleted: layoutProbe.startDetached()
+
+    // Retries while the label is still empty, covering the shell coming up before
+    // Hyprland can answer. The binding stops the timer as soon as one lands
+    Timer {
+        interval: 1500
+        repeat: true
+        running: root.currentLayout === ""
+        onTriggered: layoutProbe.startDetached()
+    }
+
     // On-screen popup for incoming notifications
     NotificationPopup {
         notifModel: server.trackedNotifications
@@ -213,6 +250,14 @@ Scope {
         onCloseRequested: root.networkMenuOpen = false
     }
 
+    LayoutMenu {
+        id: layoutMenu
+        open: root.layoutMenuOpen
+        targetY: root.layoutMenuTargetY
+        current: root.currentLayout
+        onCloseRequested: root.layoutMenuOpen = false
+    }
+
     // Reserved screen-edge space, the hover-sensitive frame,
     // and the bar itself
     FrameReserve {}
@@ -225,5 +270,5 @@ Scope {
             else if (root.centerOpen) dashboardCloseTimer.restart()
         }
     }
-    Bar {}
+    Bar { currentLayout: root.currentLayout }
 }

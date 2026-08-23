@@ -7,8 +7,12 @@ import "config.js" as Config
 // Status bar content, living in the left strip that
 // FrameReserve reserves and FrameShape paints
 PanelWindow {
+    id: bar
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
+
+    // Current tiling layout's dwm label, owned by shell.qml
+    property string currentLayout: ""
 
     anchors {
         top: true
@@ -27,6 +31,7 @@ PanelWindow {
         spacing: Config.gap.md
 
         Workspaces {}
+        LayoutIndicator { layout: bar.currentLayout }
     }
 
     // Apps launched in current workspace

@@ -13,6 +13,8 @@ PillToggle PillToggle.qml
 Bar Bar.qml
 Workspaces Bar/Workspaces.qml
 WorkspaceApps Bar/WorkspaceApps.qml
+LayoutIndicator Bar/LayoutIndicator.qml
+LayoutMenu Bar/LayoutMenu.qml
 Tray Bar/Tray.qml
 TrayMenu Bar/TrayMenu.qml
 BluetoothMenu Bar/BluetoothMenu.qml

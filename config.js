@@ -65,7 +65,23 @@ const sidebar = {
     workspaceSize: 36,  // workspace chip diameter
     trayIconSize: 26,   // tray IconImage width/height
     workspaceAppIconSize: 26, // WorkspaceApps icon width/height
+    layoutGlyphSize: 20,      // dwm layout symbol
+    useNerdLayoutGlyphs: false, // false = dwm ASCII symbols, true = the Nerd Font set
 }
+
+// The dwm-style tiling layouts, in the order the picker lists them. `label` is the
+// key hyprland.lua pushes over IPC; `ascii` is the suckless symbol from
+// ~/suckless/dwm/config.h; `nerd` is the Nerd Font alternative, using the Nerd Fonts v3 numbering
+const layouts = [
+    { label: "tile",           ascii: "[]=",  nerd: "󰕮", key: "ALT + t" },
+    { label: "bstack",         ascii: "TTT",  nerd: "󰕵", key: "ALT + b" },
+    { label: "centeredmaster", ascii: "|M|",  nerd: "󰕫", key: "ALT + c" },
+    { label: "dwindle",        ascii: "[\\]", nerd: "󰕴", key: "ALT + v" },
+    { label: "monocle",        ascii: "[M]",  nerd: "󰖯", key: "ALT + f" },
+    { label: "spiral",         ascii: "[@]",  nerd: "󰢘", key: "ALT + m" },
+    { label: "grid",           ascii: "HHH",  nerd: "󰕰", key: "ALT + g" },
+    { label: "scrolling",      ascii: ">>=",  nerd: "󰕬", key: "" },
+]
 
 const anim = {
     slide: 600,   // dashboard open/close slide duration (ms)
@@ -109,6 +125,14 @@ const trayMenu = {
 const bluetoothMenu = {
     width: 280,
     rowHeight: 36,
+    padding: 8,
+    gap: 2,
+}
+
+// Layout picker sizing
+const layoutMenu = {
+    width: 330,
+    rowHeight: 34,
     padding: 8,
     gap: 2,
 }
