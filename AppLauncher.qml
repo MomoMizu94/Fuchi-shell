@@ -384,6 +384,8 @@ PanelWindow {
                             Keys.onUpPressed: if (launcher.results.length > 0)
                                 launcher.selectedIndex = (launcher.selectedIndex - 1 + launcher.results.length) % launcher.results.length
                             Keys.onReturnPressed: launcher.executeSelected()
+                            // For bluetooth numpad enter key
+                            Keys.onEnterPressed: launcher.executeSelected()
                             Keys.onEscapePressed: launcher.closeRequested()
                         }
 

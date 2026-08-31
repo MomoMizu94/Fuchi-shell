@@ -257,5 +257,14 @@ PanelWindow {
                 powerMenu.requestAction(powerMenu.actions[powerMenu.selectedIndex])
             }
         }
+        // For bluetooth numpad enter key
+        Keys.onEnterPressed: {
+            if (powerMenu.pendingAction) {
+                if (powerMenu.confirmChoice === 0) powerMenu.runAction(powerMenu.pendingAction.id)
+                else powerMenu.pendingAction = null
+            } else {
+                powerMenu.requestAction(powerMenu.actions[powerMenu.selectedIndex])
+            }
+        }
     }
 }
