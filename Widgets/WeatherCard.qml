@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell.Widgets
 import "../"
 import "../config.js" as Config
+import "../secrets.js" as Secrets
 
 // Overview tab card: current conditions, 3-day forecast, and an interactive
 // RainViewer precipitation radar map (pan/zoom/play-pause)
@@ -119,6 +120,11 @@ Rectangle {
                 property bool viewSettled: false
                 property int prefetchStage: 0
 
+                // CARTO basemap, requires API key for no watermark; still works without a key
+                readonly property string basemapSuffix: Secrets.cartoApiKey
+                    ? ".png?key=" + Secrets.cartoApiKey
+                    : ".png"
+
                 function unsettle() {
                     viewSettled = false
                     prefetchStage = 0
@@ -213,7 +219,7 @@ Rectangle {
                             Image {
                                 anchors.fill: parent
                                 asynchronous: true
-                                source: parent.tileUrl("https://basemaps.cartocdn.com/rastertiles/voyager/", ".png")
+                                source: parent.tileUrl("https://basemaps.cartocdn.com/rastertiles/voyager/", precipMap.basemapSuffix)
                                 opacity: 0.85
                             }
                             Image {

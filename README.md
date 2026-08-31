@@ -71,10 +71,16 @@ Weather uses the [OpenWeatherMap](https://openweathermap.org/api) API and IP-bas
 ```js
 const owmApiKey = "YOUR-KEY-HERE"
 
+// Optional — see below
+const cartoApiKey = ""
+
 // Optional fixed location; leave as 0 to auto-detect via IP
 const lat = 0
 const lon = 0
 ```
+
+The precipitation map draws [RainViewer](https://www.rainviewer.com/) radar (no key needed) over a
+[CARTO](https://carto.com/basemaps/apikey/) basemap (requires a key for no watermark).
 
 `secrets.js` is gitignored and must not be committed. This is the only file holding anything
 private — the Finance tab needs no key at all.
