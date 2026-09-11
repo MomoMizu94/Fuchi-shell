@@ -2,6 +2,7 @@
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
+import Quickshell.Services.Mpris
 import Quickshell.Io
 import QtQuick
 import "config.js" as Config
@@ -33,6 +34,41 @@ Scope {
 
     // Notification history
     ListModel { id: history }
+
+    // Spotify's ('spotify' package in AUR) notification carries no image -> reuse the artwork exposed
+    // by the same player over MPRIS
+    readonly property var spotifyPlayer: {
+        const players = Mpris.players.values
+        for (let i = 0; i < players.length; i++) {
+            const player = players[i]
+            if (player && ((player.identity || "").toLowerCase() === "spotify"
+                    || (player.desktopEntry || "").toLowerCase() === "spotify"))
+                return players[i]
+        }
+        return null
+    }
+
+    function syncSpotifyHistoryArt() {
+        // Read the MPRIS property directly after postTrackChanged
+        const artUrl = root.spotifyPlayer ? (root.spotifyPlayer.trackArtUrl || "") : ""
+        if (!artUrl)
+            return
+
+        for (let i = 0; i < history.count; i++) {
+            const entry = history.get(i)
+            if (entry.image === ""
+                    && (entry.appName || "").toLowerCase() === "spotify"
+                    && entry.summary === root.spotifyPlayer.trackTitle) {
+                history.setProperty(i, "image", artUrl)
+                return
+            }
+        }
+    }
+
+    Connections {
+        target: root.spotifyPlayer
+        function onPostTrackChanged() { root.syncSpotifyHistoryArt() }
+    }
 
     // Silence music apps from notification sounds
     function playNotificationSound(n) {
@@ -180,6 +216,7 @@ Scope {
     NotificationPopup {
         notifModel: server.trackedNotifications
         dndEnabled: dash.dndEnabled
+        spotifyArtUrl: root.spotifyPlayer ? (root.spotifyPlayer.trackArtUrl || "") : ""
     }
 
     // Grace period between the top hover-zone and the panel's own hover

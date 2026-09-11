@@ -11,8 +11,10 @@ import "config.js" as Config
 // a timeout (except Critical urgency). Persistent history lives separately —
 // see Widgets/NotificationHistoryCard.qml
 PanelWindow {
+    id: popup
     property var notifModel
     property bool dndEnabled: false
+    property string spotifyArtUrl: ""
     visible: !dndEnabled
 
     // Docked into the frame's top-right corner so the first card melts into
@@ -47,6 +49,10 @@ PanelWindow {
                 id: card
                 required property var modelData
                 required property int index
+                readonly property string imageSource: modelData.image
+                    ? modelData.image.toString()
+                    : ((modelData.appName || "").toLowerCase() === "spotify"
+                        ? popup.spotifyArtUrl : "")
 
                 Timer {
                     running: card.modelData.urgency !== NotificationUrgency.Critical
@@ -119,14 +125,14 @@ PanelWindow {
                         Image {
                             anchors.fill: parent
                             fillMode: Image.PreserveAspectFit
-                            visible: card.modelData.image !== ""
-                            source: card.modelData.image
+                            visible: card.imageSource !== ""
+                            source: card.imageSource
                         }
 
                         // Fallback: Application icon
                         IconImage {
                             anchors.fill: parent
-                            visible: card.modelData.image === "" && card.modelData.appIcon !== ""
+                            visible: card.imageSource === "" && card.modelData.appIcon !== ""
                             source: Quickshell.iconPath(card.modelData.appIcon)
                         }
                     }
