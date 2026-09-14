@@ -49,17 +49,17 @@ Scope {
     }
 
     function syncSpotifyHistoryArt() {
-        // Read the MPRIS property directly after postTrackChanged
+        // Callers defer this until the current metadata update has settled.
         const artUrl = root.spotifyPlayer ? (root.spotifyPlayer.trackArtUrl || "") : ""
         if (!artUrl)
             return
 
         for (let i = 0; i < history.count; i++) {
             const entry = history.get(i)
-            if (entry.image === ""
-                    && (entry.appName || "").toLowerCase() === "spotify"
+            if ((entry.appName || "").toLowerCase() === "spotify"
                     && entry.summary === root.spotifyPlayer.trackTitle) {
-                history.setProperty(i, "image", artUrl)
+                if (entry.image === "")
+                    history.setProperty(i, "image", artUrl)
                 return
             }
         }
@@ -67,7 +67,8 @@ Scope {
 
     Connections {
         target: root.spotifyPlayer
-        function onPostTrackChanged() { root.syncSpotifyHistoryArt() }
+        function onPostTrackChanged() { Qt.callLater(root.syncSpotifyHistoryArt) }
+        function onMetadataChanged() { Qt.callLater(root.syncSpotifyHistoryArt) }
     }
 
     // Silence music apps from notification sounds
@@ -117,6 +118,8 @@ Scope {
                 // History cap
                 if (history.count > Config.notifications.historyLimit)
                     history.remove(Config.notifications.historyLimit, history.count - Config.notifications.historyLimit)
+                if ((n.appName || "").toLowerCase() === "spotify")
+                    Qt.callLater(root.syncSpotifyHistoryArt)
             }
             n.tracked = true
         }
