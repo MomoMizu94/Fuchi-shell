@@ -42,6 +42,7 @@ PanelWindow {
     property real gpuTemp: 0
     property string gpuName: ""
     property var coreLoads: []
+    property var coreFreqsGhz: []
     property real ramUsedGb: 0
     property real ramTotalGb: 0
     property real netUpMbs: 0
@@ -118,6 +119,7 @@ PanelWindow {
                 const d = JSON.parse(perfOut.text)
                 dashboard.cpuValue = d.cpu
                 dashboard.coreLoads = d.cores
+                dashboard.coreFreqsGhz = d.coreFreqs || []
                 dashboard.cpuFreqGhz = d.freq
                 dashboard.cpuTemp = d.ctemp
                 dashboard.gpuValue = d.gpu

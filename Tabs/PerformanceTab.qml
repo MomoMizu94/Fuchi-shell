@@ -155,7 +155,7 @@ ColumnLayout {
                 spacing: 12
 
                 Text {
-                    text: "CPU CORES"
+                    text: "CPU THREADS · USAGE"
                     color: Colors.subtext
                     font.family: Config.bar.fontFamily
                     font.pixelSize: Config.bar.fontSize - 6
@@ -174,26 +174,56 @@ ColumnLayout {
                         Repeater {
                             model: dashboard.coreLoads.length
                             delegate: Item {
+                                id: coreBar
                                 required property int index
                                 property real load: dashboard.coreLoads[index] || 0
+                                property var frequency: dashboard.coreFreqsGhz[index]
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
 
-                                Rectangle {
+                                Item {
+                                    anchors.top: parent.top
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: frequencyLabel.top
+                                    anchors.bottomMargin: 8
+
+                                    Rectangle {
+                                        anchors.bottom: parent.bottom
+                                        width: parent.width
+                                        height: Math.max(4, parent.height * coreBar.load / 100)
+                                        radius: Config.radius.sm
+                                        color: coreBar.load > 66 ? Colors.error
+                                             : coreBar.load > 33 ? Colors.accent
+                                             : Colors.accent2
+                                        Behavior on height {
+                                            NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    id: frequencyLabel
                                     anchors.bottom: parent.bottom
                                     width: parent.width
-                                    height: Math.max(4, parent.height * parent.load / 100)
-                                    radius: Config.radius.sm
-                                    color: parent.load > 66 ? Colors.error
-                                         : parent.load > 33 ? Colors.accent
-                                         : Colors.accent2
-                                    Behavior on height {
-                                        NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
-                                    }
+                                    horizontalAlignment: Text.AlignHCenter
+                                    text: coreBar.frequency > 0 ? coreBar.frequency.toFixed(1) : "--"
+                                    color: Colors.subtext
+                                    font.family: Config.bar.fontFamily
+                                    font.pixelSize: Config.bar.fontSize - 6
                                 }
                             }
                         }
                     }
+                }
+
+                Text {
+                    text: "CPU THREADS · GHz"
+                    color: Colors.subtext
+                    font.family: Config.bar.fontFamily
+                    font.pixelSize: Config.bar.fontSize - 6
+                    font.bold: true
+                    font.letterSpacing: 1.5
                 }
             }
         }

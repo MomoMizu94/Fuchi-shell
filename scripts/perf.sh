@@ -28,7 +28,28 @@ cpu_json=$(awk -v s1="$s1" -v s2="$s2" 'BEGIN {
 cpu=${cpu_json%% *}
 cores=${cpu_json#* }
 
-freq=$(awk -F: '/cpu MHz/{s+=$2; n++} END{if (n) printf "%.1f", s/n/1000; else print 0}' /proc/cpuinfo)
+# Match frequencies by CPU ID to the same /proc/stat order used for the bars.
+freq_json=$(awk -F: -v stats="$s1" '
+    /^processor[[:space:]]*:/ { id = $2 + 0 }
+    /^cpu MHz[[:space:]]*:/ {
+        mhz = $2 + 0
+        if (mhz > 0) { freqs[id] = mhz / 1000; sum += mhz; count++ }
+    }
+    END {
+        n = split(stats, lines, "\n")
+        out = ""
+        for (i = 1; i <= n; i++) {
+            split(lines[i], fields, " ")
+            if (fields[1] !~ /^cpu[0-9]+$/) continue
+            id = substr(fields[1], 4) + 0
+            value = id in freqs ? sprintf("%.1f", freqs[id]) : "null"
+            out = out (out == "" ? "" : ",") value
+        }
+        printf "%.1f [%s]", count ? sum / count / 1000 : 0, out
+    }
+' /proc/cpuinfo)
+freq=${freq_json%% *}
+core_freqs=${freq_json#* }
 ctemp=$(sensors 2>/dev/null | awk '/Tctl/{gsub(/[+°C]/,"",$2); print $2; exit}')
 gpu=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,name --format=csv,noheader,nounits 2>/dev/null)
 gutil=$(echo "$gpu" | cut -d, -f1 | tr -d ' ')
@@ -42,6 +63,6 @@ read -r rx2 tx2 <<< "$n2"
 up=$(awk -v a="$tx1" -v b="$tx2" 'BEGIN{printf "%.1f", (b-a)/0.5/1000000}')
 down=$(awk -v a="$rx1" -v b="$rx2" 'BEGIN{printf "%.1f", (b-a)/0.5/1000000}')
 
-printf '{"cpu":%s,"cores":%s,"freq":%s,"ctemp":%s,"gpu":%s,"gtemp":%s,"gname":"%s","ramU":%s,"ramT":%s,"up":%s,"down":%s,"diskU":%s,"diskT":%s,"procs":%s}\n' \
-    "${cpu:-0}" "${cores:-[]}" "${freq:-0}" "${ctemp:-0}" "${gutil:-0}" "${gtemp:-0}" "$gname" \
+printf '{"cpu":%s,"cores":%s,"freq":%s,"coreFreqs":%s,"ctemp":%s,"gpu":%s,"gtemp":%s,"gname":"%s","ramU":%s,"ramT":%s,"up":%s,"down":%s,"diskU":%s,"diskT":%s,"procs":%s}\n' \
+    "${cpu:-0}" "${cores:-[]}" "${freq:-0}" "${core_freqs:-[]}" "${ctemp:-0}" "${gutil:-0}" "${gtemp:-0}" "$gname" \
     "${ramU:-0}" "${ramT:-0}" "${up:-0}" "${down:-0}" "${dU:-0}" "${dT:-0}" "${procs:-0}"
