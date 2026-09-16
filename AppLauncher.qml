@@ -10,7 +10,7 @@ import "config.js" as Config
 import "calc.js" as Calc
 
 // Bottom-docked command palette: fuzzy app search, a ">" command mode
-// (just wallpaper picker, calculator for now), and a bare-expression calculator shortcut
+// for wallpaper, calculator and keybinds, and a bare-expression calculator shortcut
 PanelWindow {
     id: launcher
     signal closeRequested()
@@ -30,7 +30,7 @@ PanelWindow {
     anchors { left: true; right: true; top: true; bottom: true }
     color: "transparent"
     exclusionMode: ExclusionMode.Normal
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     property string query: ""
     property int selectedIndex: 0
@@ -42,7 +42,8 @@ PanelWindow {
     // not a new framework
     readonly property var commandDefs: [
         { name: "wallpaper", label: "Wallpaper" },
-        { name: "calc", label: "Calculator" }
+        { name: "calc", label: "Calculator" },
+        { name: "keybinds", label: "Keybinds" }
     ]
     property var wallpaperFiles: []   // populated once by wallpaperFolderModel below
 
@@ -92,6 +93,7 @@ PanelWindow {
     readonly property var parsedCommand: commandMode ? parseCommand() : { word: "", filter: "" }
     readonly property var activeCommand: commandMode ? matchedCommand(parsedCommand.word) : null
     readonly property bool wallpaperGridMode: !!activeCommand && activeCommand.name === "wallpaper"
+    readonly property bool keybindsMode: !!activeCommand && activeCommand.name === "keybinds"
 
     function filteredWallpapers(filter) {
         const f = filter.trim().toLowerCase()
@@ -108,6 +110,8 @@ PanelWindow {
         if (parsedCommand.word === "")
             return commandDefs.map(c => ({ kind: "menu", name: c.label, comment: "", command: c.name }))
         if (!activeCommand) return []
+        // Keybinds has its own reference view, with no executable result rows.
+        if (keybindsMode) return []
         if (activeCommand.name === "wallpaper") return filteredWallpapers(parsedCommand.filter)
         if (activeCommand.name === "calc") {
             const entry = Calc.entry(parsedCommand.filter)
@@ -165,6 +169,7 @@ PanelWindow {
     }
 
     function scrollSelectedIntoView(idx) {
+        if (keybindsMode) return
         const view = wallpaperGridMode ? wallpaperGrid : resultsList
         if (view.count > 0) view.positionViewAtIndex(idx, ListView.Contain)
     }
@@ -175,6 +180,7 @@ PanelWindow {
     onSelectedIndexChanged: scrollSelectedIntoView(selectedIndex)
 
     function executeSelected() {
+        if (keybindsMode) return
         if (results.length === 0) return
         const item = results[selectedIndex]
         // Kind-first: a calc row reaches here from either ">calc" or a bare
@@ -283,14 +289,18 @@ PanelWindow {
     Item {
         id: panel
         anchors.horizontalCenter: parent.horizontalCenter
-        width: launcher.wallpaperGridMode ? Config.launcher.galleryPanelWidth : Config.launcher.width
+        width: launcher.keybindsMode
+            ? Math.min(Config.keybinds.width, launcher.width - Config.gap.xl * 2)
+            : launcher.wallpaperGridMode ? Config.launcher.galleryPanelWidth : Config.launcher.width
         Behavior on width { NumberAnimation { duration: Config.anim.popup; easing.type: Easing.OutCubic } }
         // Chrome accounting must match the anchors below exactly (top margin,
         // two dividerGap gaps around the divider, the divider itself, and the
         // bottom margin)
         readonly property int outerMargin: Config.gap.xl
         readonly property int dividerGap: Config.gap.md
-        height: outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight +
+        height: launcher.keybindsMode
+            ? Math.min(Config.keybinds.height, launcher.height - Config.gap.xl * 2)
+            : outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight +
             (launcher.wallpaperGridMode
                 ? Config.launcher.galleryCardHeight + Config.launcher.galleryLabelHeight
                 : Math.max(1, Math.min(launcher.results.length, Config.launcher.maxVisibleRows)) * Config.launcher.rowHeight)
@@ -379,10 +389,25 @@ PanelWindow {
                             text: launcher.query
                             onTextChanged: launcher.query = text
 
-                            Keys.onDownPressed: if (launcher.results.length > 0)
-                                launcher.selectedIndex = (launcher.selectedIndex + 1) % launcher.results.length
-                            Keys.onUpPressed: if (launcher.results.length > 0)
-                                launcher.selectedIndex = (launcher.selectedIndex - 1 + launcher.results.length) % launcher.results.length
+                            // Keep typing in this input while navigation scrolls
+                            // the reference. Other modes retain row selection.
+                            Keys.onDownPressed: {
+                                if (launcher.keybindsMode) keybindsView.scrollBy(Config.launcher.rowHeight)
+                                else if (launcher.results.length > 0)
+                                    launcher.selectedIndex = (launcher.selectedIndex + 1) % launcher.results.length
+                            }
+                            Keys.onUpPressed: {
+                                if (launcher.keybindsMode) keybindsView.scrollBy(-Config.launcher.rowHeight)
+                                else if (launcher.results.length > 0)
+                                    launcher.selectedIndex = (launcher.selectedIndex - 1 + launcher.results.length) % launcher.results.length
+                            }
+                            Keys.onPressed: event => {
+                                if (!launcher.keybindsMode) return
+                                if (event.key === Qt.Key_PageUp) keybindsView.scrollPage(-1)
+                                else if (event.key === Qt.Key_PageDown) keybindsView.scrollPage(1)
+                                else return
+                                event.accepted = true
+                            }
                             Keys.onReturnPressed: launcher.executeSelected()
                             // For bluetooth numpad enter key
                             Keys.onEnterPressed: launcher.executeSelected()
@@ -418,8 +443,8 @@ PanelWindow {
                     id: resultsList
                     anchors.fill: parent
                     clip: true
-                    visible: !launcher.wallpaperGridMode
-                    model: launcher.wallpaperGridMode ? [] : launcher.results
+                    visible: !launcher.wallpaperGridMode && !launcher.keybindsMode
+                    model: visible ? launcher.results : []
                     currentIndex: launcher.selectedIndex
 
                     delegate: Rectangle {
@@ -586,9 +611,19 @@ PanelWindow {
                     }
                 }
 
+                // The same panel and search bar host every command. Activation
+                // refreshes bindings once; changes to the filter stay local.
+                Keybinds {
+                    id: keybindsView
+                    anchors.fill: parent
+                    visible: launcher.keybindsMode
+                    active: launcher.open && launcher.keybindsMode
+                    filter: launcher.parsedCommand.filter
+                }
+
                 Text {
                     anchors.fill: parent
-                    visible: launcher.results.length === 0
+                    visible: !launcher.keybindsMode && launcher.results.length === 0
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     text: launcher.emptyStateText

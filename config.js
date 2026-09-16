@@ -104,6 +104,12 @@ const launcher = {
     wallpaperFolder: "Pictures/Wallpapers",
 }
 
+// Expanded launcher dimensions while browsing keybinds, including its input.
+const keybinds = {
+    width: 1000,
+    height: 900,
+}
+
 // Power menu (right-docked panel) sizing
 const powerMenu = {
     width: 140,

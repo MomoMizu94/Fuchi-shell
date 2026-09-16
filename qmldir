@@ -3,6 +3,7 @@ singleton Events Events.qml
 CalendarGrid CalendarGrid.qml
 Dashboard Dashboard.qml
 AppLauncher AppLauncher.qml
+Keybinds Keybinds.qml
 PowerMenu PowerMenu.qml
 VolumeMenu VolumeMenu.qml
 NotificationPopup NotificationPopup.qml
