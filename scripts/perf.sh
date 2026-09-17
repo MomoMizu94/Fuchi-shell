@@ -50,7 +50,18 @@ freq_json=$(awk -F: -v stats="$s1" '
 ' /proc/cpuinfo)
 freq=${freq_json%% *}
 core_freqs=${freq_json#* }
-ctemp=$(sensors 2>/dev/null | awk '/Tctl/{gsub(/[+°C]/,"",$2); print $2; exit}')
+# Prefer AMD Tctl or Intel package temperature; older Intel CPUs may only expose cores.
+ctemp=$(sensors 2>/dev/null | awk -F: '
+    /^(Tctl|Package id [0-9]+|Core [0-9]+):/ {
+        split($2, fields, " ")
+        temp = fields[1]
+        gsub(/[+°C]/, "", temp)
+        if (temp !~ /^-?[0-9]+(\.[0-9]+)?$/) next
+        if ($1 !~ /^Core /) { selected = temp; exit }
+        if (hottest == "" || temp + 0 > hottest) hottest = temp + 0
+    }
+    END { print selected != "" ? selected : hottest }
+')
 gpu=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,name --format=csv,noheader,nounits 2>/dev/null)
 gutil=$(echo "$gpu" | cut -d, -f1 | tr -d ' ')
 gtemp=$(echo "$gpu" | cut -d, -f2 | tr -d ' ')
