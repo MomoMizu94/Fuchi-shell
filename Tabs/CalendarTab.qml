@@ -168,7 +168,7 @@ ColumnLayout {
                         Text {
                             anchors.centerIn: parent
                             text: "+"
-                            color: Colors.onAccent
+                            color: Colors.contrastText
                             font.family: Config.bar.fontFamily
                             font.pixelSize: Config.bar.fontSize + 4
                             font.bold: true
@@ -309,7 +309,7 @@ ColumnLayout {
                                 clearIcon.width / 2 - (clearIconMetrics.tightBoundingRect.x
                                                        + clearIconMetrics.tightBoundingRect.width / 2)
                             text: "󰩹"
-                            color: Colors.onAccent
+                            color: Colors.contrastText
                             font.family: Config.bar.fontFamily
                             font.pixelSize: Config.bar.fontSize + 2
                             font.bold: true
@@ -377,7 +377,7 @@ ColumnLayout {
                         Text {
                             anchors.centerIn: parent
                             text: "+"
-                            color: Colors.onAccent
+                            color: Colors.contrastText
                             font.family: Config.bar.fontFamily
                             font.pixelSize: Config.bar.fontSize + 4
                             font.bold: true
@@ -437,7 +437,7 @@ ColumnLayout {
                                             visible: done
                                             anchors.centerIn: parent
                                             text: "✓"
-                                            color: Colors.onAccent
+                                            color: Colors.contrastText
                                             font.pixelSize: 11
                                             font.bold: true
                                         }

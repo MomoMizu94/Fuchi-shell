@@ -118,6 +118,8 @@ and prefixes work too, so `>key` opens the keybind reference.
 | --- | --- |
 | `>wallpaper` | Shows wallpapers inside the launcher. Choose one and press Enter to apply it. |
 | `>wallpaper forest` | Filters wallpapers by name. |
+| `>theme` | Choose Dark or Light for the current wallpaper. The active mode is marked. |
+| `>theme light` | Filter the choices to Light, then press Enter to apply it. |
 | `>calc (2+3)*4` | Shows a calculation. Enter copies the result. |
 | `6*7` | Shows a calculation above matching apps without a command prefix. |
 | `>keybinds` | Shows the grouped Hyprland shortcuts inside the launcher. |
@@ -209,6 +211,30 @@ when the palette changes. [scripts/set-wallpaper.sh](scripts/set-wallpaper.sh)
 sets the image with `awww`, runs `wal`, and reloads Hyprland. Edit that script
 if you use a different wallpaper setter.
 
+`>theme` updates the pywal colors.
+The selected mode persists in `$XDG_STATE_HOME/quickshell/theme-mode`, or
+`~/.local/state/quickshell/theme-mode` by default. Wallpaper changes follow
+that mode. Until you select a mode, wallpapers use Dark as default. GTK themes
+stay as configured separately (for now).
+
+The same script supports `bash scripts/set-wallpaper.sh --theme light` and
+`--theme dark` without changing the wallpaper. Theme and wallpaper requests
+use `flock` to prevent overlapping palette updates.
+
+Light palettes keep the wallpaper hues and adjust pale text colors before pywal
+exports them. Slight adjustmenting was necessary to not make some colors too overpowering.
+
+For Kitty, install the supplied pywal template once:
+
+```sh
+install -m 644 templates/colors-kitty.conf ~/.config/wal/templates/colors-kitty.conf
+```
+
+Keep `include ~/.cache/wal/colors-kitty.conf` after any other theme includes in
+`kitty.conf`. The template also controls selection and tab colors. The wallpaper
+script reloads running Kitty instances after exporting the palette. Programs
+that draw their own RGB colors may still need their own light theme.
+
 ### Finance and saved state
 
 The Finance tab reads Yahoo Finance's chart endpoint through
@@ -266,25 +292,27 @@ disable the corresponding timer if you no longer want those requests.
 | `qmldir` | Local QML component registrations |
 | `scripts/` | Wallpaper, system statistics, and market-data helpers |
 | `assets/` | Images and animations used by widgets |
-| `tests/` | Keybind formatter tests |
+| `tests/` | Keybind and theme tests |
 
 ## Development and tests
 
 You do not need Node.js or the tests to use Fuchi-shell. Quickshell runs the
 JavaScript helpers itself.
 
-The `tests/` folder is for people changing the code. It checks that changes
-have not broken shortcut formatting or filtering. To run these checks,
+The `tests/` folder is for people changing the code. It checks shortcut formatting,
+filtering, and theme selection without applying desktop changes. To run these checks,
 install Node.js and run this command from the repository directory:
 
 ```sh
-node tests/keybinds.test.cjs
+node --test tests/*.test.cjs
+python3 tests/palette_test.py
 ```
 
 The tests cover modifier aliases, filtering, workspace ranges, category order,
-and fallback labels. They do not check how the QML renders. After changing the
-launcher UI, also check app search, wallpaper mode, calculator mode, and
-keybind scrolling in a running Hyprland session.
+fallback labels, theme persistence, and failed palette generation. They do not
+check how the QML renders. After changing the launcher UI, also check app search,
+wallpaper mode, calculator mode, theme selection, and keybind scrolling in a
+running Hyprland session.
 
 ## Acknowledgements
 

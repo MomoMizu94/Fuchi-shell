@@ -15,14 +15,15 @@ Singleton {
     function c(i, fb) { return themed ? wal.colors["color" + i] : fb }
 
     property color bg:         s("background", "#1A1F2B")
+    readonly property bool isLight: bg.r * 0.299 + bg.g * 0.587 + bg.b * 0.114 > 0.5
     property color surface:    bg
-    property color card:       themed ? Qt.lighter(bg, 1.35) : "#252B36"   // wal has no surface tiers
-    property color inset:      themed ? Qt.darker(bg, 1.40) : "#10131a"
+    property color card:       themed ? (isLight ? Qt.darker(bg, 1.06) : Qt.lighter(bg, 1.35)) : "#252B36"
+    property color inset:      themed ? Qt.darker(bg, isLight ? 1.12 : 1.40) : "#10131a"
     property color border:     c(8, "#2A313E")
     property color text:       s("foreground", "#DDE3EA")
     property color textStrong: c(15, "#F2EDDC")
     property color subtext:    c(8, "#6B7A94")
-    property color onAccent:   bg
+    property color contrastText: root.bg
     property color accent:     c(3, "#D18870")
     property color accent2:    c(5, "#F2C3A7")
     property color accentAlt:  c(6, "#90BDBC")

@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
-// Performance tab: CPU/RAM/GPU donut gauges, per-core bars, and
+// Performance tab: CPU/RAM/GPU/VRAM donut gauges, per-core bars, and
 // network/disk/process stats
 ColumnLayout {
     id: root
@@ -11,16 +11,18 @@ ColumnLayout {
 
     spacing: 14
 
-    // -- Top: CPU / RAM / GPU donut gauges --
+    // -- Top: CPU / RAM / GPU / VRAM donut gauges --
     RowLayout {
         Layout.fillWidth: true
+        uniformCellSizes: true
         spacing: 14
 
         Repeater {
             model: [
                 { label: "CPU", icon: "󰍛" },
                 { label: "RAM", icon: "󰘚" },
-                { label: "GPU", icon: "󰢮" }
+                { label: "GPU", icon: "󰢮" },
+                { label: "VRAM", icon: "󰢮" }
             ]
             delegate: Rectangle {
                 id: gaugeCard
@@ -28,12 +30,17 @@ ColumnLayout {
                 required property int index
                 property real value: index === 0 ? dashboard.cpuValue
                                    : index === 1 ? dashboard.ramValue
-                                   : dashboard.gpuValue
+                                   : index === 2 ? dashboard.gpuValue
+                                   : dashboard.vramValue
                 property string subline: index === 0
                         ? dashboard.cpuFreqGhz.toFixed(1) + "GHz · " + Math.round(dashboard.cpuTemp) + "°C"
                     : index === 1
                         ? dashboard.ramUsedGb.toFixed(1) + " / " + Math.round(dashboard.ramTotalGb) + " GB"
-                        : Math.round(dashboard.gpuTemp) + "°C · " + dashboard.gpuName
+                    : index === 2
+                        ? Math.round(dashboard.gpuTemp) + "°C · " + dashboard.gpuName
+                    : value >= 0
+                        ? (dashboard.vramUsedMib / 1024).toFixed(1) + " / " + (dashboard.vramTotalMib / 1024).toFixed(1) + " GiB"
+                        : "--"
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -55,12 +62,16 @@ ColumnLayout {
                             anchors.centerIn: parent
                             width: gauge.size * 0.78; height: width
                             radius: width / 2
-                            color: Colors.onAccent
+                            color: Colors.surface
                         }
 
                         Canvas {
                             anchors.fill: parent
                             property real value: gaugeCard.value
+                            property color trackColor: Colors.subtext
+                            property color fillColor: Colors.accent
+                            onTrackColorChanged: requestPaint()
+                            onFillColorChanged: requestPaint()
                             onValueChanged: requestPaint()
                             onWidthChanged: requestPaint()
                             onPaint: {
@@ -71,15 +82,15 @@ ColumnLayout {
                                 var r = (gauge.size - lw) / 2
                                 ctx.lineWidth = lw
                                 ctx.lineCap = "round"
-                                ctx.strokeStyle = Colors.subtext
+                                ctx.strokeStyle = trackColor
                                 ctx.globalAlpha = 0.35
                                 ctx.beginPath()
                                 ctx.arc(cx, cy, r, 0, Math.PI * 2)
                                 ctx.stroke()
                                 ctx.globalAlpha = 1.0
-                                ctx.strokeStyle = Colors.accent
+                                ctx.strokeStyle = fillColor
                                 ctx.beginPath()
-                                ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, value / 100))
+                                ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, Math.min(1, value / 100)))
                                 ctx.stroke()
                             }
                         }
@@ -90,7 +101,7 @@ ColumnLayout {
 
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: Math.round(gaugeCard.value)
+                                text: gaugeCard.value >= 0 ? Math.round(gaugeCard.value) : "--"
                                 color: Colors.text
                                 font.family: Config.bar.fontFamily
                                 font.pixelSize: gauge.size * 0.28
@@ -98,7 +109,7 @@ ColumnLayout {
                             }
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: "%"
+                                text: gaugeCard.value >= 0 ? "%" : ""
                                 color: Colors.subtext
                                 font.family: Config.bar.fontFamily
                                 font.pixelSize: gauge.size * 0.11

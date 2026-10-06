@@ -41,6 +41,9 @@ PanelWindow {
     property real cpuTemp: 0
     property real gpuTemp: 0
     property string gpuName: ""
+    property real vramUsedMib: -1
+    property real vramTotalMib: 0
+    readonly property real vramValue: vramUsedMib >= 0 && vramTotalMib > 0 ? 100 * vramUsedMib / vramTotalMib : -1
     property var coreLoads: []
     property var coreFreqsGhz: []
     property real ramUsedGb: 0
@@ -125,6 +128,8 @@ PanelWindow {
                 dashboard.gpuValue = d.gpu
                 dashboard.gpuTemp = d.gtemp
                 dashboard.gpuName = d.gname
+                dashboard.vramUsedMib = d.vramU ?? -1
+                dashboard.vramTotalMib = d.vramT ?? 0
                 dashboard.ramValue = d.ramT > 0 ? 100 * d.ramU / d.ramT : 0
                 dashboard.ramUsedGb = d.ramU
                 dashboard.ramTotalGb = d.ramT

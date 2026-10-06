@@ -50,25 +50,16 @@ PanelWindow {
     function isEasyEffects(n) {
         return ((n.description || n.name || "") + "").toLowerCase().includes("easy effects")
     }
-    // PipeWire's own media.class property ("Audio/Sink" / "Audio/Source") is a
-    // stable, documented way to tell real devices from streams/filters — far
-    // more reliable than guessing at Quickshell's internal PwNodeType bitflags
+    // These fields are available without tracking. Reading properties here
+    // would exclude devices that are not tracked, including non-default outputs.
     function computeOutputList() {
-        return Pipewire.nodes.values.filter(n => n.properties["media.class"] === "Audio/Sink" && !isEasyEffects(n))
+        return Pipewire.nodes.values.filter(n => n.audio && !n.isStream && n.isSink && !isEasyEffects(n))
     }
     function computeInputList() {
-        return Pipewire.nodes.values.filter(n => n.properties["media.class"] === "Audio/Source" && !isEasyEffects(n))
+        return Pipewire.nodes.values.filter(n => n.audio && !n.isStream && !n.isSink && !isEasyEffects(n))
     }
-    // Streams need a different classification technique from devices above:
-    // verified live that a stream node's `properties` map is permanently
-    // empty ({}) — never populates media.class/application.name at all,
-    // unlike device nodes. The only usable signal is `type`, but it's NOT a
-    // set of independent single-bit flags — verified live that OBS's capture
-    // stream reports type 13, and `PwNodeType.AudioInStream`/`AudioOutStream`
-    // are 13/21 respectively, i.e. composite category values (Audio|Stream|Source
-    // vs Audio|Stream|Sink) that share bits. A bitwise-AND check matches BOTH for
-    // a pure input stream like OBS's — exact equality is what actually
-    // distinguishes them
+    // Stream types are composite values with shared bits. Exact equality
+    // distinguishes playback from recording.
     function computePlaybackList() {
         return Pipewire.nodes.values.filter(n => n.isStream && n.type === PwNodeType.AudioOutStream)
     }
@@ -79,14 +70,7 @@ PanelWindow {
         return n.description || n.name
     }
 
-    // Declarative bindings, not one-shot snapshots. A node's `properties` map
-    // (media.class, application.name, ...) populates asynchronously shortly
-    // AFTER the node itself is added — `Pipewire.nodes.valuesChanged` (node
-    // added/removed) had already fired by then, so a list computed once via
-    // Component.onCompleted/valuesChanged got permanently stuck seeing
-    // `undefined` for media.class. Declaring these as real property bindings makes QML auto-track every node's
-    // `properties` read during the filter pass, so each list re-evaluates
-    // the moment propertiesChanged fires for any of them
+    // Bindings keep the lists current as nodes and their classification change.
     readonly property var outputList: computeOutputList()
     readonly property var inputList: computeInputList()
     readonly property var playbackList: computePlaybackList()

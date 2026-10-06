@@ -62,10 +62,16 @@ ctemp=$(sensors 2>/dev/null | awk -F: '
     }
     END { print selected != "" ? selected : hottest }
 ')
-gpu=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,name --format=csv,noheader,nounits 2>/dev/null)
+gpu=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total,name --format=csv,noheader,nounits 2>/dev/null)
 gutil=$(echo "$gpu" | cut -d, -f1 | tr -d ' ')
 gtemp=$(echo "$gpu" | cut -d, -f2 | tr -d ' ')
-gname=$(echo "$gpu" | cut -d, -f3- | sed 's/^ *//; s/NVIDIA GeForce //')
+gname=$(echo "$gpu" | cut -d, -f5- | sed 's/^ *//; s/NVIDIA GeForce //')
+# NVIDIA reports memory in MiB. Keep unavailable readings distinct from zero use
+read -r vramU vramT < <(echo "$gpu" | awk -F, '{
+    gsub(/ /, "", $3); gsub(/ /, "", $4)
+    if ($3 ~ /^[0-9]+$/ && $4 ~ /^[0-9]+$/ && $4 + 0 > 0) print $3, $4
+    else print -1, 0
+}')
 read -r ramU ramT < <(free -m | awk 'NR==2{printf "%.1f %.1f", $3/1024, $2/1024}')
 read -r dU dT < <(df -BG / | awk 'NR==2{gsub("G",""); print $3, $2}')
 procs=$(ps -e --no-headers | wc -l)
@@ -74,6 +80,7 @@ read -r rx2 tx2 <<< "$n2"
 up=$(awk -v a="$tx1" -v b="$tx2" 'BEGIN{printf "%.1f", (b-a)/0.5/1000000}')
 down=$(awk -v a="$rx1" -v b="$rx2" 'BEGIN{printf "%.1f", (b-a)/0.5/1000000}')
 
-printf '{"cpu":%s,"cores":%s,"freq":%s,"coreFreqs":%s,"ctemp":%s,"gpu":%s,"gtemp":%s,"gname":"%s","ramU":%s,"ramT":%s,"up":%s,"down":%s,"diskU":%s,"diskT":%s,"procs":%s}\n' \
+printf '{"cpu":%s,"cores":%s,"freq":%s,"coreFreqs":%s,"ctemp":%s,"gpu":%s,"gtemp":%s,"gname":"%s","vramU":%s,"vramT":%s,"ramU":%s,"ramT":%s,"up":%s,"down":%s,"diskU":%s,"diskT":%s,"procs":%s}\n' \
     "${cpu:-0}" "${cores:-[]}" "${freq:-0}" "${core_freqs:-[]}" "${ctemp:-0}" "${gutil:-0}" "${gtemp:-0}" "$gname" \
+    "${vramU:--1}" "${vramT:-0}" \
     "${ramU:-0}" "${ramT:-0}" "${up:-0}" "${down:-0}" "${dU:-0}" "${dT:-0}" "${procs:-0}"

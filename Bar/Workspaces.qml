@@ -39,7 +39,7 @@ ColumnLayout {
             Text {
                 anchors.centerIn: parent
                 text: root.icons[modelData.id] || modelData.id
-                color: modelData.active ? Colors.onAccent : Colors.subtext
+                color: modelData.active ? Colors.contrastText : Colors.subtext
                 font.family: Config.bar.fontFamily
                 font.pixelSize: Config.sidebar.iconSize
             }

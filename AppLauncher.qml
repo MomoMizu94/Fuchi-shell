@@ -10,7 +10,7 @@ import "config.js" as Config
 import "calc.js" as Calc
 
 // Bottom-docked command palette: fuzzy app search, a ">" command mode
-// for wallpaper, calculator and keybinds, and a bare-expression calculator shortcut
+// for wallpaper, theme, calculator and keybinds, and a bare-expression calculator shortcut
 PanelWindow {
     id: launcher
     signal closeRequested()
@@ -42,6 +42,7 @@ PanelWindow {
     // not a new framework
     readonly property var commandDefs: [
         { name: "wallpaper", label: "Wallpaper" },
+        { name: "theme", label: "Theme" },
         { name: "calc", label: "Calculator" },
         { name: "keybinds", label: "Keybinds" }
     ]
@@ -113,6 +114,14 @@ PanelWindow {
         // Keybinds has its own reference view, with no executable result rows.
         if (keybindsMode) return []
         if (activeCommand.name === "wallpaper") return filteredWallpapers(parsedCommand.filter)
+        if (activeCommand.name === "theme") {
+            return ["dark", "light"]
+                .filter(mode => fuzzyScore(parsedCommand.filter.trim().toLowerCase(), mode) >= 0)
+                .map(mode => ({ kind: "theme", mode,
+                    name: mode === "dark" ? "Dark" : "Light",
+                    glyph: mode === "dark" ? "󰖔" : "󰖙",
+                    comment: (mode === "light") === Colors.isLight ? "Active" : "" }))
+        }
         if (activeCommand.name === "calc") {
             const entry = Calc.entry(parsedCommand.filter)
             return entry ? [entry] : []
@@ -200,8 +209,9 @@ PanelWindow {
                 launcher.query = ">" + item.command + " "   // drill in, stay open
                 return
             }
-            if (item.kind === "wallpaper") {
-                wallpaperProc.command = ["bash", Quickshell.env("HOME") + "/.config/quickshell/scripts/set-wallpaper.sh", item.filePath]
+            if (item.kind === "wallpaper" || item.kind === "theme") {
+                wallpaperProc.command = ["bash", Quickshell.env("HOME") + "/.config/quickshell/scripts/set-wallpaper.sh"]
+                    .concat(item.kind === "theme" ? ["--theme", item.mode] : [item.filePath])
                 wallpaperProc.startDetached()
                 launcher.closeRequested()
             }

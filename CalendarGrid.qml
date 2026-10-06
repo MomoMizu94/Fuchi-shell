@@ -165,7 +165,7 @@ ColumnLayout {
                     anchors.centerIn: parent
                     text: !cell.isWeek ? cell.modelData.d : ""
                     color: cell.isToday
-                        ? Colors.onAccent
+                        ? Colors.contrastText
                         : cell.modelData.cur
                             ? Colors.text
                             : Colors.subtext
@@ -180,7 +180,7 @@ ColumnLayout {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     width: 5; height: 5; radius: 2.5
-                    color: cell.isToday ? Colors.onAccent : Colors.accent
+                    color: cell.isToday ? Colors.contrastText : Colors.accent
                 }
 
                 MouseArea {

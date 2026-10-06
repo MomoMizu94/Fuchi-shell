@@ -142,7 +142,7 @@ ColumnLayout {
                             visible: !mediaCard.player || !mediaCard.player.trackArtUrl
                             anchors.centerIn: parent
                             text: "󰝚"
-                            color: Colors.onAccent
+                            color: Colors.contrastText
                             font.family: Config.bar.fontFamily
                             font.pixelSize: artArea.artSize * 0.4
                         }
@@ -213,7 +213,7 @@ ColumnLayout {
                             Text {
                                 anchors.centerIn: parent
                                 text: mediaCard.player && mediaCard.optimisticPlaying ? "" : ""
-                                color: Colors.onAccent
+                                color: Colors.contrastText
                                 font.family: Config.bar.fontFamily
                                 font.pixelSize: Config.bar.fontSize + 10
                             }

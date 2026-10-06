@@ -139,7 +139,7 @@ ColumnLayout {
                         Text {
                             anchors.centerIn: parent
                             text: chip.modelData.label
-                            color: chip.active ? Colors.onAccent : Colors.subtext
+                            color: chip.active ? Colors.contrastText : Colors.subtext
                             font.family: Config.bar.fontFamily
                             font.pixelSize: Config.type.sm
                             font.bold: chip.active

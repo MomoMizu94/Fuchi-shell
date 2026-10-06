@@ -19,7 +19,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         x: pill.on ? parent.width - width - 3 : 3
         Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-        color: pill.on ? Colors.onAccent : Colors.subtext
+        color: pill.on ? Colors.contrastText : Colors.subtext
     }
 
     MouseArea {

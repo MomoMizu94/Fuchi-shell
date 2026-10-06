@@ -57,6 +57,8 @@ PanelWindow {
     Canvas {
         id: canvas
         anchors.fill: parent
+        property color surfaceColor: Colors.surface
+        onSurfaceColorChanged: requestPaint()
 
         onPaint: {
             // NOTE: ctx.fill('evenodd') is broken on this Qt build — the fillRule
@@ -66,7 +68,7 @@ PanelWindow {
             var ctx = getContext("2d")
             ctx.clearRect(0, 0, width, height)
             ctx.globalCompositeOperation = "source-over"
-            ctx.fillStyle = "" + Colors.surface
+            ctx.fillStyle = "" + surfaceColor
             ctx.fillRect(0, 0, width, height)
 
             var x0 = root.holeX, y0 = root.holeY
