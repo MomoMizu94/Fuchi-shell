@@ -42,7 +42,9 @@ Column {
                 : (modelData.lastIpcObject ? modelData.lastIpcObject.class : "")) || ""
             // entriesGeneration read here is what forces a re-lookup once the
             // async .desktop scan has data
-            readonly property var entry: (appId && root.entriesGeneration >= 0) ? DesktopEntries.heuristicLookup(appId) : null
+            // Dedicated SSH app IDs still use Kitty's desktop entry and icon.
+            readonly property var entry: (appId && root.entriesGeneration >= 0)
+                ? DesktopEntries.heuristicLookup(appId.startsWith("fuchi-ssh-") ? "kitty" : appId) : null
 
             // Only show windows on the currently workspace
             visible: modelData.workspace && modelData.workspace.active

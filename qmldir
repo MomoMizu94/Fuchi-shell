@@ -24,6 +24,8 @@ Clock Bar/Clock.qml
 BluetoothIndicator Bar/BluetoothIndicator.qml
 NetworkIndicator Bar/NetworkIndicator.qml
 NetworkMenu Bar/NetworkMenu.qml
+HostIndicator Bar/HostIndicator.qml
+HostMenu Bar/HostMenu.qml
 PowerButton Bar/PowerButton.qml
 DashboardTab Tabs/DashboardTab.qml
 CalendarTab Tabs/CalendarTab.qml

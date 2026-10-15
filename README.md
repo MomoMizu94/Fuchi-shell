@@ -12,8 +12,8 @@ Click the image to watch the full demo on YouTube.
 ## What it includes
 
 The sidebar shows workspaces, running apps, the current layout, tray icons,
-connection status, volume, and a clock. The dashboard opens from the top edge
-and has four tabs:
+connection status, host shortcuts, volume, and a clock. The dashboard opens
+from the top edge and has four tabs:
 
 - Dashboard, with weather, system information, quick toggles, music controls,
   todos, and notification history.
@@ -38,7 +38,8 @@ that path to find the helper scripts.
    `hyprctl` commands need to be on your `PATH`.
 2. Place this repository at `~/.config/quickshell`.
 3. Copy `secrets.js.example` to `secrets.js`. The file must exist because the
-   weather components import it. Add your OpenWeatherMap key to enable weather.
+   weather components and host picker import it. Add your weather key and
+   private host entries there.
 4. Set your wallpaper folder and profile picture in [config.js](config.js).
 5. Run `qs` from your Hyprland session.
 
@@ -81,6 +82,7 @@ These tools support optional parts of the shell:
 | `nvidia-smi` | NVIDIA GPU statistics |
 | `wlsunset` | The night-light toggle |
 | Mullvad's `mullvad` command | VPN controls, hidden when the command is absent |
+| Kitty and OpenSSH's `ssh` | SSH terminals opened from the host picker |
 | `mpc` | Pausing MPD before suspend |
 | ImageMagick's `identify` | Wallpaper dimensions in the picker |
 
@@ -103,7 +105,8 @@ from `ip-api.com` instead.
 The weather map uses RainViewer radar over a CARTO basemap. `cartoApiKey` is
 optional and is passed to the basemap requests when supplied.
 
-`secrets.js` is ignored by Git. Keep API keys out of commits.
+`secrets.js` is ignored by Git. Keep API keys and personal network settings
+there. The tracked `secrets.js.example` contains placeholders only.
 
 ## Using the launcher
 
@@ -189,6 +192,28 @@ under Other; Lua actions without a description appear as unlabelled.
 Workspace ranges use the Workspaces category and the labels
 `Switch to workspace N` or `Move window to workspace N`, where N matches the
 number key. Missing keys split the range, and different flags remain separate.
+
+## Connecting to hosts
+
+Install Kitty and OpenSSH. Add entries to `hosts` in the gitignored
+`secrets.js`, replacing these fictional examples with your own settings:
+
+```js
+const hosts = [
+    { id: "example-shell", name: "Example server", type: "ssh", destination: "operator@shell.example.test" },
+    { id: "example-web", name: "Example dashboard", type: "web", url: "http://dashboard.example.test/admin/" },
+]
+```
+
+Use a unique `id` containing letters, digits, underscores, or hyphens.
+Keep IDs unchanged when renaming hosts.
+
+For PADD, add `startupCommand: "~/padd.sh"` to the SSH entry after installing
+PADD on that host.
+
+Adjust `hostMenu.terminalWidth` and `hostMenu.terminalHeight` in `config.js`
+to set the terminal size. Open the host list from the terminal icon above
+the power button.
 
 ## Configuration
 
@@ -290,9 +315,9 @@ disable the corresponding timer if you no longer want those requests.
 | `Colors.qml`, `config.js` | Theme colors and visual settings |
 | `FrameShape.qml`, `FrameReserve.qml`, `CornerFillet.qml` | Screen frame, reserved space, and panel corners |
 | `qmldir` | Local QML component registrations |
-| `scripts/` | Wallpaper, system statistics, and market-data helpers |
+| `scripts/` | Wallpaper, SSH terminals, system statistics, and market-data helpers |
 | `assets/` | Images and animations used by widgets |
-| `tests/` | Keybind and theme tests |
+| `tests/` | Host launch, keybind, and theme tests |
 
 ## Development and tests
 
@@ -300,8 +325,9 @@ You do not need Node.js or the tests to use Fuchi-shell. Quickshell runs the
 JavaScript helpers itself.
 
 The `tests/` folder is for people changing the code. It checks shortcut formatting,
-filtering, and theme selection without applying desktop changes. To run these checks,
-install Node.js and run this command from the repository directory:
+filtering, theme selection, and host launches without applying desktop changes.
+To run these checks, install Node.js and run this command from the repository
+directory:
 
 ```sh
 node --test tests/*.test.cjs
@@ -309,8 +335,11 @@ python3 tests/palette_test.py
 ```
 
 The tests cover modifier aliases, filtering, workspace ranges, category order,
-fallback labels, theme persistence, and failed palette generation. They do not
-check how the QML renders. After changing the launcher UI, also check app search,
+fallback labels, theme persistence, failed palette generation, SSH argument
+quoting, window reuse, and session exit behavior. They do not check how the QML
+renders. After changing the host menu, also check keyboard navigation, floating
+window geometry, browser opening, and focus from another workspace in a live
+Hyprland session. After changing the launcher UI, also check app search,
 wallpaper mode, calculator mode, theme selection, and keybind scrolling in a
 running Hyprland session.
 

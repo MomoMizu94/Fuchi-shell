@@ -151,6 +151,16 @@ const networkMenu = {
     gap: 2,
 }
 
+// Sidebar host picker appearance. Private host definitions live in secrets.js.
+const hostMenu = {
+    width: 360,
+    rowHeight: 64,
+    padding: 12,
+    gap: 4,
+    terminalWidth: 1000,
+    terminalHeight: 650,
+}
+
 // Calendar menu (slides from the bar at the clock) sizing
 const calendarMenu = {
     width: 360,

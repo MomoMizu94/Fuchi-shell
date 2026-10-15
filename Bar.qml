@@ -52,6 +52,7 @@ PanelWindow {
         Clock {}
         BluetoothIndicator {}
         NetworkIndicator {}
+        HostIndicator {}
         PowerButton {}
     }
 }
