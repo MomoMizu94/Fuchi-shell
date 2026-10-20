@@ -60,7 +60,7 @@ PanelWindow {
         anchors.leftMargin: btMenu.open && btMenu.ready ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !btMenu.open) btMenu.closing = false
             }
@@ -109,7 +109,7 @@ PanelWindow {
                         Text {
                             text: "󰂯"
                             color: btMenu.adapter && btMenu.adapter.enabled ? Colors.accent : Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.md
                         }
 
@@ -117,7 +117,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: "Bluetooth"
                             color: Colors.textStrong
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                             font.bold: true
                         }
@@ -152,7 +152,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         text: "Bluetooth is off"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.sm
                     }
                 }
@@ -194,7 +194,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     text: pairedRow.modelData.name
                                     color: pairedRow.modelData.connected ? Colors.accent : Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }
@@ -203,7 +203,7 @@ PanelWindow {
                                     visible: pairedRow.busy
                                     text: "…"
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                 }
 
@@ -211,7 +211,7 @@ PanelWindow {
                                     visible: !pairedRow.busy && pairedRow.modelData.batteryAvailable
                                     text: Math.round(pairedRow.modelData.battery * 100) + "%"
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                 }
 
@@ -220,7 +220,7 @@ PanelWindow {
                                     visible: rowHover.hovered
                                     text: "󰅖"
                                     color: forgetHover.hovered ? Colors.error : Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
 
                                     HoverHandler { id: forgetHover }
@@ -268,7 +268,7 @@ PanelWindow {
                             Text {
                                 text: btMenu.adapter && btMenu.adapter.discovering ? "󰀘" : "󰐕"
                                 color: btMenu.adapter && btMenu.adapter.discovering ? Colors.accent : Colors.text
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.md
                             }
 
@@ -276,7 +276,7 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 text: btMenu.adapter && btMenu.adapter.discovering ? "Scanning…" : "Pair new device"
                                 color: Colors.text
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.sm
                             }
                         }
@@ -323,7 +323,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     text: foundRow.modelData.deviceName
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }
@@ -332,7 +332,7 @@ PanelWindow {
                                     visible: foundRow.modelData.pairing
                                     text: "pairing…"
                                     color: Colors.accent
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                 }
                             }

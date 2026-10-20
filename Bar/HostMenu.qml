@@ -134,7 +134,7 @@ PanelWindow {
         anchors.leftMargin: hostMenu.open ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !hostMenu.open) hostMenu.closing = false
             }
@@ -201,7 +201,7 @@ PanelWindow {
                             Text {
                                 text: hostRow.modelData.type === "ssh" ? "󰆍" : "󰖟"
                                 color: Colors.accent
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.sidebar.iconSize
                                 Accessible.ignored: true
                             }
@@ -213,7 +213,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     text: hostRow.modelData.name
                                     color: Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }
@@ -222,7 +222,7 @@ PanelWindow {
                                     text: hostRow.modelData.type === "ssh"
                                         ? hostRow.modelData.destination : hostRow.modelData.url
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.micro
                                     elide: Text.ElideRight
                                 }
@@ -232,7 +232,7 @@ PanelWindow {
                                 text: hostMenu.pendingHostId === hostRow.modelData.id ? "Opening"
                                     : hostRow.modelData.type === "ssh" ? "SSH" : "Web"
                                 color: Colors.subtext
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.label
                             }
                         }
@@ -253,7 +253,7 @@ PanelWindow {
                     visible: hostMenu.hosts.length === 0
                     text: "Add a host in secrets.js."
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                 }
                 Text {
@@ -261,7 +261,7 @@ PanelWindow {
                     visible: hostMenu.errorText !== ""
                     text: hostMenu.errorText
                     color: Colors.error
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.label
                     wrapMode: Text.Wrap
                 }

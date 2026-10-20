@@ -22,7 +22,7 @@ Rectangle {
         Text {
             text: "QUICK TOGGLES"
             color: Colors.subtext
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.label
             font.bold: true
             font.letterSpacing: 1.5
@@ -40,10 +40,10 @@ Rectangle {
                 ColumnLayout { anchors.centerIn: parent; spacing: Config.gap.xs
                     Text { Layout.alignment: Qt.AlignHCenter; text: "󰤨"
                         color: dashboard.wifiEnabled ? Colors.accent : Colors.subtext
-                        font.family: Config.bar.fontFamily; font.pixelSize: Config.type.xl }
+                        font.family: Settings.fontFamily; font.pixelSize: Config.type.xl }
                     Text { Layout.alignment: Qt.AlignHCenter; text: "Wi-Fi"
                         color: dashboard.wifiEnabled ? Colors.border : Colors.subtext
-                        font.family: Config.bar.fontFamily; font.pixelSize: Config.type.sm }
+                        font.family: Settings.fontFamily; font.pixelSize: Config.type.sm }
                 }
                 MouseArea { anchors.fill: parent; onClicked: dashboard.toggleWifi() }
             }
@@ -54,10 +54,10 @@ Rectangle {
                 ColumnLayout { anchors.centerIn: parent; spacing: Config.gap.xs
                     Text { Layout.alignment: Qt.AlignHCenter; text: "󰂯"
                         color: dashboard.bluetoothEnabled ? Colors.accent : Colors.subtext
-                        font.family: Config.bar.fontFamily; font.pixelSize: Config.type.xl }
+                        font.family: Settings.fontFamily; font.pixelSize: Config.type.xl }
                     Text { Layout.alignment: Qt.AlignHCenter; text: "Bluetooth"
                         color: dashboard.bluetoothEnabled ? Colors.border : Colors.subtext
-                        font.family: Config.bar.fontFamily; font.pixelSize: Config.type.sm }
+                        font.family: Settings.fontFamily; font.pixelSize: Config.type.sm }
                 }
                 MouseArea { anchors.fill: parent; onClicked: dashboard.toggleBluetooth() }
             }
@@ -68,10 +68,10 @@ Rectangle {
                 ColumnLayout { anchors.centerIn: parent; spacing: Config.gap.xs
                     Text { Layout.alignment: Qt.AlignHCenter; text: "󰍷"
                         color: dashboard.dndEnabled ? Colors.accent : Colors.subtext
-                        font.family: Config.bar.fontFamily; font.pixelSize: Config.type.xl }
+                        font.family: Settings.fontFamily; font.pixelSize: Config.type.xl }
                     Text { Layout.alignment: Qt.AlignHCenter; text: "DND"
                         color: dashboard.dndEnabled ? Colors.border : Colors.subtext
-                        font.family: Config.bar.fontFamily; font.pixelSize: Config.type.sm }
+                        font.family: Settings.fontFamily; font.pixelSize: Config.type.sm }
                 }
                 MouseArea { anchors.fill: parent; onClicked: dashboard.dndEnabled = !dashboard.dndEnabled }
             }
@@ -82,10 +82,10 @@ Rectangle {
                 ColumnLayout { anchors.centerIn: parent; spacing: Config.gap.xs
                     Text { Layout.alignment: Qt.AlignHCenter; text: "󰌵"
                         color: dashboard.nightEnabled ? Colors.accent : Colors.subtext
-                        font.family: Config.bar.fontFamily; font.pixelSize: Config.type.xl }
+                        font.family: Settings.fontFamily; font.pixelSize: Config.type.xl }
                     Text { Layout.alignment: Qt.AlignHCenter; text: "Night"
                         color: dashboard.nightEnabled ? Colors.border : Colors.subtext
-                        font.family: Config.bar.fontFamily; font.pixelSize: Config.type.sm }
+                        font.family: Settings.fontFamily; font.pixelSize: Config.type.sm }
                 }
                 MouseArea { anchors.fill: parent; onClicked: dashboard.toggleNight() }
             }

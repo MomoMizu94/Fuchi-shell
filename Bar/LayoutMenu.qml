@@ -54,7 +54,7 @@ PanelWindow {
         anchors.leftMargin: layoutMenu.open ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !layoutMenu.open) layoutMenu.closing = false
             }
@@ -118,11 +118,11 @@ PanelWindow {
                                 // regardless of glyph set
                                 Text {
                                     Layout.preferredWidth: Config.sidebar.layoutGlyphSize * 2
-                                    text: Config.sidebar.useNerdLayoutGlyphs
+                                    text: Settings.layoutIcons
                                         ? layoutRow.modelData.nerd
                                         : layoutRow.modelData.ascii
                                     color: layoutRow.active ? Colors.accent : Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.sidebar.layoutGlyphSize
                                 }
 
@@ -130,7 +130,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     text: layoutRow.modelData.label
                                     color: layoutRow.active ? Colors.accent : Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }
@@ -138,7 +138,7 @@ PanelWindow {
                                 Text {
                                     text: layoutRow.modelData.key
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                 }
 

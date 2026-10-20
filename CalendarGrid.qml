@@ -92,7 +92,7 @@ ColumnLayout {
             Layout.fillWidth: true
             text: "Week"
             color: Colors.accent
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: grid.weekFontSize
             font.bold: true
             horizontalAlignment: Text.AlignHCenter
@@ -103,7 +103,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: modelData
                 color: Colors.subtext
-                font.family: Config.bar.fontFamily
+                font.family: Settings.fontFamily
                 font.pixelSize: grid.dowFontSize
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
@@ -142,7 +142,7 @@ ColumnLayout {
                     anchors.centerIn: parent
                     text: cell.isWeek ? cell.modelData.num : ""
                     color: Colors.accent
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: grid.weekFontSize
                     font.bold: true
                     opacity: 0.7
@@ -169,7 +169,7 @@ ColumnLayout {
                         : cell.modelData.cur
                             ? Colors.text
                             : Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: grid.dayFontSize
                     font.bold: cell.isToday
                 }

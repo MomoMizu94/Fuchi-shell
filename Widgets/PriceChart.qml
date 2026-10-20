@@ -107,7 +107,7 @@ Item {
             ctx.lineWidth = 1
             ctx.strokeStyle = root.axisColor
             ctx.fillStyle = root.axisColor
-            ctx.font = "13px '" + Config.bar.fontFamily + "'"
+            ctx.font = "13px '" + Settings.fontFamily + "'"
             ctx.textBaseline = "middle"
             const lines = 4
             for (let g = 0; g <= lines; g++) {

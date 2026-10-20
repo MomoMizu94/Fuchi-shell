@@ -36,7 +36,7 @@ Item {
             : Networking.wifiEnabled ? "󰤯"
             : "󰤭"
         color: root.wiredUp || root.wifiUp ? Colors.accent : Colors.subtext
-        font.family: Config.bar.fontFamily
+        font.family: Settings.fontFamily
         font.pixelSize: Config.sidebar.iconSize
     }
 

@@ -72,7 +72,7 @@ PanelWindow {
         anchors.leftMargin: trayMenu.open && trayMenu.ready ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !trayMenu.open) trayMenu.closing = false
             }
@@ -151,7 +151,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     text: entryItem.modelData.text
                                     color: entryItem.modelData.enabled ? Colors.text : Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }

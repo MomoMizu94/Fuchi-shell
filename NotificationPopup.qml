@@ -56,7 +56,7 @@ PanelWindow {
 
                 Timer {
                     running: card.modelData.urgency !== NotificationUrgency.Critical
-                    interval: Config.notifications.timeout
+                    interval: Settings.notificationTimeout
                     onTriggered: card.modelData.dismiss()
                 }
 
@@ -145,7 +145,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: card.modelData.summary
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.lg
                             font.bold: true
                             elide: Text.ElideRight
@@ -156,7 +156,7 @@ PanelWindow {
                             visible: text !== ""
                             text: card.modelData.body
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.base
                             wrapMode: Text.WordWrap
                         }

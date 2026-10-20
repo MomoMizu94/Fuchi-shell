@@ -20,7 +20,7 @@ Rectangle {
         Text {
             text: dashboard.greeting() + ", " + dashboard.userName + "!"
             color: Colors.border
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.xl
             font.bold: true
         }
@@ -28,7 +28,7 @@ Rectangle {
         Text {
             text: dashboard.currentTime
             color: Colors.border
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.hero
             font.bold: true
         }
@@ -36,7 +36,7 @@ Rectangle {
         Text {
             text: dashboard.currentDate
             color: Colors.subtext
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.md
         }
     }

@@ -97,19 +97,19 @@ Item {
             Text {
                 text: "Keybinds"
                 color: Colors.textStrong
-                font { family: Config.bar.fontFamily; pixelSize: Config.type.xl; bold: true }
+                font { family: Settings.fontFamily; pixelSize: Config.type.xl; bold: true }
             }
             Text {
                 text: keybinds.bindingCount + " active bindings"
                 visible: keybinds.bindingCount > 0
                 color: Colors.subtext
-                font { family: Config.bar.fontFamily; pixelSize: Config.type.sm }
+                font { family: Settings.fontFamily; pixelSize: Config.type.sm }
             }
         }
         Text {
             text: keybinds.modLabel
             color: Colors.accent
-            font { family: Config.bar.fontFamily; pixelSize: Config.type.md; bold: true }
+            font { family: Settings.fontFamily; pixelSize: Config.type.md; bold: true }
         }
     }
 
@@ -134,7 +134,7 @@ Item {
             text: section
             textFormat: Text.PlainText
             color: Colors.accent
-            font { family: Config.bar.fontFamily; pixelSize: Config.type.lg; bold: true }
+            font { family: Settings.fontFamily; pixelSize: Config.type.lg; bold: true }
         }
         ScrollBar.vertical: ScrollBar {
             policy: ScrollBar.AsNeeded
@@ -159,7 +159,7 @@ Item {
                     textFormat: Text.PlainText
                     wrapMode: Text.Wrap
                     color: Colors.textStrong
-                    font { family: Config.bar.fontFamily; pixelSize: Config.type.base; bold: true }
+                    font { family: Settings.fontFamily; pixelSize: Config.type.base; bold: true }
                 }
                 ColumnLayout {
                     id: actionColumn
@@ -173,7 +173,7 @@ Item {
                         textFormat: Text.PlainText
                         wrapMode: Text.Wrap
                         color: Colors.text
-                        font { family: Config.bar.fontFamily; pixelSize: Config.type.base }
+                        font { family: Settings.fontFamily; pixelSize: Config.type.base }
                     }
                     Text {
                         Layout.fillWidth: true
@@ -182,7 +182,7 @@ Item {
                         textFormat: Text.PlainText
                         wrapMode: Text.Wrap
                         color: Colors.subtext
-                        font { family: Config.bar.fontFamily; pixelSize: Config.type.sm }
+                        font { family: Settings.fontFamily; pixelSize: Config.type.sm }
                     }
                 }
             }
@@ -197,7 +197,7 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
         color: Colors.text
-        font { family: Config.bar.fontFamily; pixelSize: Config.type.base }
+        font { family: Settings.fontFamily; pixelSize: Config.type.base }
     }
     Text {
         id: footer
@@ -205,6 +205,6 @@ Item {
         text: "Type to filter · ↑ ↓ / PgUp PgDn to scroll · Esc to close"
         wrapMode: Text.WordWrap
         color: Colors.subtext
-        font { family: Config.bar.fontFamily; pixelSize: Config.type.sm }
+        font { family: Settings.fontFamily; pixelSize: Config.type.sm }
     }
 }

@@ -20,7 +20,7 @@ ColumnLayout {
         Layout.fillHeight: true
         text: "No media playing"
         color: Colors.border
-        font.family: Config.bar.fontFamily
+        font.family: Settings.fontFamily
         font.pixelSize: Config.bar.fontSize - 2
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -143,7 +143,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             text: "󰝚"
                             color: Colors.contrastText
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: artArea.artSize * 0.4
                         }
                     }
@@ -164,7 +164,7 @@ ColumnLayout {
                         horizontalAlignment: Text.AlignHCenter
                         text: mediaCard.player ? (mediaCard.player.trackTitle || "—") : "—"
                         color: Colors.text
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.bar.fontSize + 8
                         font.bold: true
                         elide: Text.ElideRight
@@ -175,7 +175,7 @@ ColumnLayout {
                         horizontalAlignment: Text.AlignHCenter
                         text: mediaCard.player ? (mediaCard.player.trackArtist || "—") : "—"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.bar.fontSize - 4
                         elide: Text.ElideRight
                     }
@@ -186,7 +186,7 @@ ColumnLayout {
                         visible: mediaCard.player && mediaCard.player.trackAlbum !== ""
                         text: mediaCard.player ? (mediaCard.player.trackAlbum || "") : ""
                         color: Colors.accent
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.bar.fontSize - 4
                         elide: Text.ElideRight
                     }
@@ -198,7 +198,7 @@ ColumnLayout {
                         Text {
                             text: ""
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize + 8
                             opacity: mediaCard.player && mediaCard.player.canGoPrevious ? 1.0 : 0.3
                             MouseArea {
@@ -214,7 +214,7 @@ ColumnLayout {
                                 anchors.centerIn: parent
                                 text: mediaCard.player && mediaCard.optimisticPlaying ? "" : ""
                                 color: Colors.contrastText
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.bar.fontSize + 10
                             }
                             MouseArea {
@@ -226,7 +226,7 @@ ColumnLayout {
                         Text {
                             text: ""
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize + 8
                             opacity: mediaCard.player && mediaCard.player.canGoNext ? 1.0 : 0.3
                             MouseArea {
@@ -260,14 +260,14 @@ ColumnLayout {
                         Text {
                             text: mediaCard.mediaCurrentTime
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 6
                         }
                         Item { Layout.fillWidth: true }
                         Text {
                             text: mediaCard.fmtTime(mediaCard.player ? mediaCard.player.length : 0)
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 6
                         }
                     }

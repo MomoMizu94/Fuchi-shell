@@ -1,3 +1,6 @@
+// Defaults for the shell. The settings window saves overrides separately;
+// resetting a preference returns to its current value in this file.
+
 // Sidebar status bar font
 const bar = {
     fontFamily: "Mononoki Nerd Font",

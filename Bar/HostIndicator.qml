@@ -25,7 +25,7 @@ Item {
         anchors.centerIn: parent
         text: "󰆍"
         color: Colors.accent
-        font.family: Config.bar.fontFamily
+        font.family: Settings.fontFamily
         font.pixelSize: Config.sidebar.iconSize
         Accessible.ignored: true
     }

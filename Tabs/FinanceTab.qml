@@ -60,7 +60,7 @@ ColumnLayout {
                     Text {
                         text: root.focusedSym
                         color: Colors.textStrong
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.md
                         font.bold: true
                     }
@@ -69,7 +69,7 @@ ColumnLayout {
                         text: root.focusedSeries && root.focusedSeries.ok
                             ? root.focusedSeries.name : "—"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.sm
                         elide: Text.ElideRight
                         Layout.maximumWidth: 320
@@ -91,7 +91,7 @@ ColumnLayout {
                             text: root.focusedSeries
                                 ? root.fmtPrice(root.focusedSeries.price, root.focusedSeries.cur) : ""
                             color: Colors.textStrong
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.display
                             font.bold: true
                         }
@@ -99,7 +99,7 @@ ColumnLayout {
                         Text {
                             text: root.focusedSeries ? root.focusedSeries.cur : ""
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.base
                             Layout.alignment: Qt.AlignBottom
                             bottomPadding: 4
@@ -112,7 +112,7 @@ ColumnLayout {
                         text: root.arrow(pct) + " " + root.fmtPct(pct)
                             + "  ·  " + Config.finance.ranges[root.dashboard.financeRangeIdx].label
                         color: root.changeColor(pct)
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.base
                         font.bold: true
                     }
@@ -140,7 +140,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             text: chip.modelData.label
                             color: chip.active ? Colors.contrastText : Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                             font.bold: chip.active
                         }
@@ -164,7 +164,7 @@ ColumnLayout {
                         ? "Updating…"
                         : "Updated " + root.dashboard.financeUpdated
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                 }
 
@@ -172,7 +172,7 @@ ColumnLayout {
                     visible: bigChart.zoomed
                     text: "󰀽 right-click to reset"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                 }
             }
@@ -199,7 +199,7 @@ ColumnLayout {
                         ? "Loading…"
                         : "No data for " + root.focusedSym
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.base
                 }
             }
@@ -248,7 +248,7 @@ ColumnLayout {
                         Text {
                             text: card.modelData
                             color: Colors.textStrong
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                             font.bold: true
                             elide: Text.ElideRight
@@ -260,7 +260,7 @@ ColumnLayout {
                             visible: removeArea.containsMouse || cardHover.hovered
                             text: "󰅖"
                             color: removeArea.containsMouse ? Colors.error : Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                             enabled: root.dashboard.financeSymbols.length > 1
 
@@ -283,7 +283,7 @@ ColumnLayout {
                         Text {
                             text: card.s && card.s.ok ? root.fmtPrice(card.s.price, card.s.cur) : "—"
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.base
                             font.bold: true
                         }
@@ -294,7 +294,7 @@ ColumnLayout {
                             visible: card.s && card.s.ok
                             text: root.arrow(card.pct) + " " + root.fmtPct(card.pct)
                             color: root.changeColor(card.pct)
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                             font.bold: true
                         }
@@ -317,7 +317,7 @@ ColumnLayout {
                             visible: card.s !== null && !card.s.ok
                             text: "Unavailable"
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                         }
                     }
@@ -351,7 +351,7 @@ ColumnLayout {
                     Layout.alignment: Qt.AlignHCenter
                     text: "ADD ASSET"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.label
                     font.bold: true
                     font.letterSpacing: 1.5
@@ -369,7 +369,7 @@ ColumnLayout {
                         anchors.leftMargin: 10
                         anchors.rightMargin: 10
                         color: Colors.text
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.sm
                         verticalAlignment: TextInput.AlignVCenter
                         clip: true
@@ -404,7 +404,7 @@ ColumnLayout {
                     visible: symInput.addError !== ""
                     text: symInput.addError
                     color: Colors.error
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.micro
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -414,7 +414,7 @@ ColumnLayout {
                     visible: symInput.addError === ""
                     text: "stocks · crypto · FX · indices"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.micro
                 }
             }

@@ -37,6 +37,21 @@ Scope {
     // Notification history
     ListModel { id: history }
 
+    function trimHistory() {
+        if (history.count > Settings.historyLimit)
+            history.remove(Settings.historyLimit, history.count - Settings.historyLimit)
+    }
+
+    Connections {
+        target: Settings
+        function onHistoryLimitChanged() { root.trimHistory() }
+    }
+
+    function showSettings() {
+        root.launcherOpen = false
+        Qt.callLater(function() { settingsWindow.showSettings() })
+    }
+
     // Spotify's ('spotify' package in AUR) notification carries no image -> reuse the artwork exposed
     // by the same player over MPRIS
     readonly property var spotifyPlayer: {
@@ -118,8 +133,7 @@ Scope {
                     appIcon: n.appIcon.startsWith("/") ? "" : (n.appIcon || "")
                 })
                 // History cap
-                if (history.count > Config.notifications.historyLimit)
-                    history.remove(Config.notifications.historyLimit, history.count - Config.notifications.historyLimit)
+                root.trimHistory()
                 if ((n.appName || "").toLowerCase() === "spotify")
                     Qt.callLater(root.syncSpotifyHistoryArt)
             }
@@ -140,6 +154,16 @@ Scope {
         function toggle(): void { root.launcherOpen = !root.launcherOpen }
         function show(): void { root.launcherOpen = true }
         function hide(): void { root.launcherOpen = false }
+    }
+
+    IpcHandler {
+        target: "settings"
+        function show(): void { root.showSettings() }
+        function hide(): void { settingsWindow.hideSettings() }
+        function toggle(): void {
+            if (settingsWindow.visible || settingsWindow.openRequested) settingsWindow.hideSettings()
+            else root.showSettings()
+        }
     }
 
     IpcHandler {
@@ -239,7 +263,7 @@ Scope {
         id: dashboardCloseTimer
         // Comfortably longer than the slide-in animation so panelHovered has
         // a chance to pick up the cursor before this can fire
-        interval: Config.anim.slide + 200
+        interval: Settings.animationSlide + 200
         onTriggered: if (!frame.dashboardHovered && !dash.panelHovered) root.centerOpen = false
     }
 
@@ -259,7 +283,10 @@ Scope {
         id: launcher
         open: root.launcherOpen
         onCloseRequested: root.launcherOpen = false
+        onSettingsRequested: root.showSettings()
     }
+
+    SettingsWindow { id: settingsWindow }
 
     PowerMenu {
         id: powerMenu

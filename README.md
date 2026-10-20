@@ -127,6 +127,7 @@ and prefixes work too, so `>key` opens the keybind reference.
 | `6*7` | Shows a calculation above matching apps without a command prefix. |
 | `>keybinds` | Shows the grouped Hyprland shortcuts inside the launcher. |
 | `>keybinds window` | Filters shortcuts by action, category, or keys. |
+| `>settings` | Opens the settings window, or focuses it if already open. |
 
 The wallpaper picker expands the panel horizontally. The keybind view gives
 it more vertical space for the scrolling reference. Both keep the input at
@@ -216,6 +217,29 @@ to set the terminal size. Open the host list from the terminal icon above
 the power button.
 
 ## Configuration
+
+### Settings window
+
+To adjust some of the settings, open `>settings` in the launcher.
+Settings opens floating and centered on its monitor and stays open when
+you click elsewhere.
+
+| Group | Preferences |
+| --- | --- |
+| Appearance | Font, profile picture, layout labels, dashboard/menu/tab animation durations |
+| Notifications | Popup timeout and history limit |
+| Launcher | Wallpaper folder and maximum visible result rows |
+| Sound | Maximum volume selectable in the shell mixer |
+| Shell | Normal shell reload |
+
+Changes take effect immediately and save automatically. Each preference has
+a Reset control that removes its saved override and restores the current
+default in `config.js`.
+
+Choose an installed Nerd Font so the shell's icon glyphs display correctly.
+The font selector previews text and icons.
+
+### Defaults in code
 
 [config.js](config.js) contains the font, spacing, text sizes, panel dimensions,
 animation durations, and refresh intervals. The `keybinds.width` and
@@ -313,11 +337,12 @@ disable the corresponding timer if you no longer want those requests.
 | `NotificationPopup.qml` | Incoming notification popups |
 | `CalendarGrid.qml`, `Events.qml` | Shared calendar grid and event helpers |
 | `Colors.qml`, `config.js` | Theme colors and visual settings |
+| `Settings.qml`, `settings.js`, `SettingsWindow.qml` | Live preferences, persistence, validation, and the settings window |
 | `FrameShape.qml`, `FrameReserve.qml`, `CornerFillet.qml` | Screen frame, reserved space, and panel corners |
 | `qmldir` | Local QML component registrations |
 | `scripts/` | Wallpaper, SSH terminals, system statistics, and market-data helpers |
 | `assets/` | Images and animations used by widgets |
-| `tests/` | Host launch, keybind, and theme tests |
+| `tests/` | Host launch, keybind, theme, palette, and settings tests |
 
 ## Development and tests
 
@@ -325,23 +350,32 @@ You do not need Node.js or the tests to use Fuchi-shell. Quickshell runs the
 JavaScript helpers itself.
 
 The `tests/` folder is for people changing the code. It checks shortcut formatting,
-filtering, theme selection, and host launches without applying desktop changes.
-To run these checks, install Node.js and run this command from the repository
-directory:
+filtering, theme selection, host launches, and settings without applying desktop changes.
+To run these checks, install Node.js, Python 3, and Quickshell, then run these
+commands from the repository directory:
 
 ```sh
 node --test tests/*.test.cjs
-python3 tests/palette_test.py
+python3 -B tests/palette_test.py
+python3 -B tests/settings_runtime_test.py
 ```
 
 The tests cover modifier aliases, filtering, workspace ranges, category order,
 fallback labels, theme persistence, failed palette generation, SSH argument
-quoting, window reuse, and session exit behavior. They do not check how the QML
-renders. After changing the host menu, also check keyboard navigation, floating
-window geometry, browser opening, and focus from another workspace in a live
+quoting, window reuse, and session exit behavior. The Node and palette tests do
+not check QML rendering. After changing the host menu, also check keyboard
+navigation, floating window geometry, browser opening, and focus from another workspace in a live
 Hyprland session. After changing the launcher UI, also check app search,
 wallpaper mode, calculator mode, theme selection, and keybind scrolling in a
 running Hyprland session.
+
+The settings runtime tests require Quickshell. They run real QML with the
+offscreen backend and temporary state directories, so they do not change your
+desktop or saved preferences. They cover live bindings, resets, queued saves,
+normal reloads, malformed files, failed writes, floating placement before opening,
+cancellation of pending opens, reopening after native closes, and compositor failures. In a live session, also
+check window focus from the launcher, moving and resizing, font selection, and native
+file and folder pickers.
 
 ## Acknowledgements
 

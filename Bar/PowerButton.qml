@@ -20,7 +20,7 @@ Item {
         anchors.centerIn: parent
         text: "⏻"
         color: Colors.error
-        font.family: Config.bar.fontFamily
+        font.family: Settings.fontFamily
         font.pixelSize: Config.sidebar.iconSize
     }
 

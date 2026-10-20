@@ -20,7 +20,7 @@ Item {
     readonly property string glyph: {
         for (const l of Config.layouts)
             if (l.label === root.layout)
-                return Config.sidebar.useNerdLayoutGlyphs ? l.nerd : l.ascii
+                return Settings.layoutIcons ? l.nerd : l.ascii
         return ""
     }
 
@@ -38,8 +38,8 @@ Item {
             anchors.centerIn: parent
             text: root.glyph
             color: Colors.text
-            font.family: Config.bar.fontFamily
-            font.pixelSize: Config.sidebar.useNerdLayoutGlyphs
+            font.family: Settings.fontFamily
+            font.pixelSize: Settings.layoutIcons
                 ? Config.sidebar.iconSize
                 : Config.sidebar.layoutGlyphSize
         }

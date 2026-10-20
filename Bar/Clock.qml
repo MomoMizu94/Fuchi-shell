@@ -43,7 +43,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: "󰃭"
             color: Colors.text
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.sidebar.iconSize
             font.bold: true
         }
@@ -52,7 +52,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root.hour
             color: Colors.text
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.lg
             font.bold: true
         }
@@ -61,7 +61,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root.minute
             color: Colors.text
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.lg
             font.bold: true
         }
@@ -70,7 +70,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root.ampm
             color: Colors.subtext
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.md
         }
     }

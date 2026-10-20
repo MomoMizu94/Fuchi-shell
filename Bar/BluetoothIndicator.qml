@@ -22,7 +22,7 @@ Item {
         anchors.centerIn: parent
         text: "󰂯"
         color: root.enabled ? Colors.accent : Colors.subtext
-        font.family: Config.bar.fontFamily
+        font.family: Settings.fontFamily
         font.pixelSize: Config.sidebar.iconSize
     }
 

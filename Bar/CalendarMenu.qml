@@ -70,7 +70,7 @@ PanelWindow {
         anchors.leftMargin: calMenu.open ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !calMenu.open) calMenu.closing = false
             }
@@ -114,7 +114,7 @@ PanelWindow {
                     Text {
                         text: "‹"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.xl
                         font.bold: true
                         MouseArea {
@@ -131,7 +131,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         text: Events.monthNames[calMenu.calMonth - 1] + "  " + calMenu.calYear
                         color: Colors.textStrong
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.md
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -139,7 +139,7 @@ PanelWindow {
                     Text {
                         text: "›"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.xl
                         font.bold: true
                         MouseArea {
@@ -191,7 +191,7 @@ PanelWindow {
                     Layout.leftMargin: Config.gap.sm
                     text: calMenu.selectedHeading()
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.micro
                     font.bold: true
                     font.letterSpacing: 1.5
@@ -224,7 +224,7 @@ PanelWindow {
                                     visible: eventRow.modelData.time !== ""
                                     text: eventRow.modelData.time
                                     color: Colors.accent
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     font.bold: true
                                 }
@@ -233,7 +233,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     text: eventRow.modelData.title
                                     color: Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }
@@ -242,7 +242,7 @@ PanelWindow {
                                     visible: rowHover.hovered
                                     text: "󰅖"
                                     color: deleteHover.hovered ? Colors.error : Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
 
                                     HoverHandler { id: deleteHover }
@@ -266,7 +266,7 @@ PanelWindow {
                     Layout.leftMargin: Config.gap.sm
                     text: "No events"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                 }
 
@@ -284,7 +284,7 @@ PanelWindow {
                         anchors.leftMargin: Config.gap.sm
                         anchors.rightMargin: Config.gap.sm
                         color: Colors.text
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.sm
                         verticalAlignment: TextInput.AlignVCenter
                         clip: true

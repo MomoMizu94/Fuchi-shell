@@ -10,10 +10,11 @@ import "config.js" as Config
 import "calc.js" as Calc
 
 // Bottom-docked command palette: fuzzy app search, a ">" command mode
-// for wallpaper, theme, calculator and keybinds, and a bare-expression calculator shortcut
+// for wallpaper, theme, calculator, keybinds and settings, and a bare-expression calculator shortcut
 PanelWindow {
     id: launcher
     signal closeRequested()
+    signal settingsRequested()
 
     property bool open: false
     property bool closing: false
@@ -44,7 +45,8 @@ PanelWindow {
         { name: "wallpaper", label: "Wallpaper" },
         { name: "theme", label: "Theme" },
         { name: "calc", label: "Calculator" },
-        { name: "keybinds", label: "Keybinds" }
+        { name: "keybinds", label: "Keybinds" },
+        { name: "settings", label: "Settings" }
     ]
     property var wallpaperFiles: []   // populated once by wallpaperFolderModel below
 
@@ -111,6 +113,8 @@ PanelWindow {
         if (parsedCommand.word === "")
             return commandDefs.map(c => ({ kind: "menu", name: c.label, comment: "", command: c.name }))
         if (!activeCommand) return []
+        if (activeCommand.name === "settings")
+            return [{ kind: "settings", name: "Open settings", comment: "Shell preferences", glyph: "󰒓" }]
         // Keybinds has its own reference view, with no executable result rows.
         if (keybindsMode) return []
         if (activeCommand.name === "wallpaper") return filteredWallpapers(parsedCommand.filter)
@@ -205,6 +209,11 @@ PanelWindow {
             return
         }
         if (commandMode) {
+            if (item.kind === "settings" || (item.kind === "menu" && item.command === "settings")) {
+                launcher.closeRequested()
+                launcher.settingsRequested()
+                return
+            }
             if (item.kind === "menu") {
                 launcher.query = ">" + item.command + " "   // drill in, stay open
                 return
@@ -281,11 +290,12 @@ PanelWindow {
 
     FolderListModel {
         id: wallpaperFolderModel
-        folder: "file://" + Quickshell.env("HOME") + "/" + Config.launcher.wallpaperFolder
+        folder: Settings.fileUrl(Settings.wallpaperFolder)
         nameFilters: ["*.png", "*.jpg", "*.jpeg"]
         caseSensitive: false
         showDirs: false
         sortField: FolderListModel.Name
+        onFolderChanged: launcher.wallpaperFiles = []
         onStatusChanged: if (status === FolderListModel.Ready) {
             const files = []
             for (let i = 0; i < count; i++)
@@ -302,18 +312,20 @@ PanelWindow {
         width: launcher.keybindsMode
             ? Math.min(Config.keybinds.width, launcher.width - Config.gap.xl * 2)
             : launcher.wallpaperGridMode ? Config.launcher.galleryPanelWidth : Config.launcher.width
-        Behavior on width { NumberAnimation { duration: Config.anim.popup; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: Settings.animationPopup; easing.type: Easing.OutCubic } }
         // Chrome accounting must match the anchors below exactly (top margin,
         // two dividerGap gaps around the divider, the divider itself, and the
         // bottom margin)
         readonly property int outerMargin: Config.gap.xl
         readonly property int dividerGap: Config.gap.md
+        readonly property int fittingRows: Math.max(1, Math.floor((launcher.height - Config.gap.xl * 2
+            - outerMargin * 2 - dividerGap * 2 - 1 - Config.launcher.inputHeight) / Config.launcher.rowHeight))
         height: launcher.keybindsMode
             ? Math.min(Config.keybinds.height, launcher.height - Config.gap.xl * 2)
             : outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight +
             (launcher.wallpaperGridMode
                 ? Config.launcher.galleryCardHeight + Config.launcher.galleryLabelHeight
-                : Math.max(1, Math.min(launcher.results.length, Config.launcher.maxVisibleRows)) * Config.launcher.rowHeight)
+                : Math.max(1, Math.min(launcher.results.length, Settings.launcherRows, fittingRows)) * Config.launcher.rowHeight)
 
         // Docked flush to the bottom edge via an anchor (not an animated `y`),
         // so result-count-driven height changes always grow/shrink from the
@@ -326,13 +338,13 @@ PanelWindow {
         anchors.bottomMargin: launcher.open ? 0 : -height
         Behavior on anchors.bottomMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !launcher.open) launcher.closing = false
             }
         }
         Behavior on height {
-            NumberAnimation { duration: Config.anim.popup; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Settings.animationPopup; easing.type: Easing.OutCubic }
         }
 
         MouseArea { anchors.fill: parent }
@@ -380,7 +392,7 @@ PanelWindow {
                     Text {
                         text: "󰍉"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.sidebar.iconSize
                     }
 
@@ -392,7 +404,7 @@ PanelWindow {
                             id: searchInput
                             anchors.fill: parent
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.base
                             verticalAlignment: TextInput.AlignVCenter
                             clip: true
@@ -493,7 +505,7 @@ PanelWindow {
                                     visible: !!row.modelData.glyph
                                     text: row.modelData.glyph || ""
                                     color: Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.sidebar.iconSize
                                 }
                             }
@@ -507,7 +519,7 @@ PanelWindow {
                                     text: row.modelData.name
                                     color: Colors.textStrong
                                     font.bold: true
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.base
                                     elide: Text.ElideRight
                                 }
@@ -517,7 +529,7 @@ PanelWindow {
                                     text: row.modelData.genericName || row.modelData.comment || ""
                                     visible: text !== ""
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }
@@ -591,7 +603,7 @@ PanelWindow {
                                 horizontalAlignment: Text.AlignHCenter
                                 text: card.modelData.name
                                 color: Colors.textStrong
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.base
                                 elide: Text.ElideRight
                             }
@@ -602,7 +614,7 @@ PanelWindow {
                                 visible: text !== ""
                                 text: card.modelData.resolution || ""
                                 color: Colors.subtext
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.sm
                                 elide: Text.ElideRight
                             }
@@ -638,7 +650,7 @@ PanelWindow {
                     verticalAlignment: Text.AlignVCenter
                     text: launcher.emptyStateText
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.base
                 }
             }

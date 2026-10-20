@@ -99,7 +99,7 @@ PanelWindow {
     function setVolumeFromY(y) {
         const sink = Pipewire.defaultAudioSink
         if (!sink || !sink.audio) return
-        const raw = Math.max(0, Math.min(Config.volumeMenu.maxVolume, (1 - y / track.height) * Config.volumeMenu.maxVolume))
+        const raw = Math.max(0, Math.min(Settings.maxVolume, (1 - y / track.height) * Settings.maxVolume))
         sink.audio.volume = Math.abs(raw - 1.0) < Config.volumeMenu.snapBand ? 1.0 : raw
     }
 
@@ -137,14 +137,14 @@ PanelWindow {
             + volumeMenu.appsBlockHeight
             + Config.volumeMenu.gap
             + volumeMenu.recordingBlockHeight
-        Behavior on height { NumberAnimation { duration: Config.anim.popup; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: Settings.animationPopup; easing.type: Easing.OutCubic } }
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         anchors.rightMargin: volumeMenu.open ? 0 : -width
         Behavior on anchors.rightMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !volumeMenu.open) volumeMenu.closing = false
             }
@@ -188,7 +188,7 @@ PanelWindow {
                     Layout.alignment: Qt.AlignHCenter
                     text: "MASTER"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.micro
                     font.bold: true
                     font.letterSpacing: 1
@@ -206,7 +206,7 @@ PanelWindow {
                         text: volumeMenu.volumeIcon()
                         color: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio && Pipewire.defaultAudioSink.audio.muted)
                             ? Colors.error : Colors.text
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.display
                     }
 
@@ -236,8 +236,8 @@ PanelWindow {
                         clip: true
 
                         readonly property real volume: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio) ? Pipewire.defaultAudioSink.audio.volume : 0
-                        readonly property real fillFraction: Math.max(0, Math.min(1, volume / Config.volumeMenu.maxVolume))
-                        readonly property real unityFraction: Math.min(1, 1 / Config.volumeMenu.maxVolume)
+                        readonly property real fillFraction: Math.max(0, Math.min(1, volume / Settings.maxVolume))
+                        readonly property real unityFraction: Math.min(1, 1 / Settings.maxVolume)
                         // warn and accent resolve to the same pywal slot on some
                         // palettes, so the hot end of the gradient can't rely on a different
                         // Colors role being visually distinct — lighten accent
@@ -325,7 +325,7 @@ PanelWindow {
                     text: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio)
                         ? Math.round(Pipewire.defaultAudioSink.audio.volume * 100) + "%" : "--"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                 }
 
@@ -354,7 +354,7 @@ PanelWindow {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "󰋋"
                                     color: Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.lg
                                 }
                                 Text {
@@ -365,7 +365,7 @@ PanelWindow {
                                         : (Pipewire.defaultAudioSink ? (Pipewire.defaultAudioSink.description || Pipewire.defaultAudioSink.name) : "")
                                     elide: Text.ElideRight
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.micro
                                 }
                             }
@@ -396,7 +396,7 @@ PanelWindow {
                                     Text {
                                         text: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.id === outRow.modelData.id) ? "●" : "○"
                                         color: Colors.accent
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.type.micro
                                     }
                                     Text {
@@ -404,7 +404,7 @@ PanelWindow {
                                         elide: Text.ElideRight
                                         text: outRow.modelData.description || outRow.modelData.name
                                         color: Colors.text
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.type.micro
                                     }
                                 }
@@ -445,7 +445,7 @@ PanelWindow {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "󰍬"
                                     color: Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.lg
                                 }
                                 Text {
@@ -456,7 +456,7 @@ PanelWindow {
                                         : (Pipewire.defaultAudioSource ? (Pipewire.defaultAudioSource.description || Pipewire.defaultAudioSource.name) : "")
                                     elide: Text.ElideRight
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.micro
                                 }
                             }
@@ -487,7 +487,7 @@ PanelWindow {
                                     Text {
                                         text: (Pipewire.defaultAudioSource && Pipewire.defaultAudioSource.id === inRow.modelData.id) ? "●" : "○"
                                         color: Colors.accent
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.type.micro
                                     }
                                     Text {
@@ -495,7 +495,7 @@ PanelWindow {
                                         elide: Text.ElideRight
                                         text: inRow.modelData.description || inRow.modelData.name
                                         color: Colors.text
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.type.micro
                                     }
                                 }
@@ -536,7 +536,7 @@ PanelWindow {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "󰀻"
                                     color: Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.lg
                                 }
                                 Text {
@@ -545,7 +545,7 @@ PanelWindow {
                                     text: "Apps"
                                     elide: Text.ElideRight
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.micro
                                 }
                             }
@@ -580,13 +580,13 @@ PanelWindow {
                                         elide: Text.ElideRight
                                         text: volumeMenu.streamLabel(playRow.modelData)
                                         color: Colors.text
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.type.micro
                                     }
                                     Text {
                                         text: (playRow.modelData.audio && playRow.modelData.audio.muted) ? "󰝟" : "󰕾"
                                         color: (playRow.modelData.audio && playRow.modelData.audio.muted) ? Colors.error : Colors.subtext
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.type.sm
 
                                         MouseArea {
@@ -649,7 +649,7 @@ PanelWindow {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "󰑊"
                                     color: Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.lg
                                 }
                                 Text {
@@ -658,7 +658,7 @@ PanelWindow {
                                     text: "Recording"
                                     elide: Text.ElideRight
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.micro
                                 }
                             }
@@ -693,13 +693,13 @@ PanelWindow {
                                         elide: Text.ElideRight
                                         text: volumeMenu.streamLabel(recRow.modelData)
                                         color: Colors.text
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.type.micro
                                     }
                                     Text {
                                         text: (recRow.modelData.audio && recRow.modelData.audio.muted) ? "󰝟" : "󰍬"
                                         color: (recRow.modelData.audio && recRow.modelData.audio.muted) ? Colors.error : Colors.subtext
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.type.sm
 
                                         MouseArea {

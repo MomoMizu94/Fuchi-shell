@@ -103,7 +103,7 @@ ColumnLayout {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: gaugeCard.value >= 0 ? Math.round(gaugeCard.value) : "--"
                                 color: Colors.text
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: gauge.size * 0.28
                                 font.bold: true
                             }
@@ -111,7 +111,7 @@ ColumnLayout {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: gaugeCard.value >= 0 ? "%" : ""
                                 color: Colors.subtext
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: gauge.size * 0.11
                             }
                         }
@@ -123,13 +123,13 @@ ColumnLayout {
                         Text {
                             text: gaugeCard.modelData.icon
                             color: Colors.accent
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 2
                         }
                         Text {
                             text: gaugeCard.modelData.label
                             color: Colors.accent
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 2
                             font.bold: true
                             font.letterSpacing: 1.5
@@ -140,7 +140,7 @@ ColumnLayout {
                         Layout.alignment: Qt.AlignHCenter
                         text: gaugeCard.subline
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.bar.fontSize - 6
                     }
                 }
@@ -168,7 +168,7 @@ ColumnLayout {
                 Text {
                     text: "CPU THREADS · USAGE"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.bar.fontSize - 6
                     font.bold: true
                     font.letterSpacing: 1.5
@@ -220,7 +220,7 @@ ColumnLayout {
                                     horizontalAlignment: Text.AlignHCenter
                                     text: coreBar.frequency > 0 ? coreBar.frequency.toFixed(1) : "--"
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.bar.fontSize - 6
                                 }
                             }
@@ -231,7 +231,7 @@ ColumnLayout {
                 Text {
                     text: "CPU THREADS · GHz"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.bar.fontSize - 6
                     font.bold: true
                     font.letterSpacing: 1.5
@@ -273,20 +273,20 @@ ColumnLayout {
                         Text {
                             text: infoRow.modelData.icon
                             color: Colors.accent
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 4
                         }
                         Text {
                             text: infoRow.modelData.label
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 4
                         }
                         Item { Layout.fillWidth: true }
                         Text {
                             text: infoRow.value
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 4
                             font.bold: true
                         }

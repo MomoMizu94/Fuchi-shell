@@ -556,7 +556,7 @@ PanelWindow {
 
         Behavior on y {
             NumberAnimation {
-                duration: Config.anim.slide
+                duration: Settings.animationSlide
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !dashboard.open) dashboard.closing = false
             }
@@ -628,7 +628,7 @@ PanelWindow {
                                 text: modelData.icon
                                 color: dashboard.activeTab === index
                                     ? Colors.textStrong : Colors.border
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.display
                             }
 
@@ -674,7 +674,7 @@ PanelWindow {
                         x: (0 - dashboard.activeTab) * contentArea.width
                         dashboard: dashboard
                         Behavior on x {
-                            NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Settings.animationTabSlide; easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -685,7 +685,7 @@ PanelWindow {
                         x: (1 - dashboard.activeTab) * contentArea.width
                         dashboard: dashboard
                         Behavior on x {
-                            NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Settings.animationTabSlide; easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -696,7 +696,7 @@ PanelWindow {
                         x: (2 - dashboard.activeTab) * contentArea.width
                         dashboard: dashboard
                         Behavior on x {
-                            NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Settings.animationTabSlide; easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -707,7 +707,7 @@ PanelWindow {
                         x: (3 - dashboard.activeTab) * contentArea.width
                         dashboard: dashboard
                         Behavior on x {
-                            NumberAnimation { duration: Config.anim.tabSlide; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Settings.animationTabSlide; easing.type: Easing.OutCubic }
                         }
                     }
                 }

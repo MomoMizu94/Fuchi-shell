@@ -19,7 +19,7 @@ RowLayout {
         Layout.fillWidth: true
         text: "Notifications"
         color: Colors.border
-        font.family: Config.bar.fontFamily
+        font.family: Settings.fontFamily
         font.pixelSize: Config.type.lg                            
         font.bold: true
     }
@@ -27,7 +27,7 @@ RowLayout {
         text: "Clear all"
         visible: dashboard.historyModel && dashboard.historyModel.count > 0
         color: Colors.error
-        font.family: Config.bar.fontFamily
+        font.family: Settings.fontFamily
         font.pixelSize: Config.type.base
         font.bold: true
         MouseArea {
@@ -43,7 +43,7 @@ Text {
     Layout.fillHeight: true
     text: "No notifications"
     color: Colors.error
-    font.family: Config.bar.fontFamily
+    font.family: Settings.fontFamily
     font.pixelSize: Config.type.md
     horizontalAlignment: Text.AlignHCenter
     verticalAlignment: Text.AlignVCenter
@@ -112,7 +112,7 @@ Flickable {
                             Layout.fillWidth: true
                             text: summary
                             color: Colors.border
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.md
                             font.bold: true
                             elide: Text.ElideRight
@@ -122,7 +122,7 @@ Flickable {
                             visible: body !== ""
                             text: body
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.base
                             wrapMode: Text.WordWrap
                         }
@@ -133,13 +133,13 @@ Flickable {
                         Text {
                             text: time
                             color: Colors.subtext 
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                         }
                         Text {
                             text: ""
                             color: Colors.error
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.lg
                             font.bold: true
                             Layout.alignment: Qt.AlignRight

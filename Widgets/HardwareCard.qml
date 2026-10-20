@@ -19,7 +19,7 @@ Rectangle {
         Text {
             text: "HARDWARE"
             color: Colors.subtext
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.label
             font.bold: true
             font.letterSpacing: 1.5
@@ -70,7 +70,7 @@ Rectangle {
                         Layout.alignment: Qt.AlignHCenter
                         text: modelData.icon
                         color: modelData.color
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.display
                     }
                 }

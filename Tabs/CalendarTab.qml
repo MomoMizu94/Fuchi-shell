@@ -37,7 +37,7 @@ ColumnLayout {
         Text {
             text: "‹"
             color: Colors.subtext
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.bar.fontSize + 20
             font.bold: true
             MouseArea {
@@ -52,7 +52,7 @@ ColumnLayout {
             Layout.fillWidth: true
             text: Events.monthNames[dashboard.calMonth - 1] + "  " + dashboard.calYear
             color: Colors.text
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.bar.fontSize + 20
             font.bold: true
             horizontalAlignment: Text.AlignHCenter
@@ -60,7 +60,7 @@ ColumnLayout {
         Text {
             text: "›"
             color: Colors.subtext
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.bar.fontSize + 10
             font.bold: true
             MouseArea {
@@ -110,7 +110,7 @@ ColumnLayout {
                 Text {
                     text: "EVENTS — " + root.selectedHeading()
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.bar.fontSize - 8
                     font.bold: true
                     font.letterSpacing: 1.5
@@ -132,7 +132,7 @@ ColumnLayout {
                             anchors.leftMargin: 10
                             anchors.rightMargin: 10
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 4
                             verticalAlignment: TextInput.AlignVCenter
                             clip: true
@@ -169,7 +169,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             text: "+"
                             color: Colors.contrastText
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize + 4
                             font.bold: true
                         }
@@ -216,7 +216,7 @@ ColumnLayout {
                                         visible: eventRow.modelData.time !== ""
                                         text: eventRow.modelData.time
                                         color: Colors.accent
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.bar.fontSize - 4
                                         font.bold: true
                                     }
@@ -225,7 +225,7 @@ ColumnLayout {
                                         Layout.fillWidth: true
                                         text: eventRow.modelData.title
                                         color: Colors.text
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.bar.fontSize - 4
                                         elide: Text.ElideRight
                                     }
@@ -233,7 +233,7 @@ ColumnLayout {
                                     Text {
                                         text: "󰅖"
                                         color: Colors.subtext
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.bar.fontSize - 4
 
                                         MouseArea {
@@ -250,7 +250,7 @@ ColumnLayout {
                         visible: Events.revision >= 0 && Events.eventsFor(root.selectedDate).length === 0
                         text: "No events"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.bar.fontSize - 4
                     }
                 }
@@ -281,7 +281,7 @@ ColumnLayout {
                     Text {
                         text: "TO-DO"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.bar.fontSize - 8
                         font.bold: true
                         font.letterSpacing: 1.5
@@ -310,7 +310,7 @@ ColumnLayout {
                                                        + clearIconMetrics.tightBoundingRect.width / 2)
                             text: "󰩹"
                             color: Colors.contrastText
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize + 2
                             font.bold: true
 
@@ -345,7 +345,7 @@ ColumnLayout {
                             anchors.leftMargin: 10
                             anchors.rightMargin: 10
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 4
                             verticalAlignment: TextInput.AlignVCenter
                             clip: true
@@ -378,7 +378,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             text: "+"
                             color: Colors.contrastText
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize + 4
                             font.bold: true
                         }
@@ -455,7 +455,7 @@ ColumnLayout {
                                         Layout.fillWidth: true
                                         text: taskText
                                         color: done ? Colors.subtext : Colors.text
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.bar.fontSize - 4
                                         font.strikeout: done
                                         wrapMode: Text.WordWrap
@@ -464,7 +464,7 @@ ColumnLayout {
                                     Text {
                                         text: "󰅖"
                                         color: Colors.subtext
-                                        font.family: Config.bar.fontFamily
+                                        font.family: Settings.fontFamily
                                         font.pixelSize: Config.bar.fontSize - 4
 
                                         MouseArea {

@@ -83,14 +83,14 @@ PanelWindow {
             : Config.powerMenu.buttonSize * powerMenu.actions.length
                 + Config.powerMenu.gap * (powerMenu.actions.length - 1)
                 + Config.powerMenu.padding * 2
-        Behavior on height { NumberAnimation { duration: Config.anim.popup; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: Settings.animationPopup; easing.type: Easing.OutCubic } }
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         anchors.rightMargin: powerMenu.open ? 0 : -width
         Behavior on anchors.rightMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !powerMenu.open) powerMenu.closing = false
             }
@@ -148,7 +148,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: btn.modelData.icon
                             color: btn.modelData.tint ? Colors.error : Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.display
                         }
 
@@ -176,7 +176,7 @@ PanelWindow {
                     horizontalAlignment: Text.AlignHCenter
                     text: "Are you sure?"
                     color: Colors.textStrong
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.md
                     wrapMode: Text.WordWrap
                 }
@@ -197,7 +197,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: "Yes"
                             color: Colors.error
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.base
                             font.bold: true
                         }
@@ -222,7 +222,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: "No"
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.base
                         }
 

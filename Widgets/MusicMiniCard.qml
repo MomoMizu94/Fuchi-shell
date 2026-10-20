@@ -45,7 +45,7 @@ Rectangle {
         anchors.centerIn: parent
         text: "No media playing"
         color: Colors.subtext
-        font.family: Config.bar.fontFamily
+        font.family: Settings.fontFamily
         font.pixelSize: Config.type.base
     }
 
@@ -132,7 +132,7 @@ Rectangle {
                         anchors.centerIn: parent
                         text: "󰝚"
                         color: Colors.card
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.display
                     }
                 }
@@ -145,7 +145,7 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             text: musicCard.player ? (musicCard.player.trackTitle || "—") : "—"
             color: Colors.border
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.md
             font.bold: true
             elide: Text.ElideRight
@@ -155,7 +155,7 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             text: musicCard.player ? (musicCard.player.trackArtist || "—") : "—"
             color: Colors.subtext
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.sm
             elide: Text.ElideRight
         }
@@ -164,7 +164,7 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             text: musicCard.player ? (musicCard.player.trackAlbum || "") : ""
             color: Colors.accent
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.label
             elide: Text.ElideRight
             visible: musicCard.player && musicCard.player.trackAlbum !== ""
@@ -178,7 +178,7 @@ Rectangle {
             Text {
                 text: ""
                 color: musicCard.player && musicCard.player.canGoPrevious ? Colors.border : Colors.subtext
-                font.family: Config.bar.fontFamily
+                font.family: Settings.fontFamily
                 font.pixelSize: Config.type.xl
                 opacity: musicCard.player && musicCard.player.canGoPrevious ? 1.0 : 0.4
                 MouseArea { anchors.fill: parent; onClicked: if (musicCard.player && musicCard.player.canGoPrevious) musicCard.player.previous() }
@@ -186,14 +186,14 @@ Rectangle {
             Text {
                 text: musicCard.player && musicCard.optimisticPlaying ? "" : ""
                 color: Colors.accent
-                font.family: Config.bar.fontFamily
+                font.family: Settings.fontFamily
                 font.pixelSize: Config.type.display
                 MouseArea { anchors.fill: parent; onClicked: if (musicCard.player) { musicCard.optimisticPlaying = !musicCard.optimisticPlaying; musicCard.player.togglePlaying() } }
             }
             Text {
                 text: ""
                 color: musicCard.player && musicCard.player.canGoNext ? Colors.border : Colors.subtext
-                font.family: Config.bar.fontFamily
+                font.family: Settings.fontFamily
                 font.pixelSize: Config.type.xl
                 opacity: musicCard.player && musicCard.player.canGoNext ? 1.0 : 0.4
                 MouseArea { anchors.fill: parent; onClicked: if (musicCard.player && musicCard.player.canGoNext) musicCard.player.next() }

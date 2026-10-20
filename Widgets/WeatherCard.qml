@@ -22,7 +22,7 @@ Rectangle {
         Text {
             text: "WEATHER"
             color: Colors.subtext
-            font.family: Config.bar.fontFamily
+            font.family: Settings.fontFamily
             font.pixelSize: Config.type.label
             font.bold: true
             font.letterSpacing: 1.5
@@ -44,14 +44,14 @@ Rectangle {
                     Text {
                         text: dashboard.weatherTemp + "°"
                         color: Colors.border
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.hero
                         font.bold: true
                     }
                     Item { Layout.fillWidth: true }
                     Text {
                         text: dashboard.weatherIcon(dashboard.weatherDesc)
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.hero
                         color: Colors.border
                         font.bold: true
@@ -63,7 +63,7 @@ Rectangle {
                     visible: dashboard.weatherLocation !== ""
                     text: dashboard.weatherLocation
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                     elide: Text.ElideRight
                 }
@@ -72,7 +72,7 @@ Rectangle {
                     Layout.fillWidth: true
                     text: dashboard.weatherDesc !== "" ? dashboard.weatherDesc : "Loading…"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                     elide: Text.ElideRight
                 }
@@ -81,21 +81,21 @@ Rectangle {
                     text: "H: " + dashboard.weatherHigh + "°  L: " + dashboard.weatherLow
                         + "°"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                 }
 
                 Text {
                     text: dashboard.weatherHumidity + "% humidity"
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                 }
 
                 Text {
                     text: "Wind: " + dashboard.weatherWindSpeed + " km/h " + dashboard.weatherWindDir
                     color: Colors.subtext
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.sm
                 }
 
@@ -298,7 +298,7 @@ Rectangle {
                         Text {
                             text: precipMap.radarPlaying ? "" : ""
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.label
                         }
                         Text {
@@ -307,7 +307,7 @@ Rectangle {
                                   + (precipMap.radarFrame.future ? " ⟶ NOWCAST" : "")
                                 : ""
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.label
                         }
                     }
@@ -324,7 +324,7 @@ Rectangle {
                     anchors.margins: Config.gap.xs
                     text: "© OSM © CARTO · RainViewer"
                     color: Colors.border
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.micro
                 }
             }
@@ -337,7 +337,7 @@ Rectangle {
             Text {
                 text: "WEATHER FORECAST"
                 color: Colors.subtext
-                font.family: Config.bar.fontFamily
+                font.family: Settings.fontFamily
                 font.pixelSize: Config.type.lg                                        
                 font.bold: true
                 font.letterSpacing: 1.5
@@ -363,7 +363,7 @@ Rectangle {
                         Layout.alignment: Qt.AlignHCenter
                         text: fc ? fc.day : ""
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.base
                         font.bold: true
                         font.letterSpacing: 1
@@ -372,14 +372,14 @@ Rectangle {
                         Layout.alignment: Qt.AlignHCenter
                         text: fc ? dashboard.weatherIcon(fc.desc) : ""
                         color: Colors.border
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.display
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: fc ? fc.high + "° / " + fc.low + "°" : ""
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.base
                     }
                 }

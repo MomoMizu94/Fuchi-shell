@@ -18,7 +18,7 @@ Rectangle {
         anchors.margins: Config.gap.md
         spacing: Config.gap.lg
 
-        // Profile picture — path is configurable (Config.systemInfo.profilePic);
+        // Profile picture — path is configurable (Settings.profilePic);
         // falls back to an icon when image is not found via path
         Item {
             width: 140; height: 140
@@ -26,7 +26,7 @@ Rectangle {
             Image {
                 id: profileImg
                 anchors.fill: parent
-                source: "file://" + Quickshell.env("HOME") + "/" + Config.systemInfo.profilePic
+                source: Settings.fileUrl(Settings.profilePic)
                 fillMode: Image.PreserveAspectCrop
                 layer.enabled: true
                 visible: false
@@ -59,7 +59,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: "󰀄"
                     color: Colors.card
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.display
                 }
             }
@@ -85,14 +85,14 @@ Rectangle {
                     Text {
                         text: modelData.icon
                         color: Colors.accent
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.md
                     }
                     Item { Layout.fillWidth: true }
                     Text {
                         text: modelData.value || "…"
                         color: Colors.border
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.base
                         font.bold: true
                     }

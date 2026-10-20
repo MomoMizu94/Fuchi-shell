@@ -1,5 +1,9 @@
 singleton Colors Colors.qml
 singleton Events Events.qml
+singleton Settings Settings.qml
+SettingsWindow SettingsWindow.qml
+SettingsRow SettingsRow.qml
+SettingsButton SettingsButton.qml
 CalendarGrid CalendarGrid.qml
 Dashboard Dashboard.qml
 AppLauncher AppLauncher.qml

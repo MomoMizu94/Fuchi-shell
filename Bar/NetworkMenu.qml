@@ -225,7 +225,7 @@ PanelWindow {
         anchors.leftMargin: netMenu.open ? Config.frame.thick : -width
         Behavior on anchors.leftMargin {
             NumberAnimation {
-                duration: Config.anim.popup
+                duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
                 onRunningChanged: if (!running && !netMenu.open) netMenu.closing = false
             }
@@ -274,7 +274,7 @@ PanelWindow {
                         Text {
                             text: netMenu.wiredUp ? "󰈀" : "󰤨"
                             color: netMenu.wiredUp || netMenu.wifiUp ? Colors.accent : Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.md
                         }
 
@@ -282,7 +282,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: "Network"
                             color: Colors.textStrong
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                             font.bold: true
                         }
@@ -290,7 +290,7 @@ PanelWindow {
                         Text {
                             text: "Wi-Fi"
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.micro
                         }
 
@@ -327,7 +327,7 @@ PanelWindow {
                             ? (netMenu.wiredDev && netMenu.wiredDev.network ? netMenu.wiredDev.network.name : "Wired")
                             : (netMenu.activeWifiNetwork ? netMenu.activeWifiNetwork.name : "")
                         color: Colors.text
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.sm
                         font.bold: true
                         elide: Text.ElideRight
@@ -349,7 +349,7 @@ PanelWindow {
                         }
                         visible: text !== ""
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.micro
                         elide: Text.ElideRight
                     }
@@ -359,7 +359,7 @@ PanelWindow {
                         text: netMenu.connectivityLabel()
                         visible: text !== ""
                         color: Colors.warn
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.micro
                     }
                 }
@@ -374,13 +374,13 @@ PanelWindow {
                     Text {
                         text: "󰅧 " + netMenu.up.toFixed(1) + " MB/s"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.micro
                     }
                     Text {
                         text: "󰅢 " + netMenu.down.toFixed(1) + " MB/s"
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.micro
                     }
                     Item { Layout.fillWidth: true }
@@ -414,7 +414,7 @@ PanelWindow {
                         Text {
                             text: "󰖂"
                             color: netMenu.vpnUp ? Colors.accent : Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.md
                         }
 
@@ -422,7 +422,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: "Mullvad VPN"
                             color: netMenu.vpnUp ? Colors.accent : Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                         }
 
@@ -430,7 +430,7 @@ PanelWindow {
                             visible: netMenu.vpnPending
                             text: "…"
                             color: Colors.subtext
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                         }
 
@@ -451,7 +451,7 @@ PanelWindow {
                     // everything, so it gets the warning color, not the muted one
                     color: netMenu.vpnState === "error" ? Colors.error
                          : (netMenu.vpnLockdown && !netMenu.vpnUp ? Colors.warn : Colors.subtext)
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.micro
                     elide: Text.ElideRight
                 }
@@ -470,7 +470,7 @@ PanelWindow {
                         Text {
                             text: "󰦝"
                             color: netMenu.vpnLockdown ? Colors.accent : Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.md
                         }
 
@@ -478,7 +478,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: "Kill switch"
                             color: netMenu.vpnLockdown ? Colors.accent : Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                         }
 
@@ -522,7 +522,7 @@ PanelWindow {
                             Text {
                                 text: "󰈀"
                                 color: netMenu.wiredUp ? Colors.accent : Colors.text
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.md
                             }
 
@@ -530,7 +530,7 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 text: "Wired connection"
                                 color: netMenu.wiredUp ? Colors.accent : Colors.text
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.sm
                             }
 
@@ -538,7 +538,7 @@ PanelWindow {
                                 text: netMenu.wiredUp ? "connected"
                                     : (netMenu.wiredDev && netMenu.wiredDev.hasLink ? "" : "no cable")
                                 color: Colors.subtext
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.micro
                             }
                         }
@@ -576,7 +576,7 @@ PanelWindow {
                             Text {
                                 text: netMenu.wifiDev && netMenu.wifiDev.scannerEnabled ? "󰀘" : "󰐕"
                                 color: netMenu.wifiDev && netMenu.wifiDev.scannerEnabled ? Colors.accent : Colors.text
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.md
                             }
 
@@ -584,7 +584,7 @@ PanelWindow {
                                 Layout.fillWidth: true
                                 text: netMenu.wifiDev && netMenu.wifiDev.scannerEnabled ? "Scanning…" : "Search for networks"
                                 color: Colors.text
-                                font.family: Config.bar.fontFamily
+                                font.family: Settings.fontFamily
                                 font.pixelSize: Config.type.sm
                             }
                         }
@@ -631,7 +631,7 @@ PanelWindow {
                                 Text {
                                     text: netMenu.signalGlyph(netRow.modelData.signalStrength)
                                     color: netRow.modelData.connected ? Colors.accent : Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.md
                                 }
 
@@ -639,7 +639,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     text: netRow.modelData.name
                                     color: netRow.modelData.connected ? Colors.accent : Colors.text
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }
@@ -648,7 +648,7 @@ PanelWindow {
                                     visible: netRow.modelData.stateChanging
                                     text: "…"
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                 }
 
@@ -656,7 +656,7 @@ PanelWindow {
                                     visible: netRow.modelData.security !== WifiSecurityType.Open
                                     text: "󰌾"
                                     color: Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                 }
 
@@ -665,7 +665,7 @@ PanelWindow {
                                     visible: rowHover.hovered && netRow.modelData.known
                                     text: "󰅖"
                                     color: forgetHover.hovered ? Colors.error : Colors.subtext
-                                    font.family: Config.bar.fontFamily
+                                    font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
 
                                     HoverHandler { id: forgetHover }
@@ -714,7 +714,7 @@ PanelWindow {
                         Layout.leftMargin: Config.gap.sm
                         text: netMenu.pskTarget ? "Password for " + netMenu.pskTarget.name : ""
                         color: Colors.subtext
-                        font.family: Config.bar.fontFamily
+                        font.family: Settings.fontFamily
                         font.pixelSize: Config.type.micro
                         elide: Text.ElideRight
                     }
@@ -731,7 +731,7 @@ PanelWindow {
                             anchors.leftMargin: Config.gap.sm
                             anchors.rightMargin: Config.gap.sm
                             color: Colors.text
-                            font.family: Config.bar.fontFamily
+                            font.family: Settings.fontFamily
                             font.pixelSize: Config.type.sm
                             verticalAlignment: TextInput.AlignVCenter
                             echoMode: TextInput.Password
@@ -758,7 +758,7 @@ PanelWindow {
                     Layout.leftMargin: Config.gap.sm
                     text: netMenu.errorText
                     color: Colors.error
-                    font.family: Config.bar.fontFamily
+                    font.family: Settings.fontFamily
                     font.pixelSize: Config.type.micro
                     elide: Text.ElideRight
                 }
