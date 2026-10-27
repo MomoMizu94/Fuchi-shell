@@ -1,1 +1,12 @@
 secrets.js
+.venv-hue/
+__pycache__/
+
+# Local lesson material
+/MISSION.md
+/NOTES.md
+/RESOURCES.md
+/lessons/
+/reference/
+/assets/teach.css
+/assets/teach.js

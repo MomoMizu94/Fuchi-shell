@@ -85,6 +85,21 @@ These tools support optional parts of the shell:
 | Kitty and OpenSSH's `ssh` | SSH terminals opened from the host picker |
 | `mpc` | Pausing MPD before suspend |
 | ImageMagick's `identify` | Wallpaper dimensions in the picker |
+| Python 3.10+ and Bleak | Direct Bluetooth control of a Hue Go lamp |
+
+### Hue Go setup
+
+`>lights` in the launcher controls a Bluetooth-capable Philips Hue Go:
+power, brightness, color, and warm white. Install its optional dependency:
+
+```sh
+python3 -m venv .venv-hue
+.venv-hue/bin/python -m pip install -r scripts/requirements-hue.txt
+```
+
+Turn on Bluetooth, open `>lights`, then **Scan for lamps** and connect.
+The selected lamp is remembered; leaving Lights releases the connection.
+If pairing fails, close the Hue phone app and make the lamp discoverable.
 
 ### Weather and maps
 
@@ -127,6 +142,7 @@ and prefixes work too, so `>key` opens the keybind reference.
 | `6*7` | Shows a calculation above matching apps without a command prefix. |
 | `>keybinds` | Shows the grouped Hyprland shortcuts inside the launcher. |
 | `>keybinds window` | Filters shortcuts by action, category, or keys. |
+| `>lights` | Opens the Hue Go controls inside the launcher. |
 | `>settings` | Opens the settings window, or focuses it if already open. |
 
 The wallpaper picker expands the panel horizontally. The keybind view gives
@@ -338,6 +354,7 @@ disable the corresponding timer if you no longer want those requests.
 | `CalendarGrid.qml`, `Events.qml` | Shared calendar grid and event helpers |
 | `Colors.qml`, `config.js` | Theme colors and visual settings |
 | `Settings.qml`, `settings.js`, `SettingsWindow.qml` | Live preferences, persistence, validation, and the settings window |
+| `Lights.qml`, `HueService.qml`, `scripts/hue.py` | Hue lamp controls and the Bluetooth helper |
 | `FrameShape.qml`, `FrameReserve.qml`, `CornerFillet.qml` | Screen frame, reserved space, and panel corners |
 | `qmldir` | Local QML component registrations |
 | `scripts/` | Wallpaper, SSH terminals, system statistics, and market-data helpers |

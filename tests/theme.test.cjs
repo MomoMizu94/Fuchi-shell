@@ -99,7 +99,7 @@ test('launcher filters theme choices and marks the active palette', () => {
     const source = fs.readFileSync(path.join(__dirname, '../AppLauncher.qml'), 'utf8');
     const context = vm.createContext({
         parsedCommand: { word: 'theme', filter: '' },
-        activeCommand: { name: 'theme' }, keybindsMode: false, Colors: { isLight: false }
+        activeCommand: { name: 'theme' }, keybindsMode: false, lightsMode: false, Colors: { isLight: false }
     });
     for (const name of ['fuzzyScore', 'buildCommandEntries']) {
         vm.runInContext(source.match(new RegExp('    function ' + name + '\\([^]*?\\n    }'))[0], context);
@@ -118,7 +118,7 @@ test('theme and wallpaper actions use the same script with separate arguments', 
     const source = fs.readFileSync(path.join(__dirname, '../AppLauncher.qml'), 'utf8');
     let starts = 0, closes = 0;
     const context = vm.createContext({
-        keybindsMode: false, commandMode: true, selectedIndex: 0,
+        keybindsMode: false, lightsMode: false, commandMode: true, selectedIndex: 0,
         results: [{ kind: 'theme', mode: 'light' }],
         Quickshell: { env: () => '/example' },
         wallpaperProc: { startDetached: () => starts++ },

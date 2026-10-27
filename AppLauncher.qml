@@ -10,7 +10,7 @@ import "config.js" as Config
 import "calc.js" as Calc
 
 // Bottom-docked command palette: fuzzy app search, a ">" command mode
-// for wallpaper, theme, calculator, keybinds and settings, and a bare-expression calculator shortcut
+// for wallpaper, theme, calculator, keybinds, lights and settings, and a bare-expression calculator shortcut
 PanelWindow {
     id: launcher
     signal closeRequested()
@@ -46,6 +46,7 @@ PanelWindow {
         { name: "theme", label: "Theme" },
         { name: "calc", label: "Calculator" },
         { name: "keybinds", label: "Keybinds" },
+        { name: "lights", label: "Lights" },
         { name: "settings", label: "Settings" }
     ]
     property var wallpaperFiles: []   // populated once by wallpaperFolderModel below
@@ -97,6 +98,7 @@ PanelWindow {
     readonly property var activeCommand: commandMode ? matchedCommand(parsedCommand.word) : null
     readonly property bool wallpaperGridMode: !!activeCommand && activeCommand.name === "wallpaper"
     readonly property bool keybindsMode: !!activeCommand && activeCommand.name === "keybinds"
+    readonly property bool lightsMode: !!activeCommand && activeCommand.name === "lights"
 
     function filteredWallpapers(filter) {
         const f = filter.trim().toLowerCase()
@@ -115,8 +117,8 @@ PanelWindow {
         if (!activeCommand) return []
         if (activeCommand.name === "settings")
             return [{ kind: "settings", name: "Open settings", comment: "Shell preferences", glyph: "󰒓" }]
-        // Keybinds has its own reference view, with no executable result rows.
-        if (keybindsMode) return []
+        // These commands have their own views instead of result rows.
+        if (keybindsMode || lightsMode) return []
         if (activeCommand.name === "wallpaper") return filteredWallpapers(parsedCommand.filter)
         if (activeCommand.name === "theme") {
             return ["dark", "light"]
@@ -182,7 +184,7 @@ PanelWindow {
     }
 
     function scrollSelectedIntoView(idx) {
-        if (keybindsMode) return
+        if (keybindsMode || lightsMode) return
         const view = wallpaperGridMode ? wallpaperGrid : resultsList
         if (view.count > 0) view.positionViewAtIndex(idx, ListView.Contain)
     }
@@ -193,6 +195,7 @@ PanelWindow {
     onSelectedIndexChanged: scrollSelectedIntoView(selectedIndex)
 
     function executeSelected() {
+        if (lightsMode) { lightsView.focusControls(); return }
         if (keybindsMode) return
         if (results.length === 0) return
         const item = results[selectedIndex]
@@ -311,7 +314,9 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         width: launcher.keybindsMode
             ? Math.min(Config.keybinds.width, launcher.width - Config.gap.xl * 2)
-            : launcher.wallpaperGridMode ? Config.launcher.galleryPanelWidth : Config.launcher.width
+            : launcher.wallpaperGridMode ? Config.launcher.galleryPanelWidth
+            : launcher.lightsMode ? Math.min(Config.launcher.width, launcher.width - Config.gap.xl * 2)
+            : Config.launcher.width
         Behavior on width { NumberAnimation { duration: Settings.animationPopup; easing.type: Easing.OutCubic } }
         // Chrome accounting must match the anchors below exactly (top margin,
         // two dividerGap gaps around the divider, the divider itself, and the
@@ -322,6 +327,9 @@ PanelWindow {
             - outerMargin * 2 - dividerGap * 2 - 1 - Config.launcher.inputHeight) / Config.launcher.rowHeight))
         height: launcher.keybindsMode
             ? Math.min(Config.keybinds.height, launcher.height - Config.gap.xl * 2)
+            : launcher.lightsMode
+            ? Math.min(launcher.height - Config.gap.xl * 2,
+                outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight + lightsView.implicitHeight)
             : outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight +
             (launcher.wallpaperGridMode
                 ? Config.launcher.galleryCardHeight + Config.launcher.galleryLabelHeight
@@ -465,7 +473,7 @@ PanelWindow {
                     id: resultsList
                     anchors.fill: parent
                     clip: true
-                    visible: !launcher.wallpaperGridMode && !launcher.keybindsMode
+                    visible: !launcher.wallpaperGridMode && !launcher.keybindsMode && !launcher.lightsMode
                     model: visible ? launcher.results : []
                     currentIndex: launcher.selectedIndex
 
@@ -643,9 +651,18 @@ PanelWindow {
                     filter: launcher.parsedCommand.filter
                 }
 
+                Lights {
+                    id: lightsView
+                    objectName: "lightsView"
+                    anchors.fill: parent
+                    visible: launcher.lightsMode
+                    active: launcher.open && launcher.lightsMode
+                    onCloseRequested: launcher.closeRequested()
+                }
+
                 Text {
                     anchors.fill: parent
-                    visible: !launcher.keybindsMode && launcher.results.length === 0
+                    visible: !launcher.keybindsMode && !launcher.lightsMode && launcher.results.length === 0
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     text: launcher.emptyStateText
