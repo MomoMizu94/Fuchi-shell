@@ -86,6 +86,17 @@ These tools support optional parts of the shell:
 | `mpc` | Pausing MPD before suspend |
 | ImageMagick's `identify` | Wallpaper dimensions in the picker |
 | Python 3.10+ and Bleak | Direct Bluetooth control of a Hue Go lamp |
+| Python 3, `checkupdates` from pacman-contrib, and `yay` | Repository and AUR update indicator |
+
+### Package updates
+
+Click the icon below the clock to see repository and AUR updates with version
+changes. Checks run at startup and hourly. Install updates yourself, then press
+**Check now** to refresh.
+
+A checkmark means up to date, a download icon means updates are available, and a
+warning marks a failed check. Failed checks retain the last known results.
+Adjust the schedule and popup size under `updates` in `config.js`.
 
 ### Hue Go setup
 
@@ -353,6 +364,7 @@ disable the corresponding timer if you no longer want those requests.
 | `NotificationPopup.qml` | Incoming notification popups |
 | `CalendarGrid.qml`, `Events.qml` | Shared calendar grid and event helpers |
 | `Colors.qml`, `config.js` | Theme colors and visual settings |
+| `UpdateService.qml`, `Bar/UpdateIndicator.qml`, `Bar/UpdateMenu.qml`, `scripts/check-updates.py` | Update scheduling, sidebar status, package list, and read-only package queries |
 | `Settings.qml`, `settings.js`, `SettingsWindow.qml` | Live preferences, persistence, validation, and the settings window |
 | `Lights.qml`, `HueService.qml`, `scripts/hue.py` | Hue lamp controls and the Bluetooth helper |
 | `FrameShape.qml`, `FrameReserve.qml`, `CornerFillet.qml` | Screen frame, reserved space, and panel corners |
@@ -375,6 +387,8 @@ commands from the repository directory:
 node --test tests/*.test.cjs
 python3 -B tests/palette_test.py
 python3 -B tests/settings_runtime_test.py
+python3 -B tests/updates_test.py
+python3 -B tests/updates_runtime_test.py
 ```
 
 The tests cover modifier aliases, filtering, workspace ranges, category order,
@@ -393,6 +407,13 @@ normal reloads, malformed files, failed writes, floating placement before openin
 cancellation of pending opens, reopening after native closes, and compositor failures. In a live session, also
 check window focus from the launcher, moving and resizing, font selection, and native
 file and folder pickers.
+
+The update tests use fake package commands and never contact repositories or the
+AUR. They cover parsing, empty results, timeouts, independent source failures,
+recovery, startup and scheduled checks, and duplicate refresh requests. The popup
+body is rendered in an offscreen floating window because the offscreen backend
+does not support Wayland panels. Check sidebar placement, popup anchoring, keyboard
+focus, and dismissal in a live Hyprland session after changing the update UI.
 
 ## Acknowledgements
 

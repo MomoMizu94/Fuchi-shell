@@ -29,10 +29,14 @@ Scope {
     property real layoutMenuTargetY: 0
     property bool hostMenuOpen: false
     property real hostMenuTargetY: 0
+    property bool updatesMenuOpen: false
+    property real updatesMenuTargetY: 0
     // Current tiling layout as its dwm label ("tile", "bstack", ...). hyprland.lua pushes this
     // in on every change (see PublishLayout there). Both the bar indicator and
     // the layout menu read it
     property string currentLayout: ""
+
+    UpdateService { id: updateService }
 
     // Notification history
     ListModel { id: history }
@@ -228,6 +232,15 @@ Scope {
         function hide(): void { root.hostMenuOpen = false }
     }
 
+    IpcHandler {
+        target: "updatesmenu"
+        function toggle(y: string): void {
+            root.updatesMenuTargetY = Number(y)
+            root.updatesMenuOpen = !root.updatesMenuOpen
+        }
+        function hide(): void { root.updatesMenuOpen = false }
+    }
+
     // Pushed in by hyprland.lua on every layout change
     IpcHandler {
         target: "layout"
@@ -342,6 +355,13 @@ Scope {
         onCloseRequested: root.hostMenuOpen = false
     }
 
+    UpdateMenu {
+        service: updateService
+        open: root.updatesMenuOpen
+        targetY: root.updatesMenuTargetY
+        onCloseRequested: root.updatesMenuOpen = false
+    }
+
     // Reserved screen-edge space, the hover-sensitive frame,
     // and the bar itself
     FrameReserve {}
@@ -354,5 +374,5 @@ Scope {
             else if (root.centerOpen) dashboardCloseTimer.restart()
         }
     }
-    Bar { currentLayout: root.currentLayout }
+    Bar { currentLayout: root.currentLayout; updates: updateService }
 }

@@ -13,6 +13,7 @@ PanelWindow {
 
     // Current tiling layout's dwm label, owned by shell.qml
     property string currentLayout: ""
+    required property var updates
 
     anchors {
         top: true
@@ -50,6 +51,7 @@ PanelWindow {
 
         Tray {}
         Clock {}
+        UpdateIndicator { service: bar.updates }
         BluetoothIndicator {}
         NetworkIndicator {}
         HostIndicator {}

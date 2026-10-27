@@ -1,6 +1,9 @@
 singleton Colors Colors.qml
 singleton Events Events.qml
 singleton Settings Settings.qml
+UpdateService UpdateService.qml
+UpdateIndicator Bar/UpdateIndicator.qml
+UpdateMenu Bar/UpdateMenu.qml
 HueService HueService.qml
 Lights Lights.qml
 SettingsWindow SettingsWindow.qml

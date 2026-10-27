@@ -72,6 +72,14 @@ const sidebar = {
     useNerdLayoutGlyphs: false, // false = dwm ASCII symbols, true = the Nerd Font set
 }
 
+// Package update checks and the sidebar popup. Checks never install packages.
+const updates = {
+    intervalMs: 60 * 60 * 1000,
+    timeoutSeconds: 90,
+    width: 440,
+    maxHeight: 580,
+}
+
 // The dwm-style tiling layouts, in the order the picker lists them. `label` is the
 // key hyprland.lua pushes over IPC; `ascii` is the suckless symbol from
 // ~/suckless/dwm/config.h; `nerd` is the Nerd Font alternative, using the Nerd Fonts v3 numbering
