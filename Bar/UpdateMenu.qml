@@ -154,6 +154,7 @@ PanelWindow {
                 }
                 ListView {
                     id: list
+                    ScrollWheel { view: list }
                     objectName: "updatePackages"
                     Layout.fillWidth: true
                     Layout.fillHeight: true

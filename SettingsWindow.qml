@@ -138,6 +138,15 @@ FloatingWindow {
         onAccepted: Settings.setPath("profilePic", selectedFile)
     }
 
+    FolderDialog {
+        id: libraryFolderDialog
+        objectName: "libraryFolderDialog"
+        parentWindow: window.contentItem.Window.window
+        title: "Choose library folder"
+        currentFolder: Settings.fileUrl(Settings.libraryFolder)
+        onAccepted: Settings.setPath("libraryFolder", selectedFolder)
+    }
+
     Shortcut {
         sequences: [StandardKey.Close]
         enabled: window.visible
@@ -207,6 +216,7 @@ FloatingWindow {
 
             ScrollView {
                 id: scroll
+                ScrollWheel { view: scroll.contentItem }
                 objectName: "settingsScroll"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -376,6 +386,25 @@ FloatingWindow {
                         minimum: 1
                         maximum: 20
                         unit: "rows"
+                    }
+
+                    SectionHeading { title: "Library" }
+
+                    SettingsRow {
+                        title: "Library folder"
+                        description: "Where >Library reads CBZ and CBR archives and saves downloads."
+                        settingKey: "libraryFolder"
+                        controls: [
+                            TextField {
+                                objectName: "libraryFolderControl"
+                                Layout.fillWidth: true
+                                text: Settings.libraryFolder
+                                selectByMouse: true
+                                Accessible.name: "Library folder path"
+                                onEditingFinished: Settings.setPath("libraryFolder", text.trim())
+                            },
+                            SettingsButton { text: "Browse"; onClicked: libraryFolderDialog.open() }
+                        ]
                     }
 
                     SectionHeading { title: "Sound" }

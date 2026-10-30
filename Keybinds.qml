@@ -115,6 +115,7 @@ Item {
 
     ListView {
         id: list
+        ScrollWheel { view: list }
         anchors { left: parent.left; right: parent.right; top: header.bottom; bottom: footer.top }
         anchors.topMargin: Config.gap.sm
         anchors.bottomMargin: Config.gap.md

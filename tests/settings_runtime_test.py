@@ -34,8 +34,8 @@ class SettingsRuntimeTest(unittest.TestCase):
     def tearDown(self):
         self.temporary.cleanup()
 
-    def run_qml(self, content):
-        harness = '''import QtQuick
+    def run_qml(self, content, imports=""):
+        harness = imports + '\n' + '''import QtQuick
 import Quickshell
 import Quickshell.Io
 import QtQuick.Dialogs

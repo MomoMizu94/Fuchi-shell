@@ -1,421 +1,187 @@
 # Fuchi-shell
 
 My personal desktop shell for [Hyprland](https://hyprland.org/), built with
-[Quickshell](https://quickshell.org/). It has a sidebar, an app launcher, a
-slide-out dashboard, notifications, and menus for audio, networking, and power.
-The colors follow the wallpaper through pywal.
+[Quickshell](https://quickshell.org/). The colors follow the wallpaper through
+pywal.
 
 [![Watch the demo](https://github.com/user-attachments/assets/a202ed55-45ec-45c7-b7eb-e2eb312926b4)](https://www.youtube.com/watch?v=PkDNhuNavrk)
 
-Click the image to watch the full demo on YouTube.
-
 ## What it includes
 
-The sidebar shows workspaces, running apps, the current layout, tray icons,
-connection status, host shortcuts, volume, and a clock. The dashboard opens
-from the top edge and has four tabs:
-
-- Dashboard, with weather, system information, quick toggles, music controls,
-  todos, and notification history.
-- Calendar, with a month view.
-- Finance, with a watchlist of up to five symbols and price charts.
-- Performance, with CPU, GPU, memory, and disk statistics.
-
-A full-size music tab is also included. See [Changing dashboard tabs](#changing-dashboard-tabs)
-to enable it.
-
-The launcher searches installed apps, evaluates calculations, changes the
-wallpaper, and displays Hyprland shortcuts. Notifications have a history list
-and a Do Not Disturb toggle. The volume menu has separate controls for apps,
-and the power menu provides lock, suspend, logout, restart, and shutdown.
+- A sidebar with workspaces, apps, tray icons, and desktop controls.
+- A slide-out dashboard with weather, music, todos, a calendar, a stock
+  watchlist, and system statistics.
+- An app launcher with wallpaper selection, calculations, and shortcut search.
+- Notifications with history and Do Not Disturb, plus audio and power menus.
+- A CBZ/CBR library and reader with optional background downloads.
 
 ## Setup
 
-This config assumes it lives at `~/.config/quickshell`. Several commands use
-that path to find the helper scripts.
+My config expects the repository at `~/.config/quickshell`; several helpers use
+that path. These startup examples use Hyprland's Lua configuration.
 
-1. Install Quickshell, Hyprland, and the tools listed below. The `qs` and
-   `hyprctl` commands need to be on your `PATH`.
+1. Install Quickshell, Hyprland, and the dependencies below. Make sure `qs` and
+   `hyprctl` are on your `PATH`.
 2. Place this repository at `~/.config/quickshell`.
-3. Copy `secrets.js.example` to `secrets.js`. The file must exist because the
-   weather components and host picker import it. Add your weather key and
-   private host entries there.
-4. Set your wallpaper folder and profile picture in [config.js](config.js).
-5. Run `qs` from your Hyprland session.
+3. Copy [secrets.js.example](secrets.js.example) to `secrets.js` if you don't
+   already have one. This file must exist, even if you leave its defaults.
+   Keep your keys and private hosts there; Git ignores it.
+4. Run `qs` from your Hyprland session.
+5. Open `>settings` to choose your font, wallpaper folder, and profile picture.
 
-To start the shell with Hyprland, add `hl.exec_cmd("qs")` to your existing
-`hl.on("hyprland.start", ...)` callback. Start the `awww-daemon` there as well
-if you use the supplied wallpaper script.
+To start the shell automatically, add `hl.exec_cmd("qs")` to your existing
+`hl.on("hyprland.start", ...)` callback. Start `awww-daemon` there too if you
+use the wallpaper picker.
 
-The launcher can be opened with `qs ipc call launcher toggle`. For example,
-this Lua binding uses Alt + P:
+Bind the launcher to a key in `hyprland.lua`. This example uses Alt + P:
 
 ```lua
-hl.bind("ALT + P", hl.dsp.exec_cmd("qs ipc call launcher toggle"))
+hl.bind("ALT + P", hl.dsp.exec_cmd("qs ipc call -- launcher toggle"))
 ```
 
 ### Dependencies
 
-Use a Nerd Font for the icons. The default is `Mononoki Nerd Font`, which can
-be changed in `config.js`. The shell also uses Bash, common Linux command-line
-tools, and the following services and utilities:
+Use a Nerd Font for the icons. The default is `Mononoki Nerd Font`. The shell
+also uses Bash and common Linux command-line tools.
 
 | Tool or service | Used for |
 | --- | --- |
-| PipeWire and WirePlumber, including `wpctl` | Audio controls and muting before suspend |
-| NetworkManager, including `nmcli`, and `ip` from iproute2 | Network status and Wi-Fi information |
-| BlueZ | Bluetooth controls through Quickshell |
-| `curl` | Weather, location, radar, and market-data requests |
-| `jq` | Processing market-data responses |
-| pywal, providing `wal` | Generating the wallpaper palette |
-| `awww` and its daemon | Setting the wallpaper |
+| PipeWire, WirePlumber, and `wpctl` | Audio |
+| NetworkManager with `nmcli`, and `ip` from iproute2 | Network status |
+| BlueZ | Bluetooth |
+| `curl` | Weather and market data |
+| `jq` | Market-data parsing |
+| pywal, providing `wal` | Wallpaper colors |
+| `awww` and `awww-daemon` | Wallpapers |
 | `paplay` | Notification sounds |
 | `sensors` from lm_sensors | CPU temperature |
-| `wl-copy` from wl-clipboard | Copying calculator results |
-| `hyprlock` | The power menu's lock action |
-| `systemctl` | Suspend, restart, and shutdown |
+| `wl-copy` from wl-clipboard | Copying calculations |
+| `hyprlock` | Screen locking |
+| `systemctl` | Power actions |
 
-These tools support optional parts of the shell:
+Install these for the optional features you use:
 
 | Tool | Used for |
 | --- | --- |
 | `nvidia-smi` | NVIDIA GPU statistics |
-| `wlsunset` | The night-light toggle |
-| Mullvad's `mullvad` command | VPN controls, hidden when the command is absent |
-| Kitty and OpenSSH's `ssh` | SSH terminals opened from the host picker |
+| `wlsunset` | Night light |
+| Mullvad's `mullvad` command | VPN controls |
+| Kitty and OpenSSH's `ssh` | Host terminals |
 | `mpc` | Pausing MPD before suspend |
-| ImageMagick's `identify` | Wallpaper dimensions in the picker |
-| Python 3.10+ and Bleak | Direct Bluetooth control of a Hue Go lamp |
-| Python 3, `checkupdates` from pacman-contrib, and `yay` | Repository and AUR update indicator |
+| ImageMagick's `identify` | Wallpaper dimensions |
+| Python 3.10+ and Bleak | Hue Go controls |
+| Python 3, `checkupdates` from pacman-contrib, and `yay` | Arch and AUR update checks |
+| Python 3 and Pillow | Library indexing, covers, and CBZ reading |
+| gallery-dl | Library downloads |
+| libarchive with `bsdtar` and its shared library | CBR reading |
+| `gio` from GLib and `notify-send` from libnotify | Library Trash and download notifications |
 
-### Package updates
+## Using the launcher
 
-Click the icon below the clock to see repository and AUR updates with version
-changes. Checks run at startup and hourly. Install updates yourself, then press
-**Check now** to refresh.
+Type an app name, use Up and Down to select a result, and press Enter to open
+it. Escape or a click outside closes the launcher. Type `>` to list commands.
+Names are case-insensitive, and prefixes work, so `>key` opens the keybind list.
 
-A checkmark means up to date, a download icon means updates are available, and a
-warning marks a failed check. Failed checks retain the last known results.
-Adjust the schedule and popup size under `updates` in `config.js`.
+| Command | What it does |
+| --- | --- |
+| `>wallpaper` | Choose a wallpaper. Add a name to filter, such as `>wallpaper forest`. |
+| `>theme` | Choose Dark or Light for the current wallpaper. |
+| `>calc` | Calculate an expression. Enter copies the result. Bare expressions such as `6*7` work too. |
+| `>keybinds` | Browse Hyprland shortcuts. Add words to search actions, categories, or keys. |
+| `>lights` | Control a Hue Go lamp. |
+| `>settings` | Open shell preferences. |
+| `>Library` | Open the book library and reader. |
 
-### Hue Go setup
+The keybind list shows your loaded Hyprland bindings. Scroll with the wheel,
+arrows, or Page Up/Down. Enter does not execute a shortcut; replace the command
+to return to app search.
 
-`>lights` in the launcher controls a Bluetooth-capable Philips Hue Go:
-power, brightness, color, and warm white. Install its optional dependency:
+## Library
+
+Open `>Library` and choose your book and download folder under Settings > Library.
+The default is `~/Library`. Search titles and artists or filter metadata.
+Click a chapter, then press Enter or Read.
+
+Arrows or clicks on either side turn pages. **D** reverses direction, **W** changes
+fit, **Q/Escape** goes back, and **F/F11** toggles fullscreen reading without
+controls. Reading progress and your grid position are remembered. **Auto-turn**
+uses your chosen delay in seconds and stops when you leave the reader.
+
+For downloads, install gallery-dl and paste a supported URL into Downloads.
+You can cancel, retry, view logs, or discard unfinished files. Keep authentication
+and cookies in your private gallery-dl config. URLs, logs, and reading state stay
+outside this repository.
+
+<details>
+<summary>Folders and cover art</summary>
+
+Folders group chapters into series; loose archives appear as individual books.
+Covers use `cover.*`, artwork in `covers/`, or a thumbnail from a page.
+
+</details>
+
+## Optional setup
+
+### Weather
+
+Add your OpenWeatherMap key to `secrets.js`, using the fields in
+[secrets.js.example](secrets.js.example). Set both `lat` and `lon` for a fixed
+location; if either is zero, the shell uses IP-based location from `ip-api.com`.
+The map uses RainViewer radar and a CARTO basemap. `cartoApiKey` is optional.
+
+### Host shortcuts
+
+Add SSH or web entries to `hosts` in `secrets.js`; the example file has both.
+Keep each `id` unique and unchanged when renaming a host. SSH entries need Kitty
+and OpenSSH. The terminal icon above the power button opens the host list.
+For PADD, install it on the host and use `startupCommand: "~/padd.sh"`.
+
+### Hue Go
+
+For a Bluetooth-capable Hue Go, install the helper's dependency from the
+repository directory:
 
 ```sh
 python3 -m venv .venv-hue
 .venv-hue/bin/python -m pip install -r scripts/requirements-hue.txt
 ```
 
-Turn on Bluetooth, open `>lights`, then **Scan for lamps** and connect.
-The selected lamp is remembered; leaving Lights releases the connection.
-If pairing fails, close the Hue phone app and make the lamp discoverable.
+Turn on Bluetooth, open `>lights`, choose Scan for lamps, and connect.
+The shell remembers the lamp. If pairing fails, close the Hue phone app and
+make the lamp discoverable.
 
-### Weather and maps
+### Package updates
 
-Edit `secrets.js` with your own values:
-
-```js
-const owmApiKey = "YOUR-OPENWEATHERMAP-KEY"
-const cartoApiKey = ""
-const lat = 0
-const lon = 0
-```
-
-The weather code requests current conditions and forecasts from
-[OpenWeatherMap](https://openweathermap.org/api). Set both coordinates to use a
-fixed location. If either coordinate is zero, the shell requests a location
-from `ip-api.com` instead.
-
-The weather map uses RainViewer radar over a CARTO basemap. `cartoApiKey` is
-optional and is passed to the basemap requests when supplied.
-
-`secrets.js` is ignored by Git. Keep API keys and personal network settings
-there. The tracked `secrets.js.example` contains placeholders only.
-
-## Using the launcher
-
-Type an app name to search. Matching letters do not have to be adjacent, and
-frequently launched apps receive a ranking boost. Use Up and Down to choose a
-result, then press Enter. Escape or a click outside closes the launcher.
-
-Type `>` to see the available commands. Command names are case-insensitive,
-and prefixes work too, so `>key` opens the keybind reference.
-
-| Input | What happens |
-| --- | --- |
-| `>wallpaper` | Shows wallpapers inside the launcher. Choose one and press Enter to apply it. |
-| `>wallpaper forest` | Filters wallpapers by name. |
-| `>theme` | Choose Dark or Light for the current wallpaper. The active mode is marked. |
-| `>theme light` | Filter the choices to Light, then press Enter to apply it. |
-| `>calc (2+3)*4` | Shows a calculation. Enter copies the result. |
-| `6*7` | Shows a calculation above matching apps without a command prefix. |
-| `>keybinds` | Shows the grouped Hyprland shortcuts inside the launcher. |
-| `>keybinds window` | Filters shortcuts by action, category, or keys. |
-| `>lights` | Opens the Hue Go controls inside the launcher. |
-| `>settings` | Opens the settings window, or focuses it if already open. |
-
-The wallpaper picker expands the panel horizontally. The keybind view gives
-it more vertical space for the scrolling reference. Both keep the input at
-the bottom and use the same panel animation.
-
-### Keybind reference
-
-The reference reads `hyprctl -j binds` when you enter keybind mode. It shows the
-loaded Hyprland configuration, including changes picked up by a config reload.
-Typing a filter searches the bindings already in memory.
-
-Use the mouse wheel, Up and Down, or Page Up and Page Down to scroll. The
-input keeps keyboard focus, so you can keep typing. Enter does not execute
-shortcuts. Home and End move the text cursor. Delete or replace the command
-to return to app search or another launcher mode.
-
-The header shows the main modifier, such as `Mod = Alt`. Shortcuts that use
-that modifier are written as `Mod + P`; literal Super bindings still say
-`Super`. You can search using either `Mod` or the physical modifier name.
-Search words can match different fields, so `window shift` finds window
-shortcuts that include Shift.
-
-Repeated workspace bindings are grouped into ranges. Searching for
-`workspace 4` filters the individual bindings before grouping, so the result
-shows workspace 4 specifically.
-
-#### Describing bindings in Hyprland
-
-The Lua config is separate from this repository. To get readable categories
-and action labels on another machine, add this helper before your bindings in
-`hyprland.lua`:
-
-```lua
-local function bindInfo(category, label, mod, flags)
-    flags = flags or {}
-    flags.description = table.concat({ "qsbind", category, mod or "", label }, "|")
-    return flags
-end
-```
-
-Use it as the options argument of a binding. Pass your main modifier for
-shortcuts that use it, or `nil` for literal modifiers. Existing flags go in
-the last argument:
-
-```lua
-local mainMod = "ALT"
-
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("qs ipc call launcher toggle"),
-    bindInfo("Apps and shell", "Open launcher", mainMod))
-
-hl.bind("XF86AudioRaiseVolume",
-    hl.dsp.exec_cmd("wpctl set-volume -l 1.3 @DEFAULT_AUDIO_SINK@ 5%+"),
-    bindInfo("Media and brightness", "Increase volume", nil,
-        { locked = true, repeating = true }))
-```
-
-These descriptions carry the category, modifier, and action label through
-Hyprland's bind list. Changing `mainMod` updates both the shortcuts and the
-header after Hyprland reloads. Update the label when you change an action.
-New categories are supported. Bindings without these descriptions appear
-under Other; Lua actions without a description appear as unlabelled.
-
-Workspace ranges use the Workspaces category and the labels
-`Switch to workspace N` or `Move window to workspace N`, where N matches the
-number key. Missing keys split the range, and different flags remain separate.
-
-## Connecting to hosts
-
-Install Kitty and OpenSSH. Add entries to `hosts` in the gitignored
-`secrets.js`, replacing these fictional examples with your own settings:
-
-```js
-const hosts = [
-    { id: "example-shell", name: "Example server", type: "ssh", destination: "operator@shell.example.test" },
-    { id: "example-web", name: "Example dashboard", type: "web", url: "http://dashboard.example.test/admin/" },
-]
-```
-
-Use a unique `id` containing letters, digits, underscores, or hyphens.
-Keep IDs unchanged when renaming hosts.
-
-For PADD, add `startupCommand: "~/padd.sh"` to the SSH entry after installing
-PADD on that host.
-
-Adjust `hostMenu.terminalWidth` and `hostMenu.terminalHeight` in `config.js`
-to set the terminal size. Open the host list from the terminal icon above
-the power button.
+Click the icon below the clock to see Arch repository and AUR updates. Checks
+run at startup and hourly. Install updates yourself, then press Check now.
+Failed checks retain the last known results. Change the schedule under
+`updates` in `config.js`.
 
 ## Configuration
 
-### Settings window
+Open `>settings` for fonts, folders, animations, notifications, launcher size,
+and volume limits. Changes apply and save automatically. Reset restores the
+corresponding default from [config.js](config.js). You can also reload the shell
+from Settings.
 
-To adjust some of the settings, open `>settings` in the launcher.
-Settings opens floating and centered on its monitor and stays open when
-you click elsewhere.
+Edit `config.js` for other defaults, dimensions, and refresh intervals.
+`scrolling.wheelStep` sets wheel travel in pixels per notch across the shell;
+increase it for faster scrolling. Relative picture and wallpaper paths start
+from your home directory.
 
-| Group | Preferences |
-| --- | --- |
-| Appearance | Font, profile picture, layout labels, dashboard/menu/tab animation durations |
-| Notifications | Popup timeout and history limit |
-| Launcher | Wallpaper folder and maximum visible result rows |
-| Sound | Maximum volume selectable in the shell mixer |
-| Shell | Normal shell reload |
+`>theme` remembers your Dark or Light choice for later wallpaper changes.
+GTK themes are configured separately. The Finance watchlist also saves locally;
+`finance.defaultSymbols` only supplies its initial contents. Finance uses Yahoo
+Finance data without an API key.
 
-Changes take effect immediately and save automatically. Each preference has
-a Reset control that removes its saved override and restores the current
-default in `config.js`.
-
-Choose an installed Nerd Font so the shell's icon glyphs display correctly.
-The font selector previews text and icons.
-
-### Defaults in code
-
-[config.js](config.js) contains the font, spacing, text sizes, panel dimensions,
-animation durations, and refresh intervals. The `keybinds.width` and
-`keybinds.height` values control the expanded launcher size in keybind mode.
-
-The profile picture and wallpaper folder are relative to your home directory:
-
-```js
-systemInfo.profilePic     // Pictures/ProfilePics/avatar.jpg
-launcher.wallpaperFolder  // Pictures/Wallpapers
-```
-
-A missing profile picture falls back to a generic icon. The wallpaper picker
-lists PNG and JPEG files in the configured folder.
-
-[Colors.qml](Colors.qml) watches `~/.cache/wal/colors.json` and updates the shell
-when the palette changes. [scripts/set-wallpaper.sh](scripts/set-wallpaper.sh)
-sets the image with `awww`, runs `wal`, and reloads Hyprland. Edit that script
-if you use a different wallpaper setter.
-
-`>theme` updates the pywal colors.
-The selected mode persists in `$XDG_STATE_HOME/quickshell/theme-mode`, or
-`~/.local/state/quickshell/theme-mode` by default. Wallpaper changes follow
-that mode. Until you select a mode, wallpapers use Dark as default. GTK themes
-stay as configured separately (for now).
-
-The same script supports `bash scripts/set-wallpaper.sh --theme light` and
-`--theme dark` without changing the wallpaper. Theme and wallpaper requests
-use `flock` to prevent overlapping palette updates.
-
-Light palettes keep the wallpaper hues and adjust pale text colors before pywal
-exports them. Slight adjustmenting was necessary to not make some colors too overpowering.
-
-For Kitty, install the supplied pywal template once:
-
-```sh
-install -m 644 templates/colors-kitty.conf ~/.config/wal/templates/colors-kitty.conf
-```
-
-Keep `include ~/.cache/wal/colors-kitty.conf` after any other theme includes in
-`kitty.conf`. The template also controls selection and tab colors. The wallpaper
-script reloads running Kitty instances after exporting the palette. Programs
-that draw their own RGB colors may still need their own light theme.
-
-### Finance and saved state
-
-The Finance tab reads Yahoo Finance's chart endpoint through
-[scripts/fetch-quotes.sh](scripts/fetch-quotes.sh). The script makes requests
-without an API key or account. If requests fail, check its response and your
-connection before changing the UI.
-
-`finance.defaultSymbols` sets the initial watchlist. Changes made in the
-Finance tab are saved locally to `finance.json`, so editing that default does
-not replace an existing watchlist.
-
-The shell uses `Quickshell.statePath()` for the watchlist, todos, and launcher
-usage counts. With the default XDG state directory, these files live under
-`~/.local/state/quickshell/by-shell/<shell-id>/`.
-
-## Changing dashboard tabs
-
-The active tabs are defined in [Dashboard.qml](Dashboard.qml). To replace
-Finance with the included music tab:
-
-1. In the tab-bar `Repeater`, replace the Finance entry with
-   `{ icon: "󰝚", label: "Media" }`.
-2. In the content area, rename `FinanceTab {` to `MediaTab {`. Keep its size,
-   position, `dashboard` property, and animation.
-
-If you change tab positions, also update each component's `x` expression and
-any checks of `activeTab` that control refresh timers:
-
-| Tab | Current index | Files with refresh checks |
-| --- | --- | --- |
-| Dashboard | `0` | `Dashboard.qml` and `Widgets/WeatherCard.qml` |
-| Finance | `2` | `Dashboard.qml` |
-| Performance | `3` | `Dashboard.qml` |
-
-Calendar and Media do not have refresh checks tied to their index. Replacing
-a tab does not remove its data-fetching code from `Dashboard.qml`; remove or
-disable the corresponding timer if you no longer want those requests.
-
-## Files
-
-| File or folder | Contents |
-| --- | --- |
-| `shell.qml` | Shell components, IPC handlers, notification server, and open states |
-| `Bar.qml`, `Bar/` | Sidebar widgets and their menus |
-| `Dashboard.qml`, `Tabs/`, `Widgets/` | Dashboard data, tab views, and widgets |
-| `AppLauncher.qml` | App search, command modes, and the shared launcher panel |
-| `Keybinds.qml` | The launcher's keybind view and Hyprland data loading |
-| `keybinds.js` | Shortcut formatting, filtering, and workspace grouping |
-| `calc.js` | The calculator's expression parser |
-| `PowerMenu.qml`, `VolumeMenu.qml` | Power actions and audio controls |
-| `NotificationPopup.qml` | Incoming notification popups |
-| `CalendarGrid.qml`, `Events.qml` | Shared calendar grid and event helpers |
-| `Colors.qml`, `config.js` | Theme colors and visual settings |
-| `UpdateService.qml`, `Bar/UpdateIndicator.qml`, `Bar/UpdateMenu.qml`, `scripts/check-updates.py` | Update scheduling, sidebar status, package list, and read-only package queries |
-| `Settings.qml`, `settings.js`, `SettingsWindow.qml` | Live preferences, persistence, validation, and the settings window |
-| `Lights.qml`, `HueService.qml`, `scripts/hue.py` | Hue lamp controls and the Bluetooth helper |
-| `FrameShape.qml`, `FrameReserve.qml`, `CornerFillet.qml` | Screen frame, reserved space, and panel corners |
-| `qmldir` | Local QML component registrations |
-| `scripts/` | Wallpaper, SSH terminals, system statistics, and market-data helpers |
-| `assets/` | Images and animations used by widgets |
-| `tests/` | Host launch, keybind, theme, palette, and settings tests |
-
-## Development and tests
-
-You do not need Node.js or the tests to use Fuchi-shell. Quickshell runs the
-JavaScript helpers itself.
-
-The `tests/` folder is for people changing the code. It checks shortcut formatting,
-filtering, theme selection, host launches, and settings without applying desktop changes.
-To run these checks, install Node.js, Python 3, and Quickshell, then run these
-commands from the repository directory:
-
-```sh
-node --test tests/*.test.cjs
-python3 -B tests/palette_test.py
-python3 -B tests/settings_runtime_test.py
-python3 -B tests/updates_test.py
-python3 -B tests/updates_runtime_test.py
-```
-
-The tests cover modifier aliases, filtering, workspace ranges, category order,
-fallback labels, theme persistence, failed palette generation, SSH argument
-quoting, window reuse, and session exit behavior. The Node and palette tests do
-not check QML rendering. After changing the host menu, also check keyboard
-navigation, floating window geometry, browser opening, and focus from another workspace in a live
-Hyprland session. After changing the launcher UI, also check app search,
-wallpaper mode, calculator mode, theme selection, and keybind scrolling in a
-running Hyprland session.
-
-The settings runtime tests require Quickshell. They run real QML with the
-offscreen backend and temporary state directories, so they do not change your
-desktop or saved preferences. They cover live bindings, resets, queued saves,
-normal reloads, malformed files, failed writes, floating placement before opening,
-cancellation of pending opens, reopening after native closes, and compositor failures. In a live session, also
-check window focus from the launcher, moving and resizing, font selection, and native
-file and folder pickers.
-
-The update tests use fake package commands and never contact repositories or the
-AUR. They cover parsing, empty results, timeouts, independent source failures,
-recovery, startup and scheduled checks, and duplicate refresh requests. The popup
-body is rendered in an offscreen floating window because the offscreen backend
-does not support Wayland panels. Check sidebar placement, popup anchoring, keyboard
-focus, and dismissal in a live Hyprland session after changing the update UI.
+See the [customization guide](docs/customization.md) for Hyprland binding labels,
+dashboard tab changes, the optional music tab, and Kitty wallpaper colors.
 
 ## Acknowledgements
 
 [caelestia-shell](https://github.com/caelestia-dots/shell) inspired the visual
 design. Fuchi-shell is an independent implementation.
+
+[MangaReaderQS](https://github.com/sabsubGit/MangaReaderQS) informed the Library's
+archive handling and metadata conventions. Its MIT notice is retained in
+[licenses/MangaReaderQS.txt](licenses/MangaReaderQS.txt).

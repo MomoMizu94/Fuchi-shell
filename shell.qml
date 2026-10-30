@@ -56,6 +56,11 @@ Scope {
         Qt.callLater(function() { settingsWindow.showSettings() })
     }
 
+    function showLibrary() {
+        root.launcherOpen = false
+        Qt.callLater(function() { libraryWindow.showLibrary() })
+    }
+
     // Spotify's ('spotify' package in AUR) notification carries no image -> reuse the artwork exposed
     // by the same player over MPRIS
     readonly property var spotifyPlayer: {
@@ -146,6 +151,17 @@ Scope {
     }
 
     // IPC handlers
+    IpcHandler {
+        target: "library"
+        function show(): void { root.showLibrary() }
+        function hide(): void { libraryWindow.hideLibrary() }
+        function setFolder(path: string): void { Settings.setPath("libraryFolder", path) }
+        function toggle(): void {
+            if (libraryWindow.visible || libraryWindow.openRequested) libraryWindow.hideLibrary()
+            else root.showLibrary()
+        }
+    }
+
     IpcHandler {
         target: "notifications"
         function toggle(): void { root.centerOpen = !root.centerOpen }
@@ -297,9 +313,11 @@ Scope {
         open: root.launcherOpen
         onCloseRequested: root.launcherOpen = false
         onSettingsRequested: root.showSettings()
+        onLibraryRequested: root.showLibrary()
     }
 
     SettingsWindow { id: settingsWindow }
+    LibraryWindow { id: libraryWindow }
 
     PowerMenu {
         id: powerMenu

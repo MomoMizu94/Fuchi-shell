@@ -7,8 +7,11 @@ UpdateMenu Bar/UpdateMenu.qml
 HueService HueService.qml
 Lights Lights.qml
 SettingsWindow SettingsWindow.qml
+LibraryService LibraryService.qml
+LibraryWindow LibraryWindow.qml
 SettingsRow SettingsRow.qml
 SettingsButton SettingsButton.qml
+ScrollWheel ScrollWheel.qml
 CalendarGrid CalendarGrid.qml
 Dashboard Dashboard.qml
 AppLauncher AppLauncher.qml

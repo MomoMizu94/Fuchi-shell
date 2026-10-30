@@ -37,6 +37,12 @@ const gap = {
     xxl: 28,
 }
 
+// Wheel distance per notch, including synthesized scroll events.
+// Increase this value for faster scrolling in all scrollable views.
+const scrolling = {
+    wheelStep: 180,
+}
+
 // Unified corner-radius scale (proportional/circle cases stay literal, not tokenized)
 const radius = {
     xs: 3,   // thin bars
@@ -113,6 +119,13 @@ const launcher = {
     galleryLabelHeight: 56,
     // Wallpaper picker's source folder, relative to $HOME
     wallpaperFolder: "Pictures/Wallpapers",
+}
+
+// The user's folder is stored as a private override by the Settings window.
+const library = {
+    folder: "Library",
+    width: 1180,
+    height: 920,
 }
 
 // Expanded launcher dimensions while browsing keybinds, including its input.

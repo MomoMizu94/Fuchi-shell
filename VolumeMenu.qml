@@ -559,6 +559,8 @@ PanelWindow {
                         }
 
                         ListView {
+                            id: playbackScroll
+                            ScrollWheel { view: playbackScroll }
                             width: parent.width
                             height: Math.min(volumeMenu.playbackList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
                             clip: true
@@ -672,6 +674,8 @@ PanelWindow {
                         }
 
                         ListView {
+                            id: recordingScroll
+                            ScrollWheel { view: recordingScroll }
                             width: parent.width
                             height: Math.min(volumeMenu.recordingList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
                             clip: true

@@ -50,6 +50,8 @@ Text {
 }
 
 Flickable {
+    id: historyScroll
+    ScrollWheel { view: historyScroll }
     Layout.fillWidth: true
     Layout.fillHeight: true
     contentHeight: notifsCol.implicitHeight

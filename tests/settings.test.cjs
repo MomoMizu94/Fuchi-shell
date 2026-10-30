@@ -21,7 +21,7 @@ test('saves only overrides, and returning to a default removes an override', () 
 test('round-trips settings including zero durations, zero history and false', () => {
     const overrides = {
         animationPopup: 0, historyLimit: 0, layoutIcons: false,
-        profilePic: '', wallpaperFolder: 'Pictures/壁紙', volumeLimit: 125
+        profilePic: '', wallpaperFolder: 'Pictures/壁紙', libraryFolder: '/mnt/example/Books', volumeLimit: 125
     };
     assert.deepEqual(plain(logic.decode(logic.encode(overrides))), overrides);
 });
@@ -43,7 +43,7 @@ test('rejects invalid types, out-of-range values and unsafe text', () => {
         ['historyLimit', Infinity], ['notificationTimeout', 999], ['notificationTimeout', 60001],
         ['volumeLimit', 99], ['volumeLimit', 201], ['layoutIcons', 1],
         ['fontFamily', ''], ['fontFamily', ' padded '], ['fontFamily', 'font\nname'],
-        ['wallpaperFolder', ''], ['profilePic', null]
+        ['wallpaperFolder', ''], ['libraryFolder', ''], ['libraryFolder', 1], ['profilePic', null]
     ]) {
         assert.throws(() => logic.validate(key, value), `${key}: ${String(value)}`);
     }

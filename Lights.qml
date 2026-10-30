@@ -27,6 +27,7 @@ FocusScope {
 
     Flickable {
         id: scroll
+        ScrollWheel { view: scroll }
         anchors.fill: parent
         contentHeight: content.implicitHeight + Config.gap.lg * 2
         boundsBehavior: Flickable.StopAtBounds

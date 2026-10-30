@@ -3,6 +3,7 @@ const rules = {
     fontFamily: { type: "string", maxLength: 200 },
     profilePic: { type: "string", maxLength: 4096, allowEmpty: true },
     wallpaperFolder: { type: "string", maxLength: 4096 },
+    libraryFolder: { type: "string", maxLength: 4096 },
     animationSlide: { type: "number", min: 0, max: 2000 },
     animationPopup: { type: "number", min: 0, max: 2000 },
     animationTabSlide: { type: "number", min: 0, max: 2000 },

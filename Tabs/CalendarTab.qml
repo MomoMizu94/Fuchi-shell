@@ -182,6 +182,8 @@ ColumnLayout {
                 }
 
                 Flickable {
+                    id: eventsScroll
+                    ScrollWheel { view: eventsScroll }
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     contentHeight: eventItemsCol.implicitHeight
@@ -397,6 +399,8 @@ ColumnLayout {
                 }
 
                 Flickable {
+                    id: todosScroll
+                    ScrollWheel { view: todosScroll }
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     contentHeight: todoItemsCol.implicitHeight

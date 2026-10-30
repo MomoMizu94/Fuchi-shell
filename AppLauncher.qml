@@ -10,11 +10,13 @@ import "config.js" as Config
 import "calc.js" as Calc
 
 // Bottom-docked command palette: fuzzy app search, a ">" command mode
-// for wallpaper, theme, calculator, keybinds, lights and settings, and a bare-expression calculator shortcut
+// for wallpaper, theme, calculator, keybinds, lights, Library and settings,
+// and a bare-expression calculator shortcut
 PanelWindow {
     id: launcher
     signal closeRequested()
     signal settingsRequested()
+    signal libraryRequested()
 
     property bool open: false
     property bool closing: false
@@ -47,6 +49,7 @@ PanelWindow {
         { name: "calc", label: "Calculator" },
         { name: "keybinds", label: "Keybinds" },
         { name: "lights", label: "Lights" },
+        { name: "library", label: "Library" },
         { name: "settings", label: "Settings" }
     ]
     property var wallpaperFiles: []   // populated once by wallpaperFolderModel below
@@ -117,6 +120,8 @@ PanelWindow {
         if (!activeCommand) return []
         if (activeCommand.name === "settings")
             return [{ kind: "settings", name: "Open settings", comment: "Shell preferences", glyph: "󰒓" }]
+        if (activeCommand.name === "library")
+            return [{ kind: "library", name: "Open library", comment: "Read and download image books", glyph: "󰂺" }]
         // These commands have their own views instead of result rows.
         if (keybindsMode || lightsMode) return []
         if (activeCommand.name === "wallpaper") return filteredWallpapers(parsedCommand.filter)
@@ -212,6 +217,11 @@ PanelWindow {
             return
         }
         if (commandMode) {
+            if (item.kind === "library" || (item.kind === "menu" && item.command === "library")) {
+                launcher.closeRequested()
+                launcher.libraryRequested()
+                return
+            }
             if (item.kind === "settings" || (item.kind === "menu" && item.command === "settings")) {
                 launcher.closeRequested()
                 launcher.settingsRequested()
@@ -471,6 +481,7 @@ PanelWindow {
 
                 ListView {
                     id: resultsList
+                    ScrollWheel { view: resultsList }
                     anchors.fill: parent
                     clip: true
                     visible: !launcher.wallpaperGridMode && !launcher.keybindsMode && !launcher.lightsMode
@@ -559,6 +570,7 @@ PanelWindow {
 
                 ListView {
                     id: wallpaperGrid
+                    ScrollWheel { view: wallpaperGrid; horizontal: true }
                     anchors.fill: parent
                     clip: true
                     visible: launcher.wallpaperGridMode

@@ -13,6 +13,7 @@ Singleton {
         fontFamily: Config.bar.fontFamily,
         profilePic: Config.systemInfo.profilePic,
         wallpaperFolder: Config.launcher.wallpaperFolder,
+        libraryFolder: Config.library.folder,
         animationSlide: Config.anim.slide,
         animationPopup: Config.anim.popup,
         animationTabSlide: Config.anim.tabSlide,
@@ -28,6 +29,7 @@ Singleton {
         ? value("fontFamily") : Config.bar.fontFamily
     readonly property string profilePic: value("profilePic")
     readonly property string wallpaperFolder: value("wallpaperFolder")
+    readonly property string libraryFolder: value("libraryFolder")
     readonly property int animationSlide: value("animationSlide")
     readonly property int animationPopup: value("animationPopup")
     readonly property int animationTabSlide: value("animationTabSlide")
