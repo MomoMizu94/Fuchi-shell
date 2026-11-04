@@ -91,6 +91,7 @@ Names are case-insensitive, and prefixes work, so `>key` opens the keybind list.
 | `>lights` | Control a Hue Go lamp. |
 | `>settings` | Open shell preferences. |
 | `>Library` | Open the book library and reader. |
+| `>oceanus` | Focus Oceanus, or start a new conversation in a selected project. |
 
 The keybind list shows your loaded Hyprland bindings. Scroll with the wheel,
 arrows, or Page Up/Down. Enter does not execute a shortcut; replace the command
@@ -121,6 +122,21 @@ Covers use `cover.*`, artwork in `covers/`, or a thumbnail from a page.
 </details>
 
 ## Optional setup
+
+### Oceanus
+
+`>oceanus` opens or focuses Oceanus's TUI in Kitty. Choose New conversation,
+select a recent project or Browse, then press Open project.
+
+Set `oceanus.python` in `config.js` to the Python executable where Oceanus is
+installed. The default is `~/Documents/GitHub/Oceanus/.venv/bin/python`.
+Provider credentials must be available in the desktop session's environment.
+
+Ctrl+S saves the conversation and project folder. Ctrl+O loads a saved session
+in a fresh TUI; older sessions ask you to choose their folder. Quickshell reloads
+leave Oceanus running. Save before closing the terminal.
+
+See the [customization guide](docs/customization.md#oceanus-integration) for keybindings.
 
 ### Weather
 

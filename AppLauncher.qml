@@ -10,13 +10,14 @@ import "config.js" as Config
 import "calc.js" as Calc
 
 // Bottom-docked command palette: fuzzy app search, a ">" command mode
-// for wallpaper, theme, calculator, keybinds, lights, Library and settings,
+// for wallpaper, theme, calculator, keybinds, lights, Library, Oceanus and settings,
 // and a bare-expression calculator shortcut
 PanelWindow {
     id: launcher
     signal closeRequested()
     signal settingsRequested()
     signal libraryRequested()
+    signal oceanusRequested(bool newConversation)
 
     property bool open: false
     property bool closing: false
@@ -50,6 +51,7 @@ PanelWindow {
         { name: "keybinds", label: "Keybinds" },
         { name: "lights", label: "Lights" },
         { name: "library", label: "Library" },
+        { name: "oceanus", label: "Oceanus" },
         { name: "settings", label: "Settings" }
     ]
     property var wallpaperFiles: []   // populated once by wallpaperFolderModel below
@@ -118,6 +120,12 @@ PanelWindow {
         if (parsedCommand.word === "")
             return commandDefs.map(c => ({ kind: "menu", name: c.label, comment: "", command: c.name }))
         if (!activeCommand) return []
+        if (activeCommand.name === "oceanus") {
+            return [
+                { kind: "oceanus", name: "Open Oceanus", comment: "Focus the current conversation", newConversation: false, glyph: "󰆍" },
+                { kind: "oceanus", name: "New conversation", comment: "Choose a project", newConversation: true, glyph: "󰝒" }
+            ].filter(entry => fuzzyScore(parsedCommand.filter.trim(), entry.name) >= 0)
+        }
         if (activeCommand.name === "settings")
             return [{ kind: "settings", name: "Open settings", comment: "Shell preferences", glyph: "󰒓" }]
         if (activeCommand.name === "library")
@@ -217,6 +225,11 @@ PanelWindow {
             return
         }
         if (commandMode) {
+            if (item.kind === "oceanus") {
+                launcher.closeRequested()
+                launcher.oceanusRequested(item.newConversation)
+                return
+            }
             if (item.kind === "library" || (item.kind === "menu" && item.command === "library")) {
                 launcher.closeRequested()
                 launcher.libraryRequested()

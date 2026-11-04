@@ -103,3 +103,16 @@ bash scripts/set-wallpaper.sh --theme light
 
 Use `--theme dark` to switch back. The choice persists across wallpaper changes;
 the initial mode is Dark.
+
+## Oceanus integration
+
+[OceanusWindow.qml](../OceanusWindow.qml) handles project selection.
+[scripts/oceanus.py](../scripts/oceanus.py) launches or focuses its Kitty window.
+See the [README](../README.md#oceanus) for setup and controls.
+
+Use these commands in your Hyprland keybindings:
+
+```sh
+qs ipc call -- oceanus show
+qs ipc call -- oceanus newConversation
+```

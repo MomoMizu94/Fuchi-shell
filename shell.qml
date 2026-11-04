@@ -61,6 +61,11 @@ Scope {
         Qt.callLater(function() { libraryWindow.showLibrary() })
     }
 
+    function showOceanus(newConversation) {
+        root.launcherOpen = false
+        Qt.callLater(function() { oceanusWindow.showOceanus(newConversation) })
+    }
+
     // Spotify's ('spotify' package in AUR) notification carries no image -> reuse the artwork exposed
     // by the same player over MPRIS
     readonly property var spotifyPlayer: {
@@ -151,6 +156,12 @@ Scope {
     }
 
     // IPC handlers
+    IpcHandler {
+        target: "oceanus"
+        function show(): void { root.showOceanus(false) }
+        function newConversation(): void { root.showOceanus(true) }
+    }
+
     IpcHandler {
         target: "library"
         function show(): void { root.showLibrary() }
@@ -314,10 +325,12 @@ Scope {
         onCloseRequested: root.launcherOpen = false
         onSettingsRequested: root.showSettings()
         onLibraryRequested: root.showLibrary()
+        onOceanusRequested: newConversation => root.showOceanus(newConversation)
     }
 
     SettingsWindow { id: settingsWindow }
     LibraryWindow { id: libraryWindow }
+    OceanusWindow { id: oceanusWindow }
 
     PowerMenu {
         id: powerMenu

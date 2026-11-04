@@ -128,6 +128,11 @@ const library = {
     height: 920,
 }
 
+// Python from the environment where Oceanus is installed
+const oceanus = {
+    python: "Documents/GitHub/Oceanus/.venv/bin/python",
+}
+
 // Expanded launcher dimensions while browsing keybinds, including its input.
 const keybinds = {
     width: 1000,
