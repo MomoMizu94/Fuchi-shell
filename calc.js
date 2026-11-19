@@ -19,7 +19,7 @@ const FUNCTIONS = {
     asin: Math.asin, acos: Math.acos, atan: Math.atan
 }
 
-// Cheap pre-filter for auto-detect in normal (non-">") search mode: a query
+// Cheap pre-filter for auto-detect in app search: a query
 // only counts as a candidate expression if it has a digit AND an operator.
 // This is what keeps "Firefox", "1password", "7-zip" and "python3 -m" out of
 // calculator mode — those that slip past still fail to parse below.

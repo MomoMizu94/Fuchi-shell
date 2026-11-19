@@ -364,7 +364,7 @@ FloatingWindow {
 
                     SettingsRow {
                         title: "Wallpaper folder"
-                        description: "Where the >wallpaper command looks for images."
+                        description: "Where the /wallpaper command looks for images."
                         settingKey: "wallpaperFolder"
                         controls: [
                             TextField {
@@ -392,7 +392,7 @@ FloatingWindow {
 
                     SettingsRow {
                         title: "Library folder"
-                        description: "Where >Library reads CBZ and CBR archives and saves downloads."
+                        description: "Where /Library reads CBZ and CBR archives and saves downloads."
                         settingKey: "libraryFolder"
                         controls: [
                             TextField {

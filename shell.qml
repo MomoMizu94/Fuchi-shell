@@ -6,6 +6,7 @@ import Quickshell.Services.Mpris
 import Quickshell.Io
 import QtQuick
 import "config.js" as Config
+import "settings.js" as Paths
 
 
 Scope {
@@ -61,9 +62,13 @@ Scope {
         Qt.callLater(function() { libraryWindow.showLibrary() })
     }
 
-    function showOceanus(newConversation) {
+    function showOceanus(action) {
         root.launcherOpen = false
-        Qt.callLater(function() { oceanusWindow.showOceanus(newConversation) })
+        if (oceanusLauncher.running) return
+        oceanusLauncher.command = ["python3", Quickshell.shellDir + "/scripts/oceanus.py", action,
+            "--state", Quickshell.statePath("oceanus.json"),
+            "--python", Paths.absolutePath(Config.oceanus.python, Quickshell.env("HOME"))]
+        oceanusLauncher.running = true
     }
 
     // Spotify's ('spotify' package in AUR) notification carries no image -> reuse the artwork exposed
@@ -158,8 +163,8 @@ Scope {
     // IPC handlers
     IpcHandler {
         target: "oceanus"
-        function show(): void { root.showOceanus(false) }
-        function newConversation(): void { root.showOceanus(true) }
+        function show(): void { root.showOceanus("open") }
+        function newConversation(): void { root.showOceanus("new") }
     }
 
     IpcHandler {
@@ -325,12 +330,21 @@ Scope {
         onCloseRequested: root.launcherOpen = false
         onSettingsRequested: root.showSettings()
         onLibraryRequested: root.showLibrary()
-        onOceanusRequested: newConversation => root.showOceanus(newConversation)
+        onOceanusRequested: root.showOceanus("open")
     }
 
     SettingsWindow { id: settingsWindow }
     LibraryWindow { id: libraryWindow }
-    OceanusWindow { id: oceanusWindow }
+    Process {
+        id: oceanusLauncher
+        stderr: StdioCollector { id: oceanusError }
+        onExited: (code, status) => {
+            if (code === 0 && status === 0) return
+            const message = oceanusError.text.trim() || "The Oceanus launcher stopped."
+            console.warn(message)
+            Quickshell.execDetached(["notify-send", "--", "Oceanus", message])
+        }
+    }
 
     PowerMenu {
         id: powerMenu

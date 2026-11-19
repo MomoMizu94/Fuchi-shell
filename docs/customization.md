@@ -5,7 +5,7 @@ These changes are optional. For installation and everyday controls, see the
 
 ## Hyprland binding labels
 
-`>keybinds` reads your loaded bindings with `hyprctl -j binds`. To give them
+`/keybinds` reads your loaded bindings with `hyprctl -j binds`. To give them
 readable categories and action names, add this helper before your bindings
 in `hyprland.lua`. That file lives outside this repository.
 
@@ -85,7 +85,7 @@ include ~/.cache/wal/colors-kitty.conf
 ```
 
 The template covers text, background, selection, and tab colors. Apply a
-wallpaper or use `>theme` to generate the colors. The wallpaper script reloads
+wallpaper or use `/theme` to generate the colors. The wallpaper script reloads
 running Kitty instances. Programs that draw their own RGB colors may need a
 separate light theme.
 
@@ -106,11 +106,10 @@ the initial mode is Dark.
 
 ## Oceanus integration
 
-[OceanusWindow.qml](../OceanusWindow.qml) handles project selection.
-[scripts/oceanus.py](../scripts/oceanus.py) launches or focuses its Kitty window.
-See the [README](../README.md#oceanus) for setup and controls.
-
-Use these commands in your Hyprland keybindings:
+[scripts/oceanus.py](../scripts/oceanus.py) runs Yazi and Oceanus in the same
+Kitty window. Use `show` to open or focus it. The existing `newConversation`
+shortcut opens a separate project window. See the [README](../README.md#oceanus)
+for setup and controls.
 
 ```sh
 qs ipc call -- oceanus show

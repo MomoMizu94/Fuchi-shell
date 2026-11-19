@@ -9,6 +9,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from uuid import uuid4
@@ -84,7 +85,7 @@ def remember_project(path, project, projects):
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
                                          prefix=".oceanus-", delete=False) as temporary:
             temporary_path = Path(temporary.name)
-            json.dump(document, temporary, ensure_ascii=False, indent=2)
+            json.dump(document, temporary, indent=2)
             temporary.write("\n")
         temporary_path.replace(path)
     finally:
@@ -92,52 +93,72 @@ def remember_project(path, project, projects):
             temporary_path.unlink(missing_ok=True)
 
 
-def launch(project, python):
-    project = project.expanduser().resolve(strict=True)
-    if not project.is_dir():
-        raise ValueError(f"Project is not a folder: {project}")
-    # Keep the venv executable path; resolving its symlink loses the venv
+def pick_and_run(state):
+    from agent_core.shell_sandbox import validate_workspace_root
+
+    projects = load_projects(state)
+    start = Path.home()
+    for folder in projects:
+        if Path(folder).is_dir():
+            start = Path(folder)
+            break
+
+    # Yazi writes its current folder on quit and skips the file when cancelled
+    with tempfile.TemporaryDirectory(prefix="oceanus-yazi-") as directory:
+        cwd_file = Path(directory) / "cwd"
+        subprocess.run(["yazi", "--cwd-file", str(cwd_file), "--", str(start)], check=True)
+        if not cwd_file.exists():
+            return
+        selected = os.fsdecode(cwd_file.read_bytes())
+        if not selected:
+            return
+        if not os.path.isabs(selected):
+            raise ValueError("Choose a local project folder in Yazi")
+        project = validate_workspace_root(Path(selected))
+
+    # Kitty starts this helper directly, so the parent PID identifies this picker
+    require_ok(hyprctl("dispatch", f'hl.dsp.window.float({{action="unset",window="pid:{os.getppid()}"}})'))
+    os.chdir(project)
+    try:
+        with state.with_suffix(".lock").open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            remember_project(state, project, load_projects(state))
+    except OSError as error:
+        print(f"Could not save Oceanus project history: {error}", file=sys.stderr, flush=True)
+    os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
+    # Keep the picker alive so Kitty can show errors if the TUI exits early
+    subprocess.run([sys.executable, "-P", "-m", "agent_core.tui"], check=True)
+
+
+def launch(state, python):
+    # Resolving the Python symlink would bypass the virtual environment
     python = python.expanduser().absolute()
     if not python.is_file() or not os.access(python, os.X_OK):
         raise ValueError(f"Oceanus Python was not found at {python}. Set oceanus.python in config.js.")
-    if shutil.which("kitty") is None:
-        raise RuntimeError("Kitty is required to open Oceanus")
-
-    environment = dict(os.environ)
-    environment.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
-    # Reuse Oceanus's workspace rules before opening an unusable terminal
-    check = subprocess.run(
-        [str(python), "-P", "-c", "from pathlib import Path; "
-         "from agent_core.shell_sandbox import validate_workspace_root; "
-         "validate_workspace_root(Path.cwd()); "
-         "from agent_core.tui import OceanusApp"],
-        cwd=project, env=environment, capture_output=True, text=True, timeout=30,
-    )
-    if check.returncode:
-        lines = check.stderr.strip().splitlines()
-        reason = lines[-1] if lines else f"Python exited with status {check.returncode}"
-        raise RuntimeError("Oceanus could not start in this project: " + reason)
+    for executable in ("kitty", "yazi"):
+        if shutil.which(executable) is None:
+            raise RuntimeError(f"Install {executable} to open Oceanus")
 
     app_id = WINDOW_PREFIX + uuid4().hex
-    command = ["kitty", "--class", app_id, "--title", "Oceanus", "--directory", str(project),
-               "-o", "remember_window_size=no", "-o", "initial_window_width=1200",
-               "-o", "initial_window_height=820", "env",
-               "LITELLM_LOCAL_MODEL_COST_MAP=" + environment["LITELLM_LOCAL_MODEL_COST_MAP"],
-               str(python), "-P", "-m", "agent_core.tui"]
+    # A relative PYTHONPATH would follow Yazi into the selected project
+    command = [
+        "kitty", "--class", app_id, "--title", "Oceanus", "--directory", str(Path.home()),
+        "env", "-u", "PYTHONPATH", str(python), "-P", str(Path(__file__).resolve()),
+        "pick", "--state", str(state),
+    ]
     shell_command = "exec " + shlex.join(command)
     delimiter = "="
     while "]" + delimiter + "]" in shell_command:
         delimiter += "="
     lua_string = "[" + delimiter + "[" + shell_command + "]" + delimiter + "]"
     # Hyprland owns the process, so a shell reload cannot terminate the task
-    require_ok(hyprctl("eval", "hl.exec_cmd(" + lua_string
-                      + ', {float=true, center=true, size={"min(1200,monitor_w*0.9)",'
-                      + '"min(820,monitor_h*0.9)"}})'))
+    picker_rules = '{float=true,center=true,size={"monitor_w*0.7","monitor_h*0.7"}}'
+    require_ok(hyprctl("eval", f"hl.exec_cmd({lua_string}, {picker_rules})"))
     deadline = time.monotonic() + 8
     while time.monotonic() < deadline:
         for window in oceanus_windows():
             if (window.get("initialClass") or window.get("class")) == app_id:
-                return project
+                return
         time.sleep(0.1)
     raise RuntimeError("Oceanus was launched, but its window has not appeared. "
                        "Check for an Oceanus window before trying again.")
@@ -145,34 +166,27 @@ def launch(project, python):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["open", "projects", "launch"])
+    parser.add_argument("action", choices=["open", "new", "pick"])
     parser.add_argument("--state", type=Path, required=True)
-    parser.add_argument("--project", type=Path)
     parser.add_argument("--python", type=Path)
     arguments = parser.parse_args()
+    state = arguments.state.absolute()
     try:
-        arguments.state.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        lock_path = arguments.state.with_suffix(".lock")
-        with lock_path.open("a") as lock:
-            # Serialize launch and focus across shell reloads
-            fcntl.flock(lock, fcntl.LOCK_EX)
-            if arguments.action == "open" and focus_existing():
-                result = {"focused": True}
-            else:
-                projects = load_projects(arguments.state)
-                result = {"focused": False, "projects": projects}
-                if arguments.action == "launch":
-                    if arguments.project is None or arguments.python is None:
-                        raise ValueError("Launching requires a project and an Oceanus Python executable")
-                    project = launch(arguments.project, arguments.python)
-                    result = {"launched": True}
-                    try:
-                        remember_project(arguments.state, project, projects)
-                    except OSError as error:
-                        result["warning"] = f"Oceanus opened, but project history could not be saved: {error}"
-        print(json.dumps({"ok": True, **result}))
-    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
-        print(json.dumps({"ok": False, "error": str(error)}))
+        state.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if arguments.action == "pick":
+            pick_and_run(state)
+        else:
+            with state.with_suffix(".lock").open("a") as lock:
+                fcntl.flock(lock, fcntl.LOCK_EX)
+                if arguments.action == "open" and focus_existing():
+                    return 0
+                if arguments.python is None:
+                    parser.error("Opening a window requires --python")
+                launch(state, arguments.python)
+    except (OSError, ValueError, RuntimeError, ImportError, subprocess.SubprocessError) as error:
+        print(f"Could not open Oceanus: {error}", file=sys.stderr, flush=True)
+        if arguments.action == "pick" and sys.stdin.isatty():
+            input("Press Enter to close. ")
         return 1
     return 0
 

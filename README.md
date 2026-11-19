@@ -27,7 +27,7 @@ that path. These startup examples use Hyprland's Lua configuration.
    already have one. This file must exist, even if you leave its defaults.
    Keep your keys and private hosts there; Git ignores it.
 4. Run `qs` from your Hyprland session.
-5. Open `>settings` to choose your font, wallpaper folder, and profile picture.
+5. Open `/settings` to choose your font, wallpaper folder, and profile picture.
 
 To start the shell automatically, add `hl.exec_cmd("qs")` to your existing
 `hl.on("hyprland.start", ...)` callback. Start `awww-daemon` there too if you
@@ -67,6 +67,7 @@ Install these for the optional features you use:
 | `wlsunset` | Night light |
 | Mullvad's `mullvad` command | VPN controls |
 | Kitty and OpenSSH's `ssh` | Host terminals |
+| Kitty, Yazi, and Oceanus | Oceanus project launcher |
 | `mpc` | Pausing MPD before suspend |
 | ImageMagick's `identify` | Wallpaper dimensions |
 | Python 3.10+ and Bleak | Hue Go controls |
@@ -74,24 +75,25 @@ Install these for the optional features you use:
 | Python 3 and Pillow | Library indexing, covers, and CBZ reading |
 | gallery-dl | Library downloads |
 | libarchive with `bsdtar` and its shared library | CBR reading |
-| `gio` from GLib and `notify-send` from libnotify | Library Trash and download notifications |
+| `gio` from GLib | Library Trash |
+| `notify-send` from libnotify | Library download notifications and Oceanus launch errors |
 
 ## Using the launcher
 
 Type an app name, use Up and Down to select a result, and press Enter to open
-it. Escape or a click outside closes the launcher. Type `>` to list commands.
-Names are case-insensitive, and prefixes work, so `>key` opens the keybind list.
+it. Escape or a click outside closes the launcher. Type `/` to list commands.
+Names are case-insensitive, and prefixes work, so `/key` opens the keybind list.
 
 | Command | What it does |
 | --- | --- |
-| `>wallpaper` | Choose a wallpaper. Add a name to filter, such as `>wallpaper forest`. |
-| `>theme` | Choose Dark or Light for the current wallpaper. |
-| `>calc` | Calculate an expression. Enter copies the result. Bare expressions such as `6*7` work too. |
-| `>keybinds` | Browse Hyprland shortcuts. Add words to search actions, categories, or keys. |
-| `>lights` | Control a Hue Go lamp. |
-| `>settings` | Open shell preferences. |
-| `>Library` | Open the book library and reader. |
-| `>oceanus` | Focus Oceanus, or start a new conversation in a selected project. |
+| `/wallpaper` | Choose a wallpaper. Add a name to filter, such as `/wallpaper forest`. |
+| `/theme` | Choose Dark or Light for the current wallpaper. |
+| `/calc` | Calculate an expression. Enter copies the result. Bare expressions such as `6*7` work too. |
+| `/keybinds` | Browse Hyprland shortcuts. Add words to search actions, categories, or keys. |
+| `/lights` | Control a Hue Go lamp. |
+| `/settings` | Open shell preferences. |
+| `/Library` | Open the book library and reader. |
+| `/oceanus` | Focus Oceanus or choose its project folder in Yazi. |
 
 The keybind list shows your loaded Hyprland bindings. Scroll with the wheel,
 arrows, or Page Up/Down. Enter does not execute a shortcut; replace the command
@@ -99,7 +101,7 @@ to return to app search.
 
 ## Library
 
-Open `>Library` and choose your book and download folder under Settings > Library.
+Open `/Library` and choose your book and download folder under Settings > Library.
 The default is `~/Library`. Search titles and artists or filter metadata.
 Click a chapter, then press Enter or Read.
 
@@ -125,16 +127,15 @@ Covers use `cover.*`, artwork in `covers/`, or a thumbnail from a page.
 
 ### Oceanus
 
-`>oceanus` opens or focuses Oceanus's TUI in Kitty. Choose New conversation,
-select a recent project or Browse, then press Open project.
+`/oceanus` opens Yazi in a Kitty window. Enter the project folder you'd like to work in
+and press `q`. Oceanus starts in that folder. You can press `Q` in Yazi to cancel.
+The next time you open Yazi through the launcher, it starts in your last project folder.
 
 Set `oceanus.python` in `config.js` to the Python executable where Oceanus is
 installed. The default is `~/Documents/GitHub/Oceanus/.venv/bin/python`.
 Provider credentials must be available in the desktop session's environment.
 
-Ctrl+S saves the conversation and project folder. Ctrl+O loads a saved session
-in a fresh TUI; older sessions ask you to choose their folder. Quickshell reloads
-leave Oceanus running. Save before closing the terminal.
+Use `/continue` inside Oceanus to choose a saved conversation for that project.
 
 See the [customization guide](docs/customization.md#oceanus-integration) for keybindings.
 
@@ -162,7 +163,7 @@ python3 -m venv .venv-hue
 .venv-hue/bin/python -m pip install -r scripts/requirements-hue.txt
 ```
 
-Turn on Bluetooth, open `>lights`, choose Scan for lamps, and connect.
+Turn on Bluetooth, open `/lights`, choose Scan for lamps, and connect.
 The shell remembers the lamp. If pairing fails, close the Hue phone app and
 make the lamp discoverable.
 
@@ -175,7 +176,7 @@ Failed checks retain the last known results. Change the schedule under
 
 ## Configuration
 
-Open `>settings` for fonts, folders, animations, notifications, launcher size,
+Open `/settings` for fonts, folders, animations, notifications, launcher size,
 and volume limits. Changes apply and save automatically. Reset restores the
 corresponding default from [config.js](config.js). You can also reload the shell
 from Settings.
@@ -185,7 +186,7 @@ Edit `config.js` for other defaults, dimensions, and refresh intervals.
 increase it for faster scrolling. Relative picture and wallpaper paths start
 from your home directory.
 
-`>theme` remembers your Dark or Light choice for later wallpaper changes.
+`/theme` remembers your Dark or Light choice for later wallpaper changes.
 GTK themes are configured separately. The Finance watchlist also saves locally;
 `finance.defaultSymbols` only supplies its initial contents. Finance uses Yahoo
 Finance data without an API key.

@@ -9,15 +9,13 @@ import QtQuick.Layouts
 import "config.js" as Config
 import "calc.js" as Calc
 
-// Bottom-docked command palette: fuzzy app search, a ">" command mode
-// for wallpaper, theme, calculator, keybinds, lights, Library, Oceanus and settings,
-// and a bare-expression calculator shortcut
+// The launcher supports app search, slash commands and calculator expressions
 PanelWindow {
     id: launcher
     signal closeRequested()
     signal settingsRequested()
     signal libraryRequested()
-    signal oceanusRequested(bool newConversation)
+    signal oceanusRequested()
 
     property bool open: false
     property bool closing: false
@@ -39,7 +37,8 @@ PanelWindow {
     property string query: ""
     property int selectedIndex: 0
 
-    readonly property bool commandMode: query.startsWith(">")
+    readonly property string commandPrefix: "/"
+    readonly property bool commandMode: query.startsWith(commandPrefix)
 
     // One-line-per-command registry — adding another command later is one
     // array entry + one branch in buildCommandEntries()/executeSelected(),
@@ -90,7 +89,7 @@ PanelWindow {
     }
 
     function parseCommand() {
-        const rest = query.slice(1)
+        const rest = query.slice(commandPrefix.length)
         const sp = rest.indexOf(" ")
         const word = (sp === -1 ? rest : rest.slice(0, sp)).toLowerCase()
         const filter = sp === -1 ? "" : rest.slice(sp + 1)
@@ -120,12 +119,8 @@ PanelWindow {
         if (parsedCommand.word === "")
             return commandDefs.map(c => ({ kind: "menu", name: c.label, comment: "", command: c.name }))
         if (!activeCommand) return []
-        if (activeCommand.name === "oceanus") {
-            return [
-                { kind: "oceanus", name: "Open Oceanus", comment: "Focus the current conversation", newConversation: false, glyph: "󰆍" },
-                { kind: "oceanus", name: "New conversation", comment: "Choose a project", newConversation: true, glyph: "󰝒" }
-            ].filter(entry => fuzzyScore(parsedCommand.filter.trim(), entry.name) >= 0)
-        }
+        if (activeCommand.name === "oceanus")
+            return [{ kind: "oceanus", name: "Open Oceanus", comment: "Choose a folder in Yazi or return to Oceanus", glyph: "󰆍" }]
         if (activeCommand.name === "settings")
             return [{ kind: "settings", name: "Open settings", comment: "Shell preferences", glyph: "󰒓" }]
         if (activeCommand.name === "library")
@@ -168,8 +163,7 @@ PanelWindow {
         return scored.map(s => s.entry)
     }
 
-    // A bare expression typed into normal search mode (no ">" prefix) pins a
-    // calc row above the app matches, so `6*7` needs no prefix at all.
+    // A bare expression like `6*7` shows a calculator row above the app matches
     // Calc.looksLikeMath is a cheap gate; anything that slips past it — app
     // names like "7-zip" or "gimp-2.10" — fails to parse and yields null
     function autoCalcEntry() {
@@ -188,7 +182,7 @@ PanelWindow {
     // own branch — the generic wording would read "No matching calculators"
     readonly property string emptyStateText: {
         if (!commandMode) return "No matching apps"
-        if (!activeCommand) return "Unknown command “>" + parsedCommand.word + "”"
+        if (!activeCommand) return "Unknown command " + commandPrefix + parsedCommand.word
         if (activeCommand.name === "calc")
             return parsedCommand.filter.trim() === ""
                 ? "Type an expression, e.g. (2+3)*4"
@@ -212,7 +206,7 @@ PanelWindow {
         if (keybindsMode) return
         if (results.length === 0) return
         const item = results[selectedIndex]
-        // Kind-first: a calc row reaches here from either ">calc" or a bare
+        // Kind-first: a calc row reaches here from either "/calc" or a bare
         // expression in app-search mode. DesktopEntry has no `kind`, so this
         // is safely undefined for apps
         if (item.kind === "calc") {
@@ -225,9 +219,9 @@ PanelWindow {
             return
         }
         if (commandMode) {
-            if (item.kind === "oceanus") {
+            if (item.kind === "oceanus" || (item.kind === "menu" && item.command === "oceanus")) {
                 launcher.closeRequested()
-                launcher.oceanusRequested(item.newConversation)
+                launcher.oceanusRequested()
                 return
             }
             if (item.kind === "library" || (item.kind === "menu" && item.command === "library")) {
@@ -241,7 +235,7 @@ PanelWindow {
                 return
             }
             if (item.kind === "menu") {
-                launcher.query = ">" + item.command + " "   // drill in, stay open
+                launcher.query = commandPrefix + item.command + " "   // drill in, stay open
                 return
             }
             if (item.kind === "wallpaper" || item.kind === "theme") {
@@ -470,7 +464,7 @@ PanelWindow {
                         Text {
                             anchors.fill: parent
                             visible: searchInput.text === ""
-                            text: "Type \">\" for commands"
+                            text: "Type " + launcher.commandPrefix + " for commands"
                             color: Colors.subtext
                             font: searchInput.font
                             verticalAlignment: Text.AlignVCenter

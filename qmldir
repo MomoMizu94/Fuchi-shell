@@ -9,7 +9,6 @@ Lights Lights.qml
 SettingsWindow SettingsWindow.qml
 LibraryService LibraryService.qml
 LibraryWindow LibraryWindow.qml
-OceanusWindow OceanusWindow.qml
 SettingsRow SettingsRow.qml
 SettingsButton SettingsButton.qml
 ScrollWheel ScrollWheel.qml
