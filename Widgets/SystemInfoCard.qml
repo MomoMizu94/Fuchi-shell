@@ -88,10 +88,12 @@ Rectangle {
                         font.family: Settings.fontFamily
                         font.pixelSize: Config.type.md
                     }
-                    Item { Layout.fillWidth: true }
                     Text {
                         text: modelData.value || "…"
-                        color: Colors.border
+                        Layout.fillWidth: true
+                        horizontalAlignment: Text.AlignRight
+                        elide: Text.ElideRight
+                        color: Colors.text
                         font.family: Settings.fontFamily
                         font.pixelSize: Config.type.base
                         font.bold: true

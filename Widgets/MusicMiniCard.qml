@@ -12,7 +12,9 @@ Rectangle {
     id: musicCard
     required property var dashboard
     Layout.preferredWidth: 400
-    implicitHeight: musicContent.implicitHeight + 32
+    objectName: "dashboardMusicCard"
+    visible: !!player
+    implicitHeight: musicContent.implicitHeight + 2 * Config.gap.lg
     radius: Config.radius.xl
     color: Colors.card
 
@@ -40,18 +42,8 @@ Rectangle {
         onTriggered: progressRing.requestPaint()
     }
 
-    Text {
-        visible: !musicCard.player
-        anchors.centerIn: parent
-        text: "No media playing"
-        color: Colors.subtext
-        font.family: Settings.fontFamily
-        font.pixelSize: Config.type.base
-    }
-
     ColumnLayout {
         id: musicContent
-        visible: !!musicCard.player
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -144,7 +136,7 @@ Rectangle {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             text: musicCard.player ? (musicCard.player.trackTitle || "—") : "—"
-            color: Colors.border
+            color: Colors.text
             font.family: Settings.fontFamily
             font.pixelSize: Config.type.md
             font.bold: true
@@ -177,7 +169,7 @@ Rectangle {
 
             Text {
                 text: ""
-                color: musicCard.player && musicCard.player.canGoPrevious ? Colors.border : Colors.subtext
+                color: musicCard.player && musicCard.player.canGoPrevious ? Colors.text : Colors.subtext
                 font.family: Settings.fontFamily
                 font.pixelSize: Config.type.xl
                 opacity: musicCard.player && musicCard.player.canGoPrevious ? 1.0 : 0.4
@@ -192,7 +184,7 @@ Rectangle {
             }
             Text {
                 text: ""
-                color: musicCard.player && musicCard.player.canGoNext ? Colors.border : Colors.subtext
+                color: musicCard.player && musicCard.player.canGoNext ? Colors.text : Colors.subtext
                 font.family: Settings.fontFamily
                 font.pixelSize: Config.type.xl
                 opacity: musicCard.player && musicCard.player.canGoNext ? 1.0 : 0.4

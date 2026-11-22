@@ -28,21 +28,23 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            uniformCellSizes: true
             spacing: Config.gap.lg
 
             Repeater {
                 model: [
-                    { icon: "", color: Colors.accentAlt   },
+                    { icon: "", color: Colors.accentAlt },
                     { icon: "󰾲", color: Colors.accent2 },
-                    { icon: "󰘚", color: Colors.accent3   },
+                    { icon: "󰘚", color: Colors.accent3 },
                     { icon: "", color: Colors.accent },
                 ]
                 delegate: ColumnLayout {
+                    id: metric
                     required property var modelData
                     required property int index
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    spacing: Config.gap.lg
+                    spacing: Config.gap.xs
 
                     // Read live value directly from dashboard by index
                     property real value: index === 0 ? dashboard.cpuValue
@@ -59,7 +61,7 @@ Rectangle {
                             anchors.bottom: parent.bottom
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            height: Math.max(0, parent.height * parent.parent.value / 100)
+                            height: Math.max(0, parent.height * metric.value / 100)
                             radius: Config.radius.sm
                             color: modelData.color
                             Behavior on height { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
@@ -68,8 +70,17 @@ Rectangle {
 
                     Text {
                         Layout.alignment: Qt.AlignHCenter
-                        text: modelData.icon
-                        color: modelData.color
+                        Layout.topMargin: Config.gap.sm
+                        text: Math.round(metric.value) + "%"
+                        color: Colors.text
+                        font.family: Settings.fontFamily
+                        font.pixelSize: Config.type.md
+                        font.bold: true
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: metric.modelData.icon
+                        color: metric.modelData.color
                         font.family: Settings.fontFamily
                         font.pixelSize: Config.type.display
                     }

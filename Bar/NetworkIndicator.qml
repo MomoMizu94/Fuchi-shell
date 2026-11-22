@@ -1,19 +1,8 @@
 import QtQuick
-import QtQuick.Layouts
-import Quickshell
-import Quickshell.Io
 import Quickshell.Networking
 import "../"
-import "../config.js" as Config
 
-// Sidebar network icon: shows wired/Wi-Fi/disconnected state at a glance
-// Clicking it opens NetworkMenu via IPC
-Item {
-    id: root
-    Layout.alignment: Qt.AlignHCenter
-    Layout.preferredWidth: Config.sidebar.trayIconSize + Config.gap.sm
-    Layout.preferredHeight: Config.sidebar.trayIconSize + Config.gap.sm
-
+SidebarButton {
     readonly property var wiredDev: {
         for (const d of Networking.devices.values)
             if (d.type === DeviceType.Wired) return d
@@ -27,28 +16,7 @@ Item {
     readonly property bool wiredUp: wiredDev !== null && wiredDev.connected
     readonly property bool wifiUp: wifiDev !== null && wifiDev.connected
 
-    Process { id: openMenuProc; command: ["echo"] }
-
-    Text {
-        anchors.centerIn: parent
-        text: root.wiredUp ? "󰈀"
-            : root.wifiUp ? "󰤨"
-            : Networking.wifiEnabled ? "󰤯"
-            : "󰤭"
-        color: root.wiredUp || root.wifiUp ? Colors.accent : Colors.subtext
-        font.family: Settings.fontFamily
-        font.pixelSize: Config.sidebar.iconSize
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            const pos = root.QsWindow.contentItem.mapFromItem(root, 0, 0)
-            // Open NetworkMenu
-            openMenuProc.command = ["qs", "ipc", "call", "networkmenu", "toggle",
-                String(Math.round(pos.y + root.height / 2))]
-            openMenuProc.startDetached()
-        }
-    }
+    Accessible.name: wiredUp ? "Wired network" : wifiUp ? "Wi-Fi connected" : "Network disconnected"
+    glyph: wiredUp ? "󰈀" : wifiUp ? "󰤨" : Networking.wifiEnabled ? "󰤯" : "󰤭"
+    glyphColor: wiredUp || wifiUp ? Colors.accent : Colors.subtext
 }

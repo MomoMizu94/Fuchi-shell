@@ -320,6 +320,50 @@ print("ok")
     } }
 ''')
 
+    def test_reload_button_shows_qml_error_and_allows_retry(self):
+        fixture = self.directory / "ReloadFixture.qml"
+        fixture.write_text("import QtQuick\nQtObject {}\n")
+        self.run_qml(r'''
+    ReloadFixture {}
+    Shell.SettingsWindow { id: preview; visible: true; implicitWidth: 520; implicitHeight: 480 }
+    PersistentProperties {
+        id: memory
+        reloadableId: "reload-error-test"
+        property int generations: 0
+        onLoaded: generations++
+    }
+    FileView { id: fixture; path: %s }
+    property int stage: 0
+    Component.onCompleted: Quickshell.watchFiles = false
+    Timer { interval: 80; repeat: true; running: true; onTriggered: {
+        const button = findItem(preview.contentItem, "reloadShellButton")
+        const message = findItem(preview.contentItem, "reloadShellError")
+        if (!Shell.Settings.ready || !button || !message) return
+        if (memory.generations === 2) {
+            check(!message.visible && button.enabled, "successful retry clears the failure")
+            console.log("TEST_PASSED")
+            Qt.quit()
+        } else if (stage === 0) {
+            check(!message.visible, "reload error starts hidden")
+            fixture.setText("import QtQuick\nMissingReloadTestType {}")
+            stage = 1
+        } else if (stage === 1 && fixture.text().includes("MissingReloadTestType")) {
+            button.clicked()
+            stage = 2
+        } else if (stage === 2 && message.visible) {
+            check(message.text.includes("MissingReloadTestType"), "shows the QML diagnostic")
+            check(message.parent === button.parent && message.x >= button.x + button.width,
+                "failure appears beside the reload button")
+            check(button.enabled, "failure allows another reload")
+            fixture.setText("import QtQuick\nQtObject {}")
+            stage = 3
+        } else if (stage === 3 && fixture.text().includes("QtObject")) {
+            button.clicked()
+            stage = 4
+        }
+    } }
+''' % json.dumps(str(fixture)))
+
     def test_failed_write_retains_changes_and_blocks_reload(self):
         saved = self.seed_settings()
         saved.unlink()
@@ -344,6 +388,7 @@ print("ok")
             check(Shell.Settings.launcherRows === 14, "live change retained after failed write")
             check(Shell.Settings.dirty, "unsaved change can be retried")
             check(!Shell.Settings.reloadPending, "failed save cancels requested reload")
+            check(Shell.Settings.reloadError.includes("Could not save"), "reload explains the failed save")
             console.log("TEST_PASSED")
             Qt.quit()
         }

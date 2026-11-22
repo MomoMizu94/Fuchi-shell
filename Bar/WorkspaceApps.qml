@@ -11,42 +11,30 @@ Column {
     id: root
     spacing: Config.gap.sm
 
-    // DesktopEntries finishes scanning .desktop files asynchronously, after
-    // this component is created — heuristicLookup() is a plain method call
-    // with no notify signal to hook, so a delegate that calls it before the
-    // scan finishes gets null permanently with no way to know to retry.
-    // Bump a generation counter a handful of times over ~3s (comfortably
-    // past the scan time observed during testing) and have each delegate's
-    // `entry` binding read it, so they all recompute as entries come online.
-    property int entriesGeneration: 0
-    Timer {
-        interval: 400
-        running: true
-        repeat: true
-        property int attempts: 0
-        onTriggered: {
-            root.entriesGeneration++
-            attempts++
-            if (attempts >= 8) stop()
-        }
-    }
-
     Repeater {
         model: Hyprland.toplevels
 
         delegate: Item {
+            id: app
             required property var modelData
             // Native Wayland windows expose appId directly; XWayland/X11
             // windows don't -> fallback to class name
             readonly property string appId: (modelData.wayland ? modelData.wayland.appId
                 : (modelData.lastIpcObject ? modelData.lastIpcObject.class : "")) || ""
-            // entriesGeneration read here is what forces a re-lookup once the
-            // async .desktop scan has data
-            // Dedicated SSH app IDs still use Kitty's desktop entry and icon.
-            readonly property var entry: (appId && root.entriesGeneration >= 0)
-                ? DesktopEntries.heuristicLookup(appId.startsWith("fuchi-ssh-") ? "kitty" : appId) : null
+            property var entry: null
+            readonly property string windowTitle: modelData.title || (entry ? entry.name : "") || appId
 
-            // Only show windows on the currently workspace
+            function refreshEntry() {
+                const desktopId = appId.startsWith("fuchi-ssh-") ? "kitty" : appId
+                entry = desktopId ? DesktopEntries.heuristicLookup(desktopId) : null
+            }
+
+            onAppIdChanged: Qt.callLater(refreshEntry)
+            Connections {
+                target: DesktopEntries
+                function onApplicationsChanged() { Qt.callLater(app.refreshEntry) }
+            }
+
             visible: modelData.workspace && modelData.workspace.active
             width: Config.sidebar.workspaceAppIconSize + Config.gap.sm
             height: width
@@ -58,14 +46,64 @@ Column {
                 color: modelData.activated ? Qt.rgba(Colors.accent.r, Colors.accent.g, Colors.accent.b, 0.30) : "transparent"
             }
 
+            HoverHandler {
+                id: hover
+                onHoveredChanged: {
+                    if (hovered) titleDelay.restart()
+                    else {
+                        titleDelay.stop()
+                        titlePopup.visible = false
+                    }
+                }
+            }
+            Timer {
+                id: titleDelay
+                interval: 400
+                onTriggered: titlePopup.visible = hover.hovered && app.visible && app.windowTitle !== ""
+            }
+            onVisibleChanged: if (!visible) titlePopup.visible = false
+
+            PopupWindow {
+                id: titlePopup
+                visible: false
+                grabFocus: false
+                anchor.item: app
+                anchor.edges: Edges.Right
+                anchor.gravity: Edges.Right
+                anchor.margins.right: Config.gap.sm
+                implicitWidth: Math.min(420, titleText.implicitWidth + Config.gap.md * 2)
+                implicitHeight: titleText.implicitHeight + Config.gap.sm * 2
+                color: "transparent"
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Config.radius.md
+                    color: Colors.surface
+                    border.color: Colors.border
+                    Text {
+                        id: titleText
+                        anchors.fill: parent
+                        anchors.leftMargin: Config.gap.md
+                        anchors.rightMargin: Config.gap.md
+                        verticalAlignment: Text.AlignVCenter
+                        text: app.windowTitle
+                        textFormat: Text.PlainText
+                        elide: Text.ElideRight
+                        font.family: Settings.fontFamily
+                        font.pixelSize: Config.type.sm
+                        color: Colors.text
+                    }
+                }
+            }
+
             IconImage {
                 anchors.centerIn: parent
                 width: Config.sidebar.workspaceAppIconSize
                 height: Config.sidebar.workspaceAppIconSize
                 // Desktop-entry icon when the lookup succeeded, otherwise a
                 // best-effort guess straight from the raw appId
-                source: entry ? Quickshell.iconPath(entry.icon, true)
-                    : (appId ? Quickshell.iconPath(appId, true) : "")
+                source: app.entry && app.entry.icon ? Quickshell.iconPath(app.entry.icon, true)
+                    : (app.appId ? Quickshell.iconPath(app.appId, true) : "")
             }
         }
     }

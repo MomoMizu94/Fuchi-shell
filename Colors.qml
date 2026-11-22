@@ -22,7 +22,7 @@ Singleton {
     property color border:     c(8, "#2A313E")
     property color text:       s("foreground", "#DDE3EA")
     property color textStrong: c(15, "#F2EDDC")
-    property color subtext:    c(8, "#6B7A94")
+    property color subtext:    c(8, "#8897AE")
     property color contrastText: root.bg
     property color accent:     c(3, "#D18870")
     property color accent2:    c(5, "#F2C3A7")

@@ -1,22 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Io
 import "../"
 import "../config.js" as Config
 
-// Sidebar clock. Clicking it opens CalendarMenu via IPC
-Item {
+SidebarButton {
     id: root
-    Layout.alignment: Qt.AlignHCenter
-    Layout.preferredWidth: col.implicitWidth
-    Layout.preferredHeight: col.implicitHeight
+    implicitHeight: col.implicitHeight + Config.gap.sm
+    Accessible.name: "Calendar, " + hour + ":" + minute + " " + ampm
 
     property string hour: ""
     property string minute: ""
     property string ampm: ""
-
-    Process { id: openMenuProc; command: ["echo"] }
 
     Timer {
         interval: Config.timer.interval
@@ -36,7 +30,7 @@ Item {
 
     ColumnLayout {
         id: col
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.centerIn: parent
         spacing: 4
 
         Text {
@@ -72,18 +66,6 @@ Item {
             color: Colors.subtext
             font.family: Settings.fontFamily
             font.pixelSize: Config.type.md
-        }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            const pos = root.QsWindow.contentItem.mapFromItem(root, 0, 0)
-            // Open CalendarMenu via IPC
-            openMenuProc.command = ["qs", "ipc", "call", "calendarmenu", "toggle",
-                String(Math.round(pos.y + root.height / 2))]
-            openMenuProc.startDetached()
         }
     }
 }

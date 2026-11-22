@@ -40,6 +40,7 @@ ColumnLayout {
     // -- Focused asset --
     Rectangle {
         Layout.fillWidth: true
+        Layout.minimumHeight: 340
         Layout.fillHeight: true
         radius: Config.radius.xl
         color: Colors.card

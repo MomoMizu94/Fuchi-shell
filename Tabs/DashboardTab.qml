@@ -3,36 +3,63 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
-// Overview tab: greeting/system-info/quick-toggles row, music/hardware/weather
-// row, then notification history — just composes the Widgets/* cards
 ColumnLayout {
     id: root
     required property var dashboard
 
+    readonly property int cardColumns: width >= 1320 ? 3 : width >= 960 ? 2 : 1
     spacing: Config.gap.lg
 
-    RowLayout {
+    GridLayout {
         Layout.fillWidth: true
-        spacing: Config.gap.lg
+        Layout.fillHeight: false
+        columns: root.cardColumns
+        rowSpacing: Config.gap.lg
+        columnSpacing: Config.gap.lg
 
-        // QuickToggles is the height reference for this row.
-        // Greeting/SystemInfo are forced to match it exactly, not just fillHeight,
-        // so their own content can never stretch the row taller than intended
-        GreetingCard { dashboard: root.dashboard; Layout.preferredHeight: quickToggles.implicitHeight }
-        SystemInfoCard { dashboard: root.dashboard; Layout.preferredHeight: quickToggles.implicitHeight }
-        QuickTogglesCard { id: quickToggles; dashboard: root.dashboard }
+        GreetingCard {
+            dashboard: root.dashboard
+            Layout.preferredWidth: 400
+            Layout.preferredHeight: quickToggles.implicitHeight
+        }
+        SystemInfoCard {
+            dashboard: root.dashboard
+            Layout.fillWidth: true
+            Layout.preferredHeight: quickToggles.implicitHeight
+        }
+        QuickTogglesCard {
+            id: quickToggles
+            dashboard: root.dashboard
+            Layout.preferredWidth: 560
+        }
+        MusicMiniCard {
+            id: musicMini
+            Layout.row: root.cardColumns === 2 ? 2 : -1
+            Layout.column: root.cardColumns === 2 ? 0 : -1
+            dashboard: root.dashboard
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+        HardwareCard {
+            dashboard: root.dashboard
+            // In two columns the hardware gauges fit beside the quick toggles
+            Layout.row: root.cardColumns === 2 ? 1 : -1
+            Layout.column: root.cardColumns === 2 ? 1 : -1
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: quickToggles.implicitHeight
+        }
+        WeatherCard {
+            Layout.row: root.cardColumns === 2 ? 2 : -1
+            Layout.column: root.cardColumns === 2 ? (expandedMap ? 0 : 1) : -1
+            Layout.columnSpan: expandedMap ? 2 : 1
+            expandedMap: !musicMini.player && root.cardColumns > 1
+            dashboard: root.dashboard
+            Layout.preferredWidth: 560
+            Layout.fillHeight: true
+            Layout.preferredHeight: musicMini.player ? Math.max(440, musicMini.implicitHeight) : 440
+        }
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Config.gap.lg
-
-        // MusicMini is the height reference for this row. 
-        // Hardware/Weather are forced to match it exactly
-        MusicMiniCard { id: musicMini; dashboard: root.dashboard }
-        HardwareCard { dashboard: root.dashboard; Layout.preferredHeight: musicMini.implicitHeight }
-        WeatherCard { dashboard: root.dashboard; Layout.preferredHeight: musicMini.implicitHeight }
-    }
-
-    NotificationHistoryCard { dashboard: root.dashboard }
+    NotificationHistoryCard { dashboard: root.dashboard; Layout.minimumHeight: 144 }
 }

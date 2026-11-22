@@ -5,7 +5,9 @@ import "../config.js" as Config
 
 // Overview tab card: Wi-Fi/Bluetooth/DND/night-light toggle tiles
 Rectangle {
+    id: toggles
     required property var dashboard
+    readonly property color activeFill: Qt.alpha(Colors.accent, 0.18)
     Layout.fillWidth: true
     implicitHeight: quicktoggleContent.implicitHeight + 24
     radius: Config.radius.xl
@@ -36,13 +38,13 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredHeight: 68; radius: Config.radius.lg
-                color: dashboard.wifiEnabled ? Qt.rgba(0.82, 0.53, 0.44, 0.3) : Qt.rgba(0,0,0,0.05)
+                color: dashboard.wifiEnabled ? toggles.activeFill : Colors.inset
                 ColumnLayout { anchors.centerIn: parent; spacing: Config.gap.xs
                     Text { Layout.alignment: Qt.AlignHCenter; text: "󰤨"
                         color: dashboard.wifiEnabled ? Colors.accent : Colors.subtext
                         font.family: Settings.fontFamily; font.pixelSize: Config.type.xl }
                     Text { Layout.alignment: Qt.AlignHCenter; text: "Wi-Fi"
-                        color: dashboard.wifiEnabled ? Colors.border : Colors.subtext
+                        color: dashboard.wifiEnabled ? Colors.text : Colors.subtext
                         font.family: Settings.fontFamily; font.pixelSize: Config.type.sm }
                 }
                 MouseArea { anchors.fill: parent; onClicked: dashboard.toggleWifi() }
@@ -50,13 +52,13 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredHeight: 68; radius: Config.radius.lg
-                color: dashboard.bluetoothEnabled ? Qt.rgba(0.82, 0.53, 0.44, 0.3) : Qt.rgba(0,0,0,0.05)
+                color: dashboard.bluetoothEnabled ? toggles.activeFill : Colors.inset
                 ColumnLayout { anchors.centerIn: parent; spacing: Config.gap.xs
                     Text { Layout.alignment: Qt.AlignHCenter; text: "󰂯"
                         color: dashboard.bluetoothEnabled ? Colors.accent : Colors.subtext
                         font.family: Settings.fontFamily; font.pixelSize: Config.type.xl }
                     Text { Layout.alignment: Qt.AlignHCenter; text: "Bluetooth"
-                        color: dashboard.bluetoothEnabled ? Colors.border : Colors.subtext
+                        color: dashboard.bluetoothEnabled ? Colors.text : Colors.subtext
                         font.family: Settings.fontFamily; font.pixelSize: Config.type.sm }
                 }
                 MouseArea { anchors.fill: parent; onClicked: dashboard.toggleBluetooth() }
@@ -64,13 +66,13 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredHeight: 68; radius: Config.radius.lg
-                color: dashboard.dndEnabled ? Qt.rgba(0.82, 0.53, 0.44, 0.3) : Qt.rgba(0,0,0,0.05)
+                color: dashboard.dndEnabled ? toggles.activeFill : Colors.inset
                 ColumnLayout { anchors.centerIn: parent; spacing: Config.gap.xs
                     Text { Layout.alignment: Qt.AlignHCenter; text: "󰍷"
                         color: dashboard.dndEnabled ? Colors.accent : Colors.subtext
                         font.family: Settings.fontFamily; font.pixelSize: Config.type.xl }
                     Text { Layout.alignment: Qt.AlignHCenter; text: "DND"
-                        color: dashboard.dndEnabled ? Colors.border : Colors.subtext
+                        color: dashboard.dndEnabled ? Colors.text : Colors.subtext
                         font.family: Settings.fontFamily; font.pixelSize: Config.type.sm }
                 }
                 MouseArea { anchors.fill: parent; onClicked: dashboard.dndEnabled = !dashboard.dndEnabled }
@@ -78,13 +80,13 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredHeight: 68; radius: Config.radius.lg
-                color: dashboard.nightEnabled ? Qt.rgba(0.82, 0.53, 0.44, 0.3) : Qt.rgba(0,0,0,0.05)
+                color: dashboard.nightEnabled ? toggles.activeFill : Colors.inset
                 ColumnLayout { anchors.centerIn: parent; spacing: Config.gap.xs
                     Text { Layout.alignment: Qt.AlignHCenter; text: "󰌵"
                         color: dashboard.nightEnabled ? Colors.accent : Colors.subtext
                         font.family: Settings.fontFamily; font.pixelSize: Config.type.xl }
                     Text { Layout.alignment: Qt.AlignHCenter; text: "Night"
-                        color: dashboard.nightEnabled ? Colors.border : Colors.subtext
+                        color: dashboard.nightEnabled ? Colors.text : Colors.subtext
                         font.family: Settings.fontFamily; font.pixelSize: Config.type.sm }
                 }
                 MouseArea { anchors.fill: parent; onClicked: dashboard.toggleNight() }

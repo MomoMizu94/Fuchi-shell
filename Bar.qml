@@ -15,6 +15,15 @@ PanelWindow {
     property string currentLayout: ""
     required property var updates
 
+    signal trayMenuRequested(string itemId, int centerY)
+    signal layoutMenuRequested(int centerY)
+    signal calendarMenuRequested(int centerY)
+    signal updatesMenuRequested(int centerY)
+    signal bluetoothMenuRequested(int centerY)
+    signal networkMenuRequested(int centerY)
+    signal hostMenuRequested(int centerY)
+    signal powerMenuRequested()
+
     anchors {
         top: true
         bottom: true
@@ -32,7 +41,10 @@ PanelWindow {
         spacing: Config.gap.md
 
         Workspaces {}
-        LayoutIndicator { layout: bar.currentLayout }
+        LayoutIndicator {
+            layout: bar.currentLayout
+            onClicked: (button, centerY) => bar.layoutMenuRequested(centerY)
+        }
     }
 
     // Apps launched in current workspace
@@ -49,12 +61,30 @@ PanelWindow {
         anchors.margins: Config.gap.sm
         spacing: Config.gap.md
 
-        Tray {}
-        Clock {}
-        UpdateIndicator { service: bar.updates }
-        BluetoothIndicator {}
-        NetworkIndicator {}
-        HostIndicator {}
-        PowerButton {}
+        Tray {
+            id: tray
+            onMenuRequested: (itemId, centerY) => bar.trayMenuRequested(itemId, centerY)
+        }
+        Clock {
+            Layout.topMargin: tray.visible ? Config.gap.sm : 0
+            Layout.bottomMargin: Config.gap.sm
+            onClicked: (button, centerY) => bar.calendarMenuRequested(centerY)
+        }
+        UpdateIndicator {
+            service: bar.updates
+            onClicked: (button, centerY) => bar.updatesMenuRequested(centerY)
+        }
+        BluetoothIndicator {
+            onClicked: (button, centerY) => bar.bluetoothMenuRequested(centerY)
+        }
+        NetworkIndicator {
+            onClicked: (button, centerY) => bar.networkMenuRequested(centerY)
+        }
+        HostIndicator {
+            onClicked: (button, centerY) => bar.hostMenuRequested(centerY)
+        }
+        PowerButton {
+            onClicked: bar.powerMenuRequested()
+        }
     }
 }

@@ -87,6 +87,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
+        Layout.minimumHeight: 220
         Layout.fillHeight: true
         spacing: 14
 

@@ -14,6 +14,7 @@ ColumnLayout {
     // -- Top: CPU / RAM / GPU / VRAM donut gauges --
     RowLayout {
         Layout.fillWidth: true
+        Layout.minimumHeight: 220
         uniformCellSizes: true
         spacing: 14
 
@@ -151,6 +152,7 @@ ColumnLayout {
     // -- Bottom: per-core bars + network/disk/process info --
     RowLayout {
         Layout.fillWidth: true
+        Layout.minimumHeight: 240
         Layout.fillHeight: true
         spacing: 14
 

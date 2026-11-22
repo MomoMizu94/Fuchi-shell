@@ -30,11 +30,11 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
     readonly property var actions: [
-        { id: "logout",   icon: "󰍃", tint: true },
-        { id: "lock",     icon: "󰌾" },
-        { id: "suspend",  icon: "󰤄" },
-        { id: "restart",  icon: "󰜉" },
-        { id: "shutdown", icon: "󰐥" }
+        { id: "logout", label: "Log out", icon: "󰍃", tint: true },
+        { id: "lock", label: "Lock", icon: "󰌾" },
+        { id: "suspend", label: "Suspend", icon: "󰤄" },
+        { id: "restart", label: "Restart", icon: "󰜉" },
+        { id: "shutdown", label: "Shut down", icon: "󰐥" }
     ]
     readonly property var destructiveIds: ["logout", "shutdown", "restart"]
 
@@ -137,6 +137,9 @@ PanelWindow {
                         Layout.preferredWidth: Config.powerMenu.buttonSize
                         Layout.preferredHeight: Config.powerMenu.buttonSize
                         Layout.alignment: Qt.AlignHCenter
+                        Accessible.role: Accessible.Button
+                        Accessible.name: btn.modelData.label
+                        Accessible.onPressAction: powerMenu.requestAction(btn.modelData)
                         radius: Config.radius.xl
                         color: btn.modelData.tint
                             ? Qt.rgba(Colors.error.r, Colors.error.g, Colors.error.b, 0.15)

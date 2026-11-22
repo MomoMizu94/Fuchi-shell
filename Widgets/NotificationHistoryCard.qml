@@ -18,7 +18,7 @@ RowLayout {
     Text {
         Layout.fillWidth: true
         text: "Notifications"
-        color: Colors.border
+        color: Colors.text
         font.family: Settings.fontFamily
         font.pixelSize: Config.type.lg                            
         font.bold: true
@@ -42,7 +42,7 @@ Text {
     Layout.fillWidth: true
     Layout.fillHeight: true
     text: "No notifications"
-    color: Colors.error
+    color: Colors.subtext
     font.family: Settings.fontFamily
     font.pixelSize: Config.type.md
     horizontalAlignment: Text.AlignHCenter
@@ -113,10 +113,13 @@ Flickable {
                         Text {
                             Layout.fillWidth: true
                             text: summary
-                            color: Colors.border
+                            textFormat: Text.PlainText
+                            color: Colors.text
                             font.family: Settings.fontFamily
                             font.pixelSize: Config.type.md
                             font.bold: true
+                            wrapMode: Text.Wrap
+                            maximumLineCount: 2
                             elide: Text.ElideRight
                         }
                         Text {
@@ -131,6 +134,7 @@ Flickable {
                     }
 
                     ColumnLayout {
+                        Layout.alignment: Qt.AlignRight | Qt.AlignTop
                         spacing: Config.gap.xs
                         Text {
                             text: time

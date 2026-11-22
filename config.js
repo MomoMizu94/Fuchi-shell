@@ -71,7 +71,7 @@ const frame = {
 // Sidebar (left-strip status bar) module sizing
 const sidebar = {
     iconSize: 26,       // app launcher / power button glyph size
-    workspaceSize: 36,  // workspace chip diameter
+    targetSize: 36,     // clickable sidebar icon width and height
     trayIconSize: 26,   // tray IconImage width/height
     workspaceAppIconSize: 26, // WorkspaceApps icon width/height
     layoutGlyphSize: 20,      // dwm layout symbol
@@ -108,6 +108,7 @@ const anim = {
 
 // App launcher (command-palette) sizing
 const launcher = {
+    scale: 1.5,
     width: 820,
     maxVisibleRows: 8,
     rowHeight: 56,

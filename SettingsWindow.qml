@@ -98,6 +98,7 @@ FloatingWindow {
 
     component NumberPreference: SettingsRow {
         id: numberRow
+        compactEditor: true
         required property int minimum
         required property int maximum
         property int step: 1
@@ -290,6 +291,7 @@ FloatingWindow {
                         title: "Profile picture"
                         description: "Use an absolute path or a path relative to your home folder."
                         settingKey: "profilePic"
+                        fullWidthEditor: true
                         controls: [
                             TextField {
                                 objectName: "profilePicControl"
@@ -366,6 +368,7 @@ FloatingWindow {
                         title: "Wallpaper folder"
                         description: "Where the /wallpaper command looks for images."
                         settingKey: "wallpaperFolder"
+                        fullWidthEditor: true
                         controls: [
                             TextField {
                                 objectName: "wallpaperFolderControl"
@@ -394,6 +397,7 @@ FloatingWindow {
                         title: "Library folder"
                         description: "Where /Library reads CBZ and CBR archives and saves downloads."
                         settingKey: "libraryFolder"
+                        fullWidthEditor: true
                         controls: [
                             TextField {
                                 objectName: "libraryFolderControl"
@@ -428,14 +432,30 @@ FloatingWindow {
                         color: Colors.subtext
                         wrapMode: Text.Wrap
                     }
-                    SettingsButton {
-                        objectName: "reloadShellButton"
-                        text: Settings.reloadPending ? "Reloading..." : "Reload shell"
-                        enabled: !Settings.reloadPending
-                        onClicked: {
-                            // Commit a text field before deciding which writes to wait for.
-                            forceActiveFocus()
-                            Qt.callLater(Settings.requestReload)
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Config.gap.md
+                        SettingsButton {
+                            objectName: "reloadShellButton"
+                            Layout.alignment: Qt.AlignTop
+                            text: Settings.reloadPending ? "Reloading..." : "Reload shell"
+                            enabled: !Settings.reloadPending
+                            onClicked: {
+                                // Commit the focused field before checking for pending writes
+                                forceActiveFocus()
+                                Qt.callLater(Settings.requestReload)
+                            }
+                        }
+                        Label {
+                            objectName: "reloadShellError"
+                            Layout.fillWidth: true
+                            Layout.minimumWidth: 0
+                            Layout.alignment: Qt.AlignTop
+                            visible: Settings.reloadError !== ""
+                            text: Settings.reloadError
+                            textFormat: Text.PlainText
+                            wrapMode: Text.Wrap
+                            color: Colors.error
                         }
                     }
                     Item { implicitHeight: Config.gap.sm }

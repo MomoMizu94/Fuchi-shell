@@ -11,8 +11,7 @@ import "settings.js" as Paths
 
 Scope {
     id: root
-    // Open-state for every popup/menu — each flag is toggled via its
-    // matching IpcHandler and drives the matching component further down
+    // Bar clicks and external IPC calls share the same menu handlers
     property bool centerOpen: false
     property bool launcherOpen: false
     property bool powerMenuOpen: false
@@ -203,6 +202,7 @@ Scope {
     }
 
     IpcHandler {
+        id: powerMenuIpc
         target: "powermenu"
         function toggle(): void { root.powerMenuOpen = !root.powerMenuOpen }
         function show(): void { root.powerMenuOpen = true }
@@ -210,6 +210,7 @@ Scope {
     }
 
     IpcHandler {
+        id: trayMenuIpc
         target: "traymenu"
         function open(id: string, y: string): void {
             root.trayMenuItemId = id
@@ -220,6 +221,7 @@ Scope {
     }
 
     IpcHandler {
+        id: bluetoothMenuIpc
         target: "bluetoothmenu"
         function toggle(y: string): void {
             root.bluetoothMenuTargetY = Number(y)
@@ -229,6 +231,7 @@ Scope {
     }
 
     IpcHandler {
+        id: calendarMenuIpc
         target: "calendarmenu"
         function toggle(y: string): void {
             root.calendarMenuTargetY = Number(y)
@@ -238,6 +241,7 @@ Scope {
     }
 
     IpcHandler {
+        id: networkMenuIpc
         target: "networkmenu"
         function toggle(y: string): void {
             root.networkMenuTargetY = Number(y)
@@ -247,6 +251,7 @@ Scope {
     }
 
     IpcHandler {
+        id: layoutMenuIpc
         target: "layoutmenu"
         function toggle(y: string): void {
             root.layoutMenuTargetY = Number(y)
@@ -256,6 +261,7 @@ Scope {
     }
 
     IpcHandler {
+        id: hostMenuIpc
         target: "hostmenu"
         function toggle(y: string): void {
             root.hostMenuTargetY = Number(y)
@@ -265,6 +271,7 @@ Scope {
     }
 
     IpcHandler {
+        id: updatesMenuIpc
         target: "updatesmenu"
         function toggle(y: string): void {
             root.updatesMenuTargetY = Number(y)
@@ -419,5 +426,16 @@ Scope {
             else if (root.centerOpen) dashboardCloseTimer.restart()
         }
     }
-    Bar { currentLayout: root.currentLayout; updates: updateService }
+    Bar {
+        currentLayout: root.currentLayout
+        updates: updateService
+        onTrayMenuRequested: (itemId, y) => trayMenuIpc.open(itemId, String(y))
+        onLayoutMenuRequested: y => layoutMenuIpc.toggle(String(y))
+        onCalendarMenuRequested: y => calendarMenuIpc.toggle(String(y))
+        onUpdatesMenuRequested: y => updatesMenuIpc.toggle(String(y))
+        onBluetoothMenuRequested: y => bluetoothMenuIpc.toggle(String(y))
+        onNetworkMenuRequested: y => networkMenuIpc.toggle(String(y))
+        onHostMenuRequested: y => hostMenuIpc.toggle(String(y))
+        onPowerMenuRequested: powerMenuIpc.toggle()
+    }
 }

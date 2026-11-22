@@ -8,7 +8,8 @@ pywal.
 
 ## What it includes
 
-- A sidebar with workspaces, apps, tray icons, and desktop controls.
+- A sidebar with workspaces, apps, tray icons, and desktop controls. Hover over
+  an app in the middle of the sidebar to see its window title.
 - A slide-out dashboard with weather, music, todos, a calendar, a stock
   watchlist, and system statistics.
 - An app launcher with wallpaper selection, calculations, and shortcut search.
@@ -177,9 +178,9 @@ Failed checks retain the last known results. Change the schedule under
 ## Configuration
 
 Open `/settings` for fonts, folders, animations, notifications, launcher size,
-and volume limits. Changes apply and save automatically. Reset restores the
-corresponding default from [config.js](config.js). You can also reload the shell
-from Settings.
+and volume limits. Changes apply and save automatically. Changed settings show a
+Reset button that restores the default from [config.js](config.js). If **Reload shell** fails,
+Settings shows the error beside the button. The current shell keeps running.
 
 Edit `config.js` for other defaults, dimensions, and refresh intervals.
 `scrolling.wheelStep` sets wheel travel in pixels per notch across the shell;

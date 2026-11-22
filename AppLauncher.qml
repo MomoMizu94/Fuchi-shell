@@ -21,7 +21,7 @@ PanelWindow {
     property bool closing: false
     visible: open || closing
     onOpenChanged: {
-        closing = !open
+        closing = !open && Settings.animationPopup > 0
         if (open) {
             query = ""
             selectedIndex = 0
@@ -32,7 +32,8 @@ PanelWindow {
     anchors { left: true; right: true; top: true; bottom: true }
     color: "transparent"
     exclusionMode: ExclusionMode.Normal
-    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // Keep keyboard input here if the previously launched app opens a window late
+    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     property string query: ""
     property int selectedIndex: 0
@@ -329,38 +330,36 @@ PanelWindow {
     Item {
         id: panel
         anchors.horizontalCenter: parent.horizontalCenter
-        width: launcher.keybindsMode
-            ? Math.min(Config.keybinds.width, launcher.width - Config.gap.xl * 2)
-            : launcher.wallpaperGridMode ? Config.launcher.galleryPanelWidth
-            : launcher.lightsMode ? Math.min(Config.launcher.width, launcher.width - Config.gap.xl * 2)
-            : Config.launcher.width
+        scale: Config.launcher.scale
+        transformOrigin: Item.Bottom
+        // Lay out the panel in local coordinates before scaling it to the screen
+        readonly property real availableWidth: Math.max(0, launcher.width / scale - Config.gap.xl * 2)
+        readonly property real availableHeight: Math.max(0, launcher.height / scale - Config.gap.xl * 2)
+        readonly property real preferredWidth: launcher.keybindsMode ? Config.keybinds.width
+            : launcher.wallpaperGridMode ? Config.launcher.galleryPanelWidth : Config.launcher.width
+        width: Math.min(preferredWidth, availableWidth)
         Behavior on width { NumberAnimation { duration: Settings.animationPopup; easing.type: Easing.OutCubic } }
         // Chrome accounting must match the anchors below exactly (top margin,
         // two dividerGap gaps around the divider, the divider itself, and the
         // bottom margin)
         readonly property int outerMargin: Config.gap.xl
         readonly property int dividerGap: Config.gap.md
-        readonly property int fittingRows: Math.max(1, Math.floor((launcher.height - Config.gap.xl * 2
-            - outerMargin * 2 - dividerGap * 2 - 1 - Config.launcher.inputHeight) / Config.launcher.rowHeight))
-        height: launcher.keybindsMode
-            ? Math.min(Config.keybinds.height, launcher.height - Config.gap.xl * 2)
-            : launcher.lightsMode
-            ? Math.min(launcher.height - Config.gap.xl * 2,
-                outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight + lightsView.implicitHeight)
-            : outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight +
-            (launcher.wallpaperGridMode
-                ? Config.launcher.galleryCardHeight + Config.launcher.galleryLabelHeight
-                : Math.max(1, Math.min(launcher.results.length, Settings.launcherRows, fittingRows)) * Config.launcher.rowHeight)
+        readonly property int chromeHeight: outerMargin * 2 + dividerGap * 2 + 1 + Config.launcher.inputHeight
+        readonly property int fittingRows: Math.max(1, Math.floor((availableHeight - chromeHeight) / Config.launcher.rowHeight))
+        readonly property real contentHeight: launcher.lightsMode ? lightsView.implicitHeight
+            : launcher.wallpaperGridMode ? Config.launcher.galleryCardHeight + Config.launcher.galleryLabelHeight
+            : Math.max(1, Math.min(launcher.results.length, Settings.launcherRows, fittingRows)) * Config.launcher.rowHeight
+        height: Math.min(availableHeight, launcher.keybindsMode ? Config.keybinds.height : chromeHeight + contentHeight)
 
         // Docked flush to the bottom edge via an anchor (not an animated `y`),
         // so result-count-driven height changes always grow/shrink from the
         // top with the bottom edge pinned. Only bottomMargin animates for the
         // open/close slide — when closed it pushes the panel fully below the
-        // screen (-height); when open it's 0 (flush). Animating `y` and
+        // screen; when open it's 0 (flush). Animating `y` and
         // `height` as two independent Behaviors previously let them drift out
         // of sync mid-transition, visibly detaching the bottom edge
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: launcher.open ? 0 : -height
+        anchors.bottomMargin: launcher.open ? 0 : -height * scale
         Behavior on anchors.bottomMargin {
             NumberAnimation {
                 duration: Settings.animationPopup
@@ -379,13 +378,13 @@ PanelWindow {
         CornerFillet {
             anchors.right: parent.left
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: Config.frame.thin
+            anchors.bottomMargin: Config.frame.thin / panel.scale
             solidCorner: "bottomRight"
         }
         CornerFillet {
             anchors.left: parent.right
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: Config.frame.thin
+            anchors.bottomMargin: Config.frame.thin / panel.scale
             solidCorner: "bottomLeft"
         }
 
@@ -405,13 +404,19 @@ PanelWindow {
             // not reliably re-stretch a fillHeight child once that animated
             // ancestor resizes after the initial layout pass — it gets stuck
             // at a sliver. Anchoring each region directly sidesteps that
-            Item {
+            Rectangle {
                 id: searchBar
                 anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: Config.gap.xl }
                 height: Config.launcher.inputHeight
+                radius: Config.radius.lg
+                color: Colors.inset
+                border.color: Colors.border
+                border.width: 1
 
                 RowLayout {
                     anchors.fill: parent
+                    anchors.leftMargin: Config.gap.md
+                    anchors.rightMargin: Config.gap.md
                     spacing: Config.gap.sm
 
                     Text {
@@ -464,11 +469,18 @@ PanelWindow {
                         Text {
                             anchors.fill: parent
                             visible: searchInput.text === ""
-                            text: "Type " + launcher.commandPrefix + " for commands"
+                            text: "Search apps"
                             color: Colors.subtext
                             font: searchInput.font
                             verticalAlignment: Text.AlignVCenter
                         }
+                    }
+                    Text {
+                        visible: launcher.query === ""
+                        text: launcher.commandPrefix + " commands"
+                        color: Colors.subtext
+                        font.family: Settings.fontFamily
+                        font.pixelSize: Config.type.label
                     }
                 }
             }
@@ -592,7 +604,7 @@ PanelWindow {
                         required property var modelData
                         required property int index
                         readonly property bool selected: index === launcher.selectedIndex
-                        width: Config.launcher.galleryCardWidth
+                        width: Math.min(Config.launcher.galleryCardWidth, ListView.view.width)
                         height: ListView.view.height
 
                         // No scale-on-select here: a scale transform pivots
@@ -605,7 +617,7 @@ PanelWindow {
                         ClippingRectangle {
                             id: thumb
                             width: parent.width
-                            height: Config.launcher.galleryCardHeight
+                            height: Math.min(Config.launcher.galleryCardHeight, Math.max(0, card.height - Config.launcher.galleryLabelHeight))
                             radius: Config.radius.lg
                             color: Colors.card
                             border.width: card.selected ? 4 : 0

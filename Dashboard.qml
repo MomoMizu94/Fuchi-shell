@@ -549,9 +549,10 @@ PanelWindow {
     // The dashboard panel itself — slides down from the top edge when open
     Item {
         id: hero
+        objectName: "dashboardPanel"
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 1500
-        height: 1200
+        width: Math.max(0, Math.min(1500, parent.width - 2 * Config.radius.fillet))
+        height: Math.max(0, Math.min(1200, parent.height - Config.frame.thin))
         y: dashboard.open ? 0 : -height
 
         Behavior on y {
@@ -609,37 +610,48 @@ PanelWindow {
                             { icon: "󰓅", label: "Performance"   }
                         ]
                         delegate: Item {
+                            id: tabButton
                             required property var modelData
                             required property int index
+                            readonly property bool selected: dashboard.activeTab === index
                             Layout.fillWidth: true
-                            height: 50
+                            Layout.preferredWidth: 1
+                            implicitHeight: 50
 
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: Config.radius.md
-                                color: dashboard.activeTab === index
-                                    ? Qt.rgba(0.29, 0.33, 0.42, 0.12)
-                                    : "transparent"
-                            }
-
-                            Text {
+                            Row {
                                 anchors.centerIn: parent
-                                Layout.alignment: Qt.AlignHCenter
-                                text: modelData.icon
-                                color: dashboard.activeTab === index
-                                    ? Colors.textStrong : Colors.border
-                                font.family: Settings.fontFamily
-                                font.pixelSize: Config.type.display
+                                spacing: Config.gap.sm
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    id: tabIcon
+                                    visible: tabButton.width >= 148
+                                    text: tabButton.modelData.icon
+                                    color: tabButton.selected ? Colors.accent : Colors.subtext
+                                    font.family: Settings.fontFamily
+                                    font.pixelSize: Config.type.xl
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.min(implicitWidth, tabButton.width - (tabIcon.visible ? tabIcon.width + Config.gap.sm : 0))
+                                    elide: Text.ElideRight
+                                    text: tabButton.modelData.label
+                                    color: tabButton.selected ? Colors.text : Colors.subtext
+                                    font.family: Settings.fontFamily
+                                    font.pixelSize: tabButton.width >= 148 ? Config.type.base : Config.type.sm
+                                    font.bold: tabButton.selected
+                                }
                             }
 
                             Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                width: parent.width * 0.5
-                                height: 4
+                                width: Config.gap.xxl
+                                height: 3
                                 radius: Config.radius.sm
-                                color: Colors.subtext
-                                visible: dashboard.activeTab === index
+                                color: Colors.accent
+                                visible: tabButton.selected
                             }
 
                             MouseArea {
@@ -652,7 +664,7 @@ PanelWindow {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 4
+                    implicitHeight: 1
                     color: Colors.border
                     opacity: 0.75
                 }
@@ -664,50 +676,35 @@ PanelWindow {
                     Layout.fillHeight: true
                     clip: true
 
-                    // Any of these dashboard tabs can be replaced with MediaTab if you prefer
-                    // Necessary MPRIS functionality already lives on Dashboard.qml due to MusicMiniCard.qml
-
-                    DashboardTab {
-                        y: 0
-                        width: contentArea.width
-                        height: contentArea.height
-                        x: (0 - dashboard.activeTab) * contentArea.width
-                        dashboard: dashboard
+                    Row {
+                        x: -dashboard.activeTab * contentArea.width
                         Behavior on x {
                             NumberAnimation { duration: Settings.animationTabSlide; easing.type: Easing.OutCubic }
                         }
-                    }
 
-                    CalendarTab {
-                        y: 0
-                        width: contentArea.width
-                        height: contentArea.height
-                        x: (1 - dashboard.activeTab) * contentArea.width
-                        dashboard: dashboard
-                        Behavior on x {
-                            NumberAnimation { duration: Settings.animationTabSlide; easing.type: Easing.OutCubic }
+                        TabViewport {
+                            availableArea: contentArea
+                            minimumPageWidth: 540
+                            contentHeight: Math.max(height, overview.implicitHeight)
+                            DashboardTab { id: overview; anchors.fill: parent; dashboard: dashboard }
                         }
-                    }
-
-                    FinanceTab {
-                        y: 0
-                        width: contentArea.width
-                        height: contentArea.height
-                        x: (2 - dashboard.activeTab) * contentArea.width
-                        dashboard: dashboard
-                        Behavior on x {
-                            NumberAnimation { duration: Settings.animationTabSlide; easing.type: Easing.OutCubic }
+                        TabViewport {
+                            availableArea: contentArea
+                            minimumPageWidth: 640
+                            contentHeight: Math.max(height, calendar.implicitHeight)
+                            CalendarTab { id: calendar; anchors.fill: parent; dashboard: dashboard }
                         }
-                    }
-
-                    PerformanceTab {
-                        y: 0
-                        width: contentArea.width
-                        height: contentArea.height
-                        x: (3 - dashboard.activeTab) * contentArea.width
-                        dashboard: dashboard
-                        Behavior on x {
-                            NumberAnimation { duration: Settings.animationTabSlide; easing.type: Easing.OutCubic }
+                        TabViewport {
+                            availableArea: contentArea
+                            minimumPageWidth: Math.max(780, dashboard.financeSymbols.length * 240)
+                            contentHeight: Math.max(height, finance.implicitHeight)
+                            FinanceTab { id: finance; anchors.fill: parent; dashboard: dashboard }
+                        }
+                        TabViewport {
+                            availableArea: contentArea
+                            minimumPageWidth: 900
+                            contentHeight: Math.max(height, performance.implicitHeight)
+                            PerformanceTab { id: performance; anchors.fill: parent; dashboard: dashboard }
                         }
                     }
                 }

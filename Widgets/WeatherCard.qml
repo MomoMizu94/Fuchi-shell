@@ -9,6 +9,7 @@ import "../secrets.js" as Secrets
 // RainViewer precipitation radar map (pan/zoom/play-pause)
 Rectangle {
     required property var dashboard
+    property bool expandedMap: false
     Layout.fillWidth: true
     radius: Config.radius.xl
     color: Colors.card
@@ -28,10 +29,13 @@ Rectangle {
             font.letterSpacing: 1.5
         }
 
-        RowLayout {
+        GridLayout {
+            id: weatherGrid
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: Config.gap.md
+            columns: dashboard.weatherLat !== 0 ? 2 : 1
+            columnSpacing: Config.gap.md
+            rowSpacing: Config.gap.sm
 
             ColumnLayout {
                 Layout.fillWidth: true
@@ -40,22 +44,23 @@ Rectangle {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.bottomMargin: Config.gap.xl
+                    Layout.bottomMargin: expandedMap ? 0 : Config.gap.xl
                     Text {
                         text: dashboard.weatherTemp + "°"
-                        color: Colors.border
+                        color: Colors.text
                         font.family: Settings.fontFamily
                         font.pixelSize: Config.type.hero
                         font.bold: true
                     }
-                    Item { Layout.fillWidth: true }
+                    Item { Layout.fillWidth: true; visible: !expandedMap }
                     Text {
                         text: dashboard.weatherIcon(dashboard.weatherDesc)
                         font.family: Settings.fontFamily
                         font.pixelSize: Config.type.hero
-                        color: Colors.border
+                        color: Colors.text
                         font.bold: true
                     }
+                    Item { Layout.fillWidth: true; visible: expandedMap }
                 }
 
                 Text {
@@ -105,8 +110,13 @@ Rectangle {
             // -- Interactive radar map (drag to pan, wheel to zoom, double-click home) --
             ClippingRectangle {
                 id: precipMap
+                objectName: "weatherRadarMap"
+                Layout.row: 0
+                Layout.column: 1
+                Layout.rowSpan: expandedMap && forecast.visible ? 3 : 1
                 Layout.fillHeight: true
-                Layout.preferredWidth: height
+                Layout.preferredWidth: expandedMap ? weatherContent.width * 0.64
+                    : Math.min(height, weatherContent.width * 0.48)
                 radius: Config.radius.lg
                 color: Colors.border
                 visible: dashboard.weatherLat !== 0
@@ -328,59 +338,63 @@ Rectangle {
                     font.pixelSize: Config.type.micro
                 }
             }
-        }
 
-        // 3-day forecast strip
-        ColumnLayout {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: Config.gap.lg
             Text {
-                text: "WEATHER FORECAST"
+                visible: forecast.visible
+                Layout.row: 1
+                Layout.column: 0
+                Layout.columnSpan: expandedMap ? 1 : weatherGrid.columns
+                Layout.alignment: expandedMap ? Qt.AlignLeft : Qt.AlignHCenter
+                Layout.bottomMargin: expandedMap ? 0 : Config.gap.lg
+                text: expandedMap ? "Forecast" : "WEATHER FORECAST"
                 color: Colors.subtext
                 font.family: Settings.fontFamily
-                font.pixelSize: Config.type.lg                                        
+                font.pixelSize: expandedMap ? Config.type.sm : Config.type.lg
                 font.bold: true
-                font.letterSpacing: 1.5
             }
-        }
 
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.bottomMargin: Config.gap.lg
-            Layout.alignment: Qt.AlignHCenter
-            spacing: Config.gap.lg
+            RowLayout {
+                id: forecast
+                visible: dashboard.weatherForecast.length > 0
+                Layout.row: 2
+                Layout.column: 0
+                Layout.columnSpan: expandedMap ? 1 : weatherGrid.columns
+                Layout.fillWidth: true
+                Layout.bottomMargin: expandedMap ? 0 : Config.gap.lg
+                spacing: Config.gap.lg
 
-            Repeater {
-                model: 3
-                delegate: ColumnLayout {
-                    required property int index
-                    property var fc: dashboard.weatherForecast[index] || null
-                    Layout.fillWidth: true
-                    spacing: Config.gap.xs
-                    visible: fc !== null
+                Repeater {
+                    model: 3
+                    delegate: ColumnLayout {
+                        required property int index
+                        property var fc: dashboard.weatherForecast[index] || null
+                        Layout.fillWidth: true
+                        spacing: Config.gap.xs
+                        visible: fc !== null
 
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: fc ? fc.day : ""
-                        color: Colors.subtext
-                        font.family: Settings.fontFamily
-                        font.pixelSize: Config.type.base
-                        font.bold: true
-                        font.letterSpacing: 1
-                    }
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: fc ? dashboard.weatherIcon(fc.desc) : ""
-                        color: Colors.border
-                        font.family: Settings.fontFamily
-                        font.pixelSize: Config.type.display
-                    }
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: fc ? fc.high + "° / " + fc.low + "°" : ""
-                        color: Colors.subtext
-                        font.family: Settings.fontFamily
-                        font.pixelSize: Config.type.base
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: fc ? fc.day : ""
+                            color: Colors.subtext
+                            font.family: Settings.fontFamily
+                            font.pixelSize: Config.type.base
+                            font.bold: true
+                            font.letterSpacing: 1
+                        }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: fc ? dashboard.weatherIcon(fc.desc) : ""
+                            color: Colors.text
+                            font.family: Settings.fontFamily
+                            font.pixelSize: Config.type.display
+                        }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: fc ? fc.high + "° / " + fc.low + "°" : ""
+                            color: Colors.subtext
+                            font.family: Settings.fontFamily
+                            font.pixelSize: Config.type.base
+                        }
                     }
                 }
             }

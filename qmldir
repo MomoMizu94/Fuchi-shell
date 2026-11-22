@@ -13,6 +13,7 @@ SettingsRow SettingsRow.qml
 SettingsButton SettingsButton.qml
 ScrollWheel ScrollWheel.qml
 CalendarGrid CalendarGrid.qml
+TabViewport TabViewport.qml
 Dashboard Dashboard.qml
 AppLauncher AppLauncher.qml
 Keybinds Keybinds.qml
@@ -24,6 +25,7 @@ FrameShape FrameShape.qml
 CornerFillet CornerFillet.qml
 PillToggle PillToggle.qml
 Bar Bar.qml
+SidebarButton Bar/SidebarButton.qml
 Workspaces Bar/Workspaces.qml
 WorkspaceApps Bar/WorkspaceApps.qml
 LayoutIndicator Bar/LayoutIndicator.qml

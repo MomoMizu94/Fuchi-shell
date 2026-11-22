@@ -25,35 +25,14 @@ ColumnLayout {
     Repeater {
         model: Hyprland.workspaces
 
-        delegate: Rectangle {
+        delegate: SidebarButton {
             id: chip
             required property var modelData
-            property bool hovered: false
-            Layout.alignment: Qt.AlignHCenter
-            width: Config.sidebar.workspaceSize
-            height: Config.sidebar.workspaceSize
-            radius: Config.radius.md
-            color: modelData.active ? Colors.accent
-                : (chip.hovered ? Qt.rgba(Colors.text.r, Colors.text.g, Colors.text.b, 0.08) : "transparent")
-
-            Text {
-                anchors.centerIn: parent
-                text: root.icons[modelData.id] || modelData.id
-                color: modelData.active ? Colors.contrastText : Colors.subtext
-                font.family: Settings.fontFamily
-                font.pixelSize: Config.sidebar.iconSize
-            }
-
-            // Click functionality to switch workspaces
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onEntered: chip.hovered = true
-                onExited: chip.hovered = false
-                // Lua config style
-                onClicked: Hyprland.dispatch("hl.dsp.focus({workspace = " + chip.modelData.id + "})")
-            }
+            Accessible.name: "Workspace " + modelData.name
+            selected: modelData.active
+            glyph: root.icons[modelData.id] || modelData.id
+            glyphColor: Colors.subtext
+            onClicked: Hyprland.dispatch("hl.dsp.focus({workspace = " + chip.modelData.id + "})")
         }
     }
 }

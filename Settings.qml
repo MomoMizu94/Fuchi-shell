@@ -43,6 +43,7 @@ Singleton {
     property bool dirty: false
     property bool saving: false
     property bool reloadPending: false
+    property string reloadError: ""
     property string errorText: ""
 
     function value(key) {
@@ -106,6 +107,7 @@ Singleton {
 
     function requestReload() {
         if (reloadPending) return
+        reloadError = ""
         reloadPending = true
         if (dirty) save()
         else if (!saving) Quickshell.reload(false)
@@ -146,8 +148,11 @@ Singleton {
         onSaveFailed: error => {
             settings.saving = false
             settings.dirty = true
-            settings.reloadPending = false
             settings.errorText = "Could not save settings. Check permissions for " + path + ", then retry."
+            if (settings.reloadPending) {
+                settings.reloadError = "Reload stopped. " + settings.errorText
+                settings.reloadPending = false
+            }
         }
     }
 
@@ -155,7 +160,7 @@ Singleton {
         target: Quickshell
         function onReloadFailed(errorString) {
             settings.reloadPending = false
-            settings.errorText = "Could not reload the shell: " + errorString
+            settings.reloadError = "Could not reload the shell. " + errorString
         }
     }
 

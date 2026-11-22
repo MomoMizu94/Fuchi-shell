@@ -54,11 +54,12 @@ Finance with the included music tab:
 
 1. In the tab-bar `Repeater`, replace the Finance entry with
    `{ icon: "󰝚", label: "Media" }`.
-2. Rename the `FinanceTab` instance to `MediaTab`. Keep its dimensions,
-   `dashboard` property, position, and animation.
+2. Replace `FinanceTab` with `MediaTab` inside its `TabViewport`. Keep the
+   instance ID, anchors, and `dashboard` property so sizing still works.
+   Choose a minimum page width that fits the media controls.
 
-If you reorder tabs, update their `x` expressions and the `activeTab` checks
-that control refresh timers:
+If you reorder tabs, match the order of the `TabViewport` entries to the tab
+bar and update the `activeTab` checks that control refresh timers.
 
 | Tab | Default index | Files with refresh checks |
 | --- | --- | --- |
