@@ -9,11 +9,24 @@ pywal.
 ## What it includes
 
 - A sidebar with workspaces, apps, tray icons, and desktop controls. Hover over
-  an app in the middle of the sidebar to see its window title.
+  a workspace icon to see a snapshot of that desktop, or an app in the middle
+  of the sidebar to see its title. The shell keeps the latest thumbnail of each
+  visited workspace in memory and refreshes visible workspaces every eight
+  seconds. A dot marks an inactive workspace that needs attention. Right-click
+  a tray icon and hover over an arrow to open its submenu.
 - A slide-out dashboard with weather, music, todos, a calendar, a stock
-  watchlist, and system statistics.
+  watchlist, and system statistics. Hover over a hardware gauge to see its
+  temperature or used and total capacity.
 - An app launcher with wallpaper selection, calculations, and shortcut search.
 - Notifications with history and Do Not Disturb, plus audio and power menus.
+  Text-only popups use a compact card. Popups with an image or app icon use a
+  taller card. Message bodies show up to two lines. Click a truncated entry in
+  the dashboard history to read the full notification. Click again to collapse it.
+  Popups honor the sender's timeout. A zero timeout keeps the popup open until
+  dismissed. With the default timeout, critical notifications stay open and
+  other notifications use the duration in Settings.
+  In the mixer, click a device or stream category to open its list beside the
+  master slider.
 - A CBZ/CBR library and reader with optional background downloads.
 
 ## Setup
@@ -71,6 +84,7 @@ Install these for the optional features you use:
 | Kitty, Yazi, and Oceanus | Oceanus project launcher |
 | `mpc` | Pausing MPD before suspend |
 | ImageMagick's `identify` | Wallpaper dimensions |
+| `grim` and Python 3 | Workspace hover snapshots |
 | Python 3.10+ and Bleak | Hue Go controls |
 | Python 3, `checkupdates` from pacman-contrib, and `yay` | Arch and AUR update checks |
 | Python 3 and Pillow | Library indexing, covers, and CBZ reading |
@@ -145,7 +159,11 @@ See the [customization guide](docs/customization.md#oceanus-integration) for key
 Add your OpenWeatherMap key to `secrets.js`, using the fields in
 [secrets.js.example](secrets.js.example). Set both `lat` and `lon` for a fixed
 location; if either is zero, the shell uses IP-based location from `ip-api.com`.
-The map uses RainViewer radar and a CARTO basemap. `cartoApiKey` is optional.
+If lookup fails, the dashboard retries when reopened and on each weather refresh
+while visible.
+The radar uses a charcoal map in dark themes and Voyager in light themes. Click
+the timestamp to pause or resume the RainViewer animation. CARTO may watermark
+tiles when `cartoApiKey` is empty.
 
 ### Host shortcuts
 

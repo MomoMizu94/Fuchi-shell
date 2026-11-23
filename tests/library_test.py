@@ -1094,6 +1094,27 @@ for page in (1, 2):
         self.assertEqual(planted.read_bytes(), b"pre-existing partial file")
         self.assertEqual(list(self.root.glob(".*.part")), [])
 
+    def test_import_enforces_reader_limit_for_new_and_merged_pages(self):
+        stage = self.root / ".library-downloads" / "size-limit"
+        data = dict(gallery_id=10, gallery_title="Book", page=1)
+        first = download_image(stage / "001.png", data)
+        second = download_image(stage / "002.png", dict(data, page=2))
+        with patch.object(library, "MAX_CHAPTER_BYTES", first.stat().st_size):
+            with self.assertRaisesRegex(ValueError, "2 GiB"):
+                library.import_download(stage, self.root, [])
+            self.assertTrue(first.exists() and second.exists())
+            second.unlink()
+            outputs = library.import_download(stage, self.root, [])
+            original = Path(outputs[0]).read_bytes()
+            download_image(second, dict(data, page=2))
+            with self.assertRaisesRegex(ValueError, "2 GiB"):
+                library.import_download(stage, self.root, outputs)
+            self.assertEqual(Path(outputs[0]).read_bytes(), original)
+            self.assertTrue(second.exists())
+            second.unlink()
+            download_image(first, data)
+            self.assertEqual(library.import_download(stage, self.root, outputs), outputs)
+
     def test_import_rejects_links_special_files_and_external_staging_folders(self):
         outside = self.base / "outside"
         image = download_image(outside / "001.png", dict(title="Outside"))

@@ -54,6 +54,18 @@ PanelWindow {
         }
     }
 
+    function chooseConfirmation(confirm) {
+        if (!open || !pendingAction) return
+        if (confirm) runAction(pendingAction.id)
+        else pendingAction = null
+    }
+
+    function activateSelection(event) {
+        if (!open || event.isAutoRepeat) return
+        if (pendingAction) chooseConfirmation(confirmChoice === 0)
+        else requestAction(actions[selectedIndex])
+    }
+
     function runAction(id) {
         switch (id) {
             case "shutdown": actionProc.command = ["systemctl", "poweroff"]; break
@@ -193,6 +205,9 @@ PanelWindow {
                         Layout.preferredHeight: 64
                         radius: Config.radius.lg
                         color: Qt.rgba(Colors.error.r, Colors.error.g, Colors.error.b, 0.2)
+                        Accessible.role: Accessible.Button
+                        Accessible.name: powerMenu.pendingAction ? "Confirm " + powerMenu.pendingAction.label.toLowerCase() : ""
+                        Accessible.onPressAction: powerMenu.chooseConfirmation(true)
                         border.width: powerMenu.confirmChoice === 0 ? 3 : 0
                         border.color: Colors.accent
 
@@ -209,7 +224,7 @@ PanelWindow {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: powerMenu.runAction(powerMenu.pendingAction.id)
+                            onClicked: powerMenu.chooseConfirmation(true)
                         }
                     }
 
@@ -218,6 +233,9 @@ PanelWindow {
                         Layout.preferredHeight: 64
                         radius: Config.radius.lg
                         color: Colors.card
+                        Accessible.role: Accessible.Button
+                        Accessible.name: powerMenu.pendingAction ? "Cancel " + powerMenu.pendingAction.label.toLowerCase() : ""
+                        Accessible.onPressAction: powerMenu.chooseConfirmation(false)
                         border.width: powerMenu.confirmChoice === 1 ? 3 : 0
                         border.color: Colors.accent
 
@@ -233,7 +251,7 @@ PanelWindow {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: powerMenu.pendingAction = null
+                            onClicked: powerMenu.chooseConfirmation(false)
                         }
                     }
                 }
@@ -252,22 +270,7 @@ PanelWindow {
             powerMenu.selectedIndex = (powerMenu.selectedIndex + 1) % powerMenu.actions.length
         Keys.onLeftPressed: if (powerMenu.pendingAction) powerMenu.confirmChoice = 0
         Keys.onRightPressed: if (powerMenu.pendingAction) powerMenu.confirmChoice = 1
-        Keys.onReturnPressed: {
-            if (powerMenu.pendingAction) {
-                if (powerMenu.confirmChoice === 0) powerMenu.runAction(powerMenu.pendingAction.id)
-                else powerMenu.pendingAction = null
-            } else {
-                powerMenu.requestAction(powerMenu.actions[powerMenu.selectedIndex])
-            }
-        }
-        // For bluetooth numpad enter key
-        Keys.onEnterPressed: {
-            if (powerMenu.pendingAction) {
-                if (powerMenu.confirmChoice === 0) powerMenu.runAction(powerMenu.pendingAction.id)
-                else powerMenu.pendingAction = null
-            } else {
-                powerMenu.requestAction(powerMenu.actions[powerMenu.selectedIndex])
-            }
-        }
+        Keys.onReturnPressed: event => powerMenu.activateSelection(event)
+        Keys.onEnterPressed: event => powerMenu.activateSelection(event)
     }
 }

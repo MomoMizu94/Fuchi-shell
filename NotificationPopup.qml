@@ -7,9 +7,7 @@ import Quickshell.Widgets
 
 import "config.js" as Config
 
-// On-screen notification popups, stacked top-right and auto-dismissed after
-// a timeout (except Critical urgency). Persistent history lives separately —
-// see Widgets/NotificationHistoryCard.qml
+// The popup stack uses the sender's timeout when supplied
 PanelWindow {
     id: popup
     property var notifModel
@@ -55,13 +53,14 @@ PanelWindow {
                         ? popup.spotifyArtUrl : "")
 
                 Timer {
-                    running: card.modelData.urgency !== NotificationUrgency.Critical
-                    interval: Settings.notificationTimeout
-                    onTriggered: card.modelData.dismiss()
+                    readonly property int requestedTimeout: card.modelData.expireTimeout ?? -1
+                    interval: requestedTimeout < 0 ? Settings.notificationTimeout : requestedTimeout
+                    running: interval > 0 && (requestedTimeout > 0 || card.modelData.urgency !== NotificationUrgency.Critical)
+                    onTriggered: card.modelData.expire()
                 }
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: layout.implicitHeight + 28
+                Layout.preferredHeight: media.visible ? 160 : 104
                 topLeftRadius: 0
                 bottomLeftRadius: card.index === repeater.count - 1 ? Config.radius.hero : 0
                 topRightRadius: 0
@@ -75,12 +74,8 @@ PanelWindow {
                     id: urgencyStripe
                     width: 6
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                    // Keep clear of the stack's shaped ends: stop above the
-                    // bottom corner rounding (a straight strip would poke
-                    // outside the curve) and start below the first card's
-                    // frame dock at the top
-                    anchors.topMargin: card.index === 0 ? Config.radius.hero : 0
-                    anchors.bottomMargin: card.bottomLeftRadius
+                    anchors.topMargin: Config.gap.sm
+                    anchors.bottomMargin: Math.max(Config.gap.sm, card.bottomLeftRadius)
                     radius: Config.radius.xs
                     color: card.modelData.urgency === NotificationUrgency.Critical
                         ? Colors.error : Colors.border
@@ -110,30 +105,39 @@ PanelWindow {
                 }
 
                 RowLayout {
-                    id: layout
                     anchors.fill: parent
                     anchors.margins: Config.gap.md
                     anchors.leftMargin: Config.gap.md + urgencyStripe.width
                     spacing: Config.gap.md
 
                     Item {
+                        id: media
                         Layout.preferredWidth: 132
                         Layout.preferredHeight: 132
-                        Layout.alignment: Qt.AlignTop
+                        visible: previewImage.available || appIcon.available
 
-                        // Notification image
                         Image {
+                            id: previewImage
                             anchors.fill: parent
-                            fillMode: Image.PreserveAspectFit
-                            visible: card.imageSource !== ""
+                            readonly property bool available: source.toString() !== "" && status !== Image.Error
+                            visible: available
                             source: card.imageSource
+                            fillMode: Image.PreserveAspectFit
                         }
 
-                        // Fallback: Application icon
                         IconImage {
-                            anchors.fill: parent
-                            visible: card.imageSource === "" && card.modelData.appIcon !== ""
-                            source: Quickshell.iconPath(card.modelData.appIcon)
+                            id: appIcon
+                            anchors.centerIn: parent
+                            readonly property string icon: card.modelData.appIcon || ""
+                            readonly property bool localFile: icon.startsWith("/") || icon.startsWith("file:")
+                            implicitSize: localFile ? 132 : 64
+                            readonly property bool available: source.toString() !== "" && status !== Image.Error
+                            visible: !previewImage.available && available
+                            source: {
+                                if (!icon) return ""
+                                if (localFile) return Qt.resolvedUrl(icon)
+                                return Quickshell.iconPath(icon, true)
+                            }
                         }
                     }
 
@@ -144,6 +148,9 @@ PanelWindow {
                         Text {
                             Layout.fillWidth: true
                             text: card.modelData.summary
+                            textFormat: Text.PlainText
+                            wrapMode: Text.Wrap
+                            maximumLineCount: card.modelData.body ? 1 : 2
                             color: Colors.text
                             font.family: Settings.fontFamily
                             font.pixelSize: Config.type.lg
@@ -158,7 +165,10 @@ PanelWindow {
                             color: Colors.subtext
                             font.family: Settings.fontFamily
                             font.pixelSize: Config.type.base
-                            wrapMode: Text.WordWrap
+                            textFormat: Text.PlainText
+                            wrapMode: Text.Wrap
+                            maximumLineCount: 2
+                            elide: Text.ElideRight
                         }
                     }
                 }

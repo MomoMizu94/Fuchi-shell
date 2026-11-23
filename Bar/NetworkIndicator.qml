@@ -1,18 +1,11 @@
 import QtQuick
 import Quickshell.Networking
 import "../"
+import "network.js" as Network
 
 SidebarButton {
-    readonly property var wiredDev: {
-        for (const d of Networking.devices.values)
-            if (d.type === DeviceType.Wired) return d
-        return null
-    }
-    readonly property var wifiDev: {
-        for (const d of Networking.devices.values)
-            if (d.type === DeviceType.Wifi) return d
-        return null
-    }
+    readonly property var wiredDev: Network.preferredDevice(Networking.devices.values, DeviceType.Wired)
+    readonly property var wifiDev: Network.preferredDevice(Networking.devices.values, DeviceType.Wifi)
     readonly property bool wiredUp: wiredDev !== null && wiredDev.connected
     readonly property bool wifiUp: wifiDev !== null && wifiDev.connected
 

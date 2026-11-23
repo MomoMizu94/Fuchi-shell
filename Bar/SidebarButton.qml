@@ -9,6 +9,7 @@ Rectangle {
     property color glyphColor: Colors.text
     property int glyphSize: Config.sidebar.iconSize
     property bool selected: false
+    readonly property bool hovered: pointer.containsMouse
     property alias acceptedButtons: pointer.acceptedButtons
     signal clicked(int button, int centerY)
 
@@ -18,8 +19,6 @@ Rectangle {
     radius: Config.radius.md
     color: selected ? Colors.accent : pointer.containsMouse
         ? Qt.rgba(Colors.accent.r, Colors.accent.g, Colors.accent.b, 0.30) : "transparent"
-    border.width: pointer.containsMouse ? 1 : 0
-    border.color: selected ? Colors.textStrong : Colors.accent
 
     Accessible.role: Accessible.Button
     Accessible.onPressAction: control.activate(Qt.LeftButton)

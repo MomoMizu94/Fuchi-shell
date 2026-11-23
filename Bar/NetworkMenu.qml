@@ -5,6 +5,7 @@ import Quickshell.Io
 import Quickshell.Networking
 import Quickshell.Wayland
 import "../"
+import "network.js" as Network
 import "../config.js" as Config
 
 // Network panel opened from NetworkIndicator: Wi-Fi toggle, current
@@ -23,10 +24,12 @@ PanelWindow {
         if (open) {
             errorText = ""
             pskTarget = null
-            probeProc.running = true
+            column.contentY = 0
+            refreshProbe()
         } else {
             // Don't leave the radio scanning after the menu goes away
             if (wifiDev) wifiDev.scannerEnabled = false
+            scanningDevice = null
         }
     }
 
@@ -40,18 +43,18 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-    readonly property var wiredDev: {
-        for (const d of Networking.devices.values)
-            if (d.type === DeviceType.Wired) return d
-        return null
-    }
-    readonly property var wifiDev: {
-        for (const d of Networking.devices.values)
-            if (d.type === DeviceType.Wifi) return d
-        return null
-    }
+    readonly property var wiredDev: Network.preferredDevice(Networking.devices.values, DeviceType.Wired)
+    readonly property var wifiDev: Network.preferredDevice(Networking.devices.values, DeviceType.Wifi)
     readonly property bool wiredUp: wiredDev !== null && wiredDev.connected
     readonly property bool wifiUp: wifiDev !== null && wifiDev.connected
+    property var scanningDevice: null
+    onWifiDevChanged: {
+        if (scanningDevice && scanningDevice !== wifiDev) {
+            scanningDevice.scannerEnabled = false
+            scanningDevice = null
+        }
+        pskTarget = null
+    }
 
     readonly property var activeWifiNetwork: {
         if (!wifiDev) return null
@@ -63,27 +66,38 @@ PanelWindow {
     property string errorText: ""
     property var pskTarget: null   // WifiNetwork awaiting a password
 
-    // Frequency + IPv4, fetched when the menu
-    // opens and when the active connection changes
+    readonly property string activeInterface: wiredUp ? wiredDev.name : wifiUp ? wifiDev.name : ""
     property string freq: ""
     property string ipAddr: ""
+    function refreshProbe() {
+        freq = ""
+        ipAddr = ""
+        if (!open || !activeInterface) return
+        if (probeProc.running) {
+            probeProc.refreshPending = true
+            return
+        }
+        probeProc.command = ["bash", Quickshell.shellDir + "/scripts/network-details.sh",
+            activeInterface, wiredUp ? "wired" : "wifi"]
+        probeProc.running = true
+    }
     Process {
         id: probeProc
-        command: ["bash", "-c",
-            "freq=$(nmcli -t -f ACTIVE,FREQ dev wifi list 2>/dev/null | awk -F: '$1==\"yes\"{print $2\" \"$3; exit}'); " +
-            "ip=$(ip -4 -o addr show up scope global 2>/dev/null | awk '{print $4; exit}'); " +
-            "printf '{\"freq\":\"%s\",\"ip\":\"%s\"}\\n' \"$freq\" \"$ip\""]
+        property bool refreshPending: false
         stdout: StdioCollector { id: probeOut }
         onExited: {
-            try {
-                const j = JSON.parse(probeOut.text)
-                netMenu.freq = j.freq
-                netMenu.ipAddr = j.ip
-            } catch (e) {}
+            if (refreshPending) {
+                refreshPending = false
+                Qt.callLater(netMenu.refreshProbe)
+            } else if (netMenu.open && netMenu.activeInterface === command[2]) {
+                const lines = probeOut.text.split("\n")
+                netMenu.ipAddr = lines[0] || ""
+                netMenu.freq = lines[1] || ""
+            }
         }
     }
-    onWiredUpChanged: if (open) probeProc.running = true
-    onActiveWifiNetworkChanged: if (open) probeProc.running = true
+    onActiveInterfaceChanged: if (open) Qt.callLater(refreshProbe)
+    onActiveWifiNetworkChanged: if (open) Qt.callLater(refreshProbe)
 
     // Live up/down speeds — polled only while the menu is open
     property real up: 0
@@ -210,7 +224,8 @@ PanelWindow {
         width: Config.networkMenu.width
         // Height and vertical position snap instantly: they
         // must both be settled before the slide-in starts
-        height: column.implicitHeight + Config.networkMenu.padding * 2
+        height: Math.min(column.implicitHeight + Config.networkMenu.padding * 2,
+            Math.max(0, parent.height - 2 * (Config.frame.thin + Config.radius.fillet)))
 
         anchors.left: parent.left
         anchors.top: parent.top
@@ -254,7 +269,7 @@ PanelWindow {
             color: Colors.surface
             clip: true
 
-            ColumnLayout {
+            MenuScrollColumn {
                 id: column
                 anchors.fill: parent
                 anchors.margins: Config.networkMenu.padding
@@ -593,7 +608,13 @@ PanelWindow {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: if (netMenu.wifiDev) netMenu.wifiDev.scannerEnabled = !netMenu.wifiDev.scannerEnabled
+                            onClicked: {
+                                const device = netMenu.wifiDev
+                                if (!device) return
+                                const enableScan = !device.scannerEnabled
+                                netMenu.scanningDevice = enableScan ? device : null
+                                device.scannerEnabled = enableScan
+                            }
                         }
                     }
                 }
@@ -695,6 +716,7 @@ PanelWindow {
                                         netMenu.pskTarget = n
                                         pskInput.text = ""
                                         pskInput.forceActiveFocus()
+                                        Qt.callLater(() => column.reveal(pskInput))
                                     }
                                 }
                             }

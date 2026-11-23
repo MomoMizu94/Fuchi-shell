@@ -3,6 +3,7 @@ import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Controls
 
 import "config.js" as Config
 
@@ -16,8 +17,8 @@ PanelWindow {
     property bool panelHovered: false
     visible: open || closing
     onOpenChanged: {
-        closing = !open
-        if (open) expandedList = ""
+        closing = !open && Settings.animationPopup > 0
+        if (open) activeSection = null
     }
 
     anchors { left: true; right: true; top: true; bottom: true }
@@ -45,7 +46,24 @@ PanelWindow {
             .concat(volumeMenu.recordingList)
     }
 
-    property string expandedList: ""   // "" | "output" | "input" | "apps" | "recording"
+    readonly property var sections: [
+        { key: "output", label: "Output", icon: "󰋋", emptyText: "No output devices" },
+        { key: "input", label: "Input", icon: "󰍬", emptyText: "No input devices" },
+        { key: "apps", label: "Apps", icon: "󰀻", emptyText: "No playback streams" },
+        { key: "recording", label: "Recording", icon: "󰑊", emptyText: "No recording streams" }
+    ]
+    property var activeSection: null
+    readonly property string sectionKey: activeSection ? activeSection.key : ""
+    readonly property bool showingDevices: sectionKey === "output" || sectionKey === "input"
+    readonly property var sectionNodes: {
+        switch (sectionKey) {
+            case "output": return outputList
+            case "input": return inputList
+            case "apps": return playbackList
+            case "recording": return recordingList
+            default: return []
+        }
+    }
 
     function isEasyEffects(n) {
         return ((n.description || n.name || "") + "").toLowerCase().includes("easy effects")
@@ -66,8 +84,12 @@ PanelWindow {
     function computeRecordingList() {
         return Pipewire.nodes.values.filter(n => n.isStream && n.type === PwNodeType.AudioInStream)
     }
-    function streamLabel(n) {
-        return n.description || n.name
+    function sectionLabel(section) {
+        if (section.key === sectionKey) return section.label
+        let node = null
+        if (section.key === "output") node = Pipewire.defaultAudioSink
+        if (section.key === "input") node = Pipewire.defaultAudioSource
+        return node ? (node.description || node.name || section.label) : section.label
     }
 
     // Bindings keep the lists current as nodes and their classification change.
@@ -78,11 +100,11 @@ PanelWindow {
 
     function selectOutput(node) {
         Pipewire.preferredDefaultAudioSink = node
-        expandedList = ""
+        activeSection = null
     }
     function selectInput(node) {
         Pipewire.preferredDefaultAudioSource = node
-        expandedList = ""
+        activeSection = null
     }
 
     function volumeIcon() {
@@ -105,39 +127,15 @@ PanelWindow {
 
     readonly property int percentRowHeight: 22
     readonly property int masterLabelHeight: 18
-    readonly property int outputBlockHeight: expandedList === "output"
-        ? Config.volumeMenu.deviceButtonSize + outputList.length * Config.volumeMenu.deviceRowHeight
-        : Config.volumeMenu.deviceButtonSize
-    readonly property int inputBlockHeight: expandedList === "input"
-        ? Config.volumeMenu.deviceButtonSize + inputList.length * Config.volumeMenu.deviceRowHeight
-        : Config.volumeMenu.deviceButtonSize
-    readonly property int appsBlockHeight: expandedList === "apps"
-        ? Config.volumeMenu.deviceButtonSize + Math.min(playbackList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
-        : Config.volumeMenu.deviceButtonSize
-    readonly property int recordingBlockHeight: expandedList === "recording"
-        ? Config.volumeMenu.deviceButtonSize + Math.min(recordingList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
-        : Config.volumeMenu.deviceButtonSize
 
     Item {
         id: panel
-        width: Config.volumeMenu.width
-        height: Config.volumeMenu.padding * 2
-            + volumeMenu.masterLabelHeight
-            + Config.volumeMenu.gap
-            + Config.volumeMenu.deviceButtonSize
-            + Config.volumeMenu.gap
-            + Config.volumeMenu.sliderHeight
-            + Config.volumeMenu.gap
-            + volumeMenu.percentRowHeight
-            + Config.volumeMenu.gap
-            + volumeMenu.outputBlockHeight
-            + Config.volumeMenu.gap
-            + volumeMenu.inputBlockHeight
-            + Config.volumeMenu.gap
-            + volumeMenu.appsBlockHeight
-            + Config.volumeMenu.gap
-            + volumeMenu.recordingBlockHeight
-        Behavior on height { NumberAnimation { duration: Settings.animationPopup; easing.type: Easing.OutCubic } }
+        readonly property real railWidth: Math.min(volumeMenu.width, Config.volumeMenu.width)
+        width: Math.min(volumeMenu.width, railWidth + (volumeMenu.activeSection ? Config.volumeMenu.detailWidth : 0))
+        Behavior on width { NumberAnimation { duration: Settings.animationPopup; easing.type: Easing.OutCubic } }
+        height: Math.min(volumeMenu.height, Config.volumeMenu.padding * 2 + Config.volumeMenu.gap * 7
+            + volumeMenu.masterLabelHeight + volumeMenu.percentRowHeight + Config.volumeMenu.sliderHeight
+            + Config.volumeMenu.deviceButtonSize * (1 + volumeMenu.sections.length))
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
@@ -179,8 +177,9 @@ PanelWindow {
             clip: true
 
             ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Config.volumeMenu.padding
+                id: rail
+                anchors { right: parent.right; top: parent.top; bottom: parent.bottom; margins: Config.volumeMenu.padding }
+                width: panel.railWidth - Config.volumeMenu.padding * 2
                 spacing: Config.volumeMenu.gap
 
                 Text {
@@ -329,413 +328,175 @@ PanelWindow {
                     font.pixelSize: Config.type.sm
                 }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: volumeMenu.outputBlockHeight
-                    radius: Config.radius.xl
-                    color: "transparent"
-                    clip: true
+                Repeater {
+                    model: volumeMenu.sections
+                    delegate: Rectangle {
+                        id: sectionButton
+                        required property var modelData
+                        readonly property bool selected: volumeMenu.sectionKey === modelData.key
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Config.volumeMenu.deviceButtonSize
+                        radius: Config.radius.xl
+                        color: selected ? Qt.alpha(Colors.accent, 0.18) : sectionHover.hovered ? Colors.card : "transparent"
 
-                    Column {
-                        anchors.fill: parent
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            width: parent.width - Config.gap.xs
+                            spacing: 2
 
-                        Rectangle {
-                            width: parent.width
-                            height: Config.volumeMenu.deviceButtonSize
-                            radius: Config.radius.xl
-                            color: outHeaderHover.hovered ? Colors.card : "transparent"
-
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                spacing: 2
-                                width: parent.width - Config.gap.xs
-
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: "󰋋"
-                                    color: Colors.text
-                                    font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.lg
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    text: volumeMenu.expandedList === "output"
-                                        ? "Output"
-                                        : (Pipewire.defaultAudioSink ? (Pipewire.defaultAudioSink.description || Pipewire.defaultAudioSink.name) : "")
-                                    elide: Text.ElideRight
-                                    color: Colors.subtext
-                                    font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.micro
-                                }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: sectionButton.modelData.icon
+                                color: sectionButton.selected ? Colors.accent : Colors.text
+                                font.family: Settings.fontFamily
+                                font.pixelSize: Config.type.lg
                             }
-
-                            HoverHandler { id: outHeaderHover }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: volumeMenu.expandedList = volumeMenu.expandedList === "output" ? "" : "output"
+                            Text {
+                                Layout.fillWidth: true
+                                horizontalAlignment: Text.AlignHCenter
+                                text: volumeMenu.sectionLabel(sectionButton.modelData)
+                                elide: Text.ElideRight
+                                color: Colors.subtext
+                                font.family: Settings.fontFamily
+                                font.pixelSize: Config.type.micro
                             }
                         }
 
-                        Repeater {
-                            model: volumeMenu.expandedList === "output" ? volumeMenu.outputList : []
-                            delegate: Rectangle {
-                                id: outRow
-                                required property var modelData
-                                width: parent ? parent.width : 0
-                                height: Config.volumeMenu.deviceRowHeight
-                                color: outRowHover.hovered ? Colors.card : "transparent"
-                                radius: Config.radius.md
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: Config.gap.xs
-                                    spacing: Config.gap.xs
-
-                                    Text {
-                                        text: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.id === outRow.modelData.id) ? "●" : "○"
-                                        color: Colors.accent
-                                        font.family: Settings.fontFamily
-                                        font.pixelSize: Config.type.micro
-                                    }
-                                    Text {
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                        text: outRow.modelData.description || outRow.modelData.name
-                                        color: Colors.text
-                                        font.family: Settings.fontFamily
-                                        font.pixelSize: Config.type.micro
-                                    }
-                                }
-
-                                HoverHandler { id: outRowHover }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: volumeMenu.selectOutput(outRow.modelData)
-                                }
-                            }
+                        HoverHandler { id: sectionHover }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: volumeMenu.activeSection = sectionButton.selected ? null : sectionButton.modelData
                         }
                     }
                 }
+            }
 
-                Rectangle {
+            ColumnLayout {
+                id: details
+                anchors.left: parent.left
+                anchors.leftMargin: Config.volumeMenu.padding
+                width: Math.max(0, panel.width - panel.railWidth - Config.volumeMenu.padding)
+                anchors.verticalCenter: parent.verticalCenter
+                visible: volumeMenu.activeSection !== null && width > 0
+                spacing: Config.gap.md
+
+                Text {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: volumeMenu.inputBlockHeight
-                    radius: Config.radius.xl
-                    color: "transparent"
-                    clip: true
-
-                    Column {
-                        anchors.fill: parent
-
-                        Rectangle {
-                            width: parent.width
-                            height: Config.volumeMenu.deviceButtonSize
-                            radius: Config.radius.xl
-                            color: inHeaderHover.hovered ? Colors.card : "transparent"
-
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                spacing: 2
-                                width: parent.width - Config.gap.xs
-
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: "󰍬"
-                                    color: Colors.text
-                                    font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.lg
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    text: volumeMenu.expandedList === "input"
-                                        ? "Input"
-                                        : (Pipewire.defaultAudioSource ? (Pipewire.defaultAudioSource.description || Pipewire.defaultAudioSource.name) : "")
-                                    elide: Text.ElideRight
-                                    color: Colors.subtext
-                                    font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.micro
-                                }
-                            }
-
-                            HoverHandler { id: inHeaderHover }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: volumeMenu.expandedList = volumeMenu.expandedList === "input" ? "" : "input"
-                            }
-                        }
-
-                        Repeater {
-                            model: volumeMenu.expandedList === "input" ? volumeMenu.inputList : []
-                            delegate: Rectangle {
-                                id: inRow
-                                required property var modelData
-                                width: parent ? parent.width : 0
-                                height: Config.volumeMenu.deviceRowHeight
-                                color: inRowHover.hovered ? Colors.card : "transparent"
-                                radius: Config.radius.md
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: Config.gap.xs
-                                    spacing: Config.gap.xs
-
-                                    Text {
-                                        text: (Pipewire.defaultAudioSource && Pipewire.defaultAudioSource.id === inRow.modelData.id) ? "●" : "○"
-                                        color: Colors.accent
-                                        font.family: Settings.fontFamily
-                                        font.pixelSize: Config.type.micro
-                                    }
-                                    Text {
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                        text: inRow.modelData.description || inRow.modelData.name
-                                        color: Colors.text
-                                        font.family: Settings.fontFamily
-                                        font.pixelSize: Config.type.micro
-                                    }
-                                }
-
-                                HoverHandler { id: inRowHover }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: volumeMenu.selectInput(inRow.modelData)
-                                }
-                            }
-                        }
-                    }
+                    text: volumeMenu.activeSection?.label ?? ""
+                    color: Colors.textStrong
+                    font.family: Settings.fontFamily
+                    font.pixelSize: Config.type.md
+                    font.bold: true
                 }
-
-                Rectangle {
+                Text {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: volumeMenu.appsBlockHeight
-                    radius: Config.radius.xl
-                    color: "transparent"
+                    visible: nodes.count === 0
+                    text: volumeMenu.activeSection?.emptyText ?? ""
+                    color: Colors.subtext
+                    font.family: Settings.fontFamily
+                    font.pixelSize: Config.type.sm
+                }
+                ListView {
+                    id: nodes
+                    readonly property int rowHeight: volumeMenu.showingDevices ? Config.volumeMenu.deviceRowHeight : Config.volumeMenu.appRowHeight
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.min(count, Config.volumeMenu.maxVisibleAppRows) * rowHeight
+                    visible: count > 0
                     clip: true
+                    model: volumeMenu.sectionNodes
+                    onModelChanged: positionViewAtBeginning()
+                    ScrollWheel { view: nodes }
+                    Controls.ScrollBar.vertical: Controls.ScrollBar {
+                        id: scrollBar
+                        visible: nodes.contentHeight > nodes.height
+                    }
 
-                    Column {
-                        anchors.fill: parent
+                    delegate: Rectangle {
+                        id: row
+                        required property var modelData
+                        readonly property var audio: modelData.audio
+                        readonly property var defaultDevice: volumeMenu.sectionKey === "output"
+                            ? Pipewire.defaultAudioSink : Pipewire.defaultAudioSource
+                        width: ListView.view.width - (scrollBar.visible ? scrollBar.width + Config.gap.xs : 0)
+                        height: nodes.rowHeight
+                        radius: Config.radius.md
+                        color: deviceMouse.containsMouse ? Colors.card : "transparent"
 
-                        Rectangle {
-                            width: parent.width
-                            height: Config.volumeMenu.deviceButtonSize
-                            radius: Config.radius.xl
-                            color: appsHeaderHover.hovered ? Colors.card : "transparent"
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: Config.gap.xs
+                            spacing: 2
 
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                spacing: 2
-                                width: parent.width - Config.gap.xs
-
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Config.gap.sm
                                 Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: "󰀻"
-                                    color: Colors.text
+                                    visible: volumeMenu.showingDevices
+                                    text: row.defaultDevice?.id === row.modelData.id ? "●" : "○"
+                                    color: Colors.accent
                                     font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.lg
+                                    font.pixelSize: Config.type.sm
                                 }
                                 Text {
                                     Layout.fillWidth: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    text: "Apps"
+                                    text: row.modelData.description || row.modelData.name
                                     elide: Text.ElideRight
-                                    color: Colors.subtext
+                                    color: Colors.text
                                     font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.micro
+                                    font.pixelSize: Config.type.sm
                                 }
-                            }
-
-                            HoverHandler { id: appsHeaderHover }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: volumeMenu.expandedList = volumeMenu.expandedList === "apps" ? "" : "apps"
-                            }
-                        }
-
-                        ListView {
-                            id: playbackScroll
-                            ScrollWheel { view: playbackScroll }
-                            width: parent.width
-                            height: Math.min(volumeMenu.playbackList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
-                            clip: true
-                            model: volumeMenu.expandedList === "apps" ? volumeMenu.playbackList : []
-
-                            delegate: Column {
-                                id: playRow
-                                required property var modelData
-                                width: ListView.view.width
-                                height: Config.volumeMenu.appRowHeight
-                                spacing: 2
-
-                                RowLayout {
-                                    width: parent.width
-                                    spacing: Config.gap.xs
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                        text: volumeMenu.streamLabel(playRow.modelData)
-                                        color: Colors.text
-                                        font.family: Settings.fontFamily
-                                        font.pixelSize: Config.type.micro
-                                    }
-                                    Text {
-                                        text: (playRow.modelData.audio && playRow.modelData.audio.muted) ? "󰝟" : "󰕾"
-                                        color: (playRow.modelData.audio && playRow.modelData.audio.muted) ? Colors.error : Colors.subtext
-                                        font.family: Settings.fontFamily
-                                        font.pixelSize: Config.type.sm
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: if (playRow.modelData.audio) playRow.modelData.audio.muted = !playRow.modelData.audio.muted
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    id: playTrack
-                                    width: parent.width
-                                    height: 10
-                                    radius: 5
-                                    color: Colors.inset
-                                    border.width: 1
-                                    border.color: Colors.border
-
-                                    Rectangle {
-                                        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                                        width: parent.width * Math.max(0, Math.min(1, playRow.modelData.audio ? playRow.modelData.audio.volume : 0))
-                                        radius: 5
-                                        color: Colors.accent
-                                    }
-
+                                Text {
+                                    visible: !volumeMenu.showingDevices
+                                    text: row.audio?.muted ? "󰝟" : "󰕾"
+                                    color: row.audio?.muted ? Colors.error : Colors.subtext
+                                    font.family: Settings.fontFamily
+                                    font.pixelSize: Config.type.sm
                                     MouseArea {
                                         anchors.fill: parent
-                                        onPressed: mouse => { if (playRow.modelData.audio) playRow.modelData.audio.volume = Math.max(0, Math.min(1, mouse.x / playTrack.width)) }
-                                        onPositionChanged: mouse => { if (pressed && playRow.modelData.audio) playRow.modelData.audio.volume = Math.max(0, Math.min(1, mouse.x / playTrack.width)) }
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: if (row.audio) row.audio.muted = !row.audio.muted
                                     }
                                 }
                             }
-                        }
-                    }
-                }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: volumeMenu.recordingBlockHeight
-                    radius: Config.radius.xl
-                    color: "transparent"
-                    clip: true
-
-                    Column {
-                        anchors.fill: parent
-
-                        Rectangle {
-                            width: parent.width
-                            height: Config.volumeMenu.deviceButtonSize
-                            radius: Config.radius.xl
-                            color: recHeaderHover.hovered ? Colors.card : "transparent"
-
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                spacing: 2
-                                width: parent.width - Config.gap.xs
-
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: "󰑊"
-                                    color: Colors.text
-                                    font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.lg
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: Text.AlignHCenter
-                                    text: "Recording"
-                                    elide: Text.ElideRight
-                                    color: Colors.subtext
-                                    font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.micro
-                                }
-                            }
-
-                            HoverHandler { id: recHeaderHover }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: volumeMenu.expandedList = volumeMenu.expandedList === "recording" ? "" : "recording"
-                            }
-                        }
-
-                        ListView {
-                            id: recordingScroll
-                            ScrollWheel { view: recordingScroll }
-                            width: parent.width
-                            height: Math.min(volumeMenu.recordingList.length, Config.volumeMenu.maxVisibleAppRows) * Config.volumeMenu.appRowHeight
-                            clip: true
-                            model: volumeMenu.expandedList === "recording" ? volumeMenu.recordingList : []
-
-                            delegate: Column {
-                                id: recRow
-                                required property var modelData
-                                width: ListView.view.width
-                                height: Config.volumeMenu.appRowHeight
-                                spacing: 2
-
-                                RowLayout {
-                                    width: parent.width
-                                    spacing: Config.gap.xs
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                        text: volumeMenu.streamLabel(recRow.modelData)
-                                        color: Colors.text
-                                        font.family: Settings.fontFamily
-                                        font.pixelSize: Config.type.micro
-                                    }
-                                    Text {
-                                        text: (recRow.modelData.audio && recRow.modelData.audio.muted) ? "󰝟" : "󰍬"
-                                        color: (recRow.modelData.audio && recRow.modelData.audio.muted) ? Colors.error : Colors.subtext
-                                        font.family: Settings.fontFamily
-                                        font.pixelSize: Config.type.sm
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: if (recRow.modelData.audio) recRow.modelData.audio.muted = !recRow.modelData.audio.muted
-                                        }
-                                    }
-                                }
+                            Rectangle {
+                                id: streamTrack
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 10
+                                visible: !volumeMenu.showingDevices
+                                radius: 5
+                                color: Colors.inset
+                                border.width: 1
+                                border.color: Colors.border
 
                                 Rectangle {
-                                    id: recTrack
-                                    width: parent.width
-                                    height: 10
-                                    radius: 5
-                                    color: Colors.inset
-                                    border.width: 1
-                                    border.color: Colors.border
-
-                                    Rectangle {
-                                        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                                        width: parent.width * Math.max(0, Math.min(1, recRow.modelData.audio ? recRow.modelData.audio.volume : 0))
-                                        radius: 5
-                                        color: Colors.accent
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        onPressed: mouse => { if (recRow.modelData.audio) recRow.modelData.audio.volume = Math.max(0, Math.min(1, mouse.x / recTrack.width)) }
-                                        onPositionChanged: mouse => { if (pressed && recRow.modelData.audio) recRow.modelData.audio.volume = Math.max(0, Math.min(1, mouse.x / recTrack.width)) }
-                                    }
+                                    anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                                    width: parent.width * Math.max(0, Math.min(1, row.audio?.volume ?? 0))
+                                    radius: parent.radius
+                                    color: Colors.accent
                                 }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    preventStealing: true
+                                    function setVolume(x) {
+                                        if (row.audio) row.audio.volume = Math.max(0, Math.min(1, x / width))
+                                    }
+                                    onPressed: mouse => setVolume(mouse.x)
+                                    onPositionChanged: mouse => { if (pressed) setVolume(mouse.x) }
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            id: deviceMouse
+                            anchors.fill: parent
+                            enabled: volumeMenu.showingDevices
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (volumeMenu.sectionKey === "output") volumeMenu.selectOutput(row.modelData)
+                                else volumeMenu.selectInput(row.modelData)
                             }
                         }
                     }

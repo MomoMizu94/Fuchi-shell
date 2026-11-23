@@ -203,6 +203,7 @@ const calendarMenu = {
 // Volume menu (right-docked, hover-only panel) sizing
 const volumeMenu = {
     width: 160,
+    detailWidth: 360,
     sliderTrackWidth: 48,
     sliderHeight: 220,
     deviceButtonSize: 64,

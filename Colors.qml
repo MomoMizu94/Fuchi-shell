@@ -32,6 +32,10 @@ Singleton {
     property color warn:       c(3, "#ECCC8C")
     property color error:      c(1, "#C0616A")
 
+    readonly property color cpu: accentAlt
+    readonly property color gpu: accent2
+    readonly property color ram: accent3
+
     FileView {
         path: Quickshell.env("HOME") + "/.cache/wal/colors.json"
         watchChanges: true

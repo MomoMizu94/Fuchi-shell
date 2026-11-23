@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
@@ -33,10 +34,10 @@ Rectangle {
 
             Repeater {
                 model: [
-                    { icon: "", color: Colors.accentAlt },
-                    { icon: "󰾲", color: Colors.accent2 },
-                    { icon: "󰘚", color: Colors.accent3 },
-                    { icon: "", color: Colors.accent },
+                    { name: "CPU", icon: "", color: Colors.cpu },
+                    { name: "GPU", icon: "󰾲", color: Colors.gpu },
+                    { name: "RAM", icon: "󰘚", color: Colors.ram },
+                    { name: "Disk", icon: "", color: Colors.accent },
                 ]
                 delegate: ColumnLayout {
                     id: metric
@@ -51,6 +52,38 @@ Rectangle {
                                        : index === 1 ? dashboard.gpuValue
                                        : index === 2 ? dashboard.ramValue
                                        : dashboard.diskValue
+
+                    readonly property string detail: {
+                        if (index < 2) {
+                            const temperature = index === 0 ? dashboard.cpuTemp : dashboard.gpuTemp
+                            return temperature ? Math.round(temperature) + " °C" : "Temperature unavailable"
+                        }
+                        const used = index === 2 ? dashboard.ramUsedGb : dashboard.diskUsedGb
+                        const total = index === 2 ? dashboard.ramTotalGb : dashboard.diskTotalGb
+                        const digits = index === 2 ? 1 : 0
+                        return total > 0 ? used.toFixed(digits) + " / " + total.toFixed(digits) + " GiB" : "Capacity unavailable"
+                    }
+
+                    HoverHandler { id: hover }
+                    Controls.ToolTip {
+                        parent: metric
+                        x: {
+                            const cursorX = hover.point.scenePosition.x
+                            const rightLimit = metric.Window.width - margins - implicitWidth
+                            const windowX = Math.max(margins, Math.min(cursorX + Config.gap.md, rightLimit))
+                            return hover.point.position.x + windowX - cursorX
+                        }
+                        y: hover.point.scenePosition.y + Config.gap.md + implicitHeight <= metric.Window.height - margins
+                            ? hover.point.position.y + Config.gap.md
+                            : hover.point.position.y - Config.gap.md - implicitHeight
+                        visible: hover.hovered && metric.visible
+                        delay: 350
+                        text: metric.modelData.name + " · " + metric.detail
+                        font.family: Settings.fontFamily
+                        font.pixelSize: Config.type.sm
+                        palette.toolTipText: Colors.text
+                        background: Rectangle { radius: Config.radius.md; color: Colors.surface }
+                    }
 
                     Item {
                         Layout.fillWidth: true

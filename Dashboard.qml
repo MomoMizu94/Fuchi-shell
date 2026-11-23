@@ -73,6 +73,8 @@ PanelWindow {
     property var weatherForecast: []
     property real weatherLat: Secrets.lat
     property real weatherLon: Secrets.lon
+    property bool autoLocationResolved: false
+    readonly property bool hasWeatherLocation: autoLocationResolved || (weatherLat !== 0 && weatherLon !== 0)
     property int mapZoom: 7
     property var radarFrames: []
     property int radarIdx: 0
@@ -200,22 +202,23 @@ PanelWindow {
         osProc.running = true
         kernelProc.running = true
         nightCheckProc.running = true
-        if (dashboard.weatherLat === 0 || dashboard.weatherLon === 0)
-            locProc.running = true
+        if (!hasWeatherLocation && !locProc.running) locProc.running = true
     }
 
     // -- Weather --
     // Resolve location by IP unless secrets.js pins a fixed lat/lon
     Process {
         id: locProc
-        command: ["bash", "-c", "curl -sf 'http://ip-api.com/json'"]
+        command: ["curl", "-sf", "--max-time", "10", "http://ip-api.com/json"]
         stdout: StdioCollector { id: locOut }
         onExited: {
             try {
                 const d = JSON.parse(locOut.text)
-                if (d.status === "success") {
+                if (d.status === "success" && Number.isFinite(d.lat) && Number.isFinite(d.lon)) {
                     dashboard.weatherLat = d.lat
                     dashboard.weatherLon = d.lon
+                    dashboard.autoLocationResolved = true
+                    if (dashboard.visible) dashboard.refreshWeather()
                 }
             } catch(e) {}
         }
@@ -223,18 +226,9 @@ PanelWindow {
 
     Process {
         id: weatherProc
-        // Key goes through $OWM_API_KEY (env) rather than being interpolated
-        // straight into the command string — an argv-embedded key sits in
-        // plain sight in `ps`/`/proc/<pid>/cmdline` for as long as curl runs.
         environment: ({ OWM_API_KEY: Secrets.owmApiKey })
-        command: ["bash", "-c",
-            "echo \"{\\\"cur\\\":$(curl -sf 'https://api.openweathermap.org/data/2.5/weather?lat="
-            + dashboard.weatherLat + "&lon=" + dashboard.weatherLon
-            + "&units=metric&appid='\"$OWM_API_KEY\""
-            + "),\\\"fc\\\":$(curl -sf 'https://api.openweathermap.org/data/2.5/forecast?lat="
-            + dashboard.weatherLat + "&lon=" + dashboard.weatherLon
-            + "&units=metric&appid='\"$OWM_API_KEY\""
-            + ")}\""]
+        command: ["bash", Quickshell.shellDir + "/scripts/fetch-weather.sh",
+            String(dashboard.weatherLat), String(dashboard.weatherLon)]
         stdout: StdioCollector { id: weatherOut }
         onExited: {
             try {
@@ -301,15 +295,21 @@ PanelWindow {
         }
     }
 
+    function refreshWeather() {
+        if (!hasWeatherLocation) {
+            if (!locProc.running) locProc.running = true
+            return
+        }
+        if (!weatherProc.running) weatherProc.running = true
+        if (!radarProc.running) radarProc.running = true
+    }
+
     Timer {
         interval: Config.timer.weatherRefresh
-        running: dashboard.visible && dashboard.weatherLat !== 0
+        running: dashboard.visible
         repeat: true
         triggeredOnStart: true
-        onTriggered: {
-            if (!weatherProc.running) weatherProc.running = true
-            if (!radarProc.running) radarProc.running = true
-        }
+        onTriggered: dashboard.refreshWeather()
     }
 
     Timer {
@@ -322,14 +322,17 @@ PanelWindow {
 
     // -- Finance (for FinanceTab) --
     // Symbols are passed as separate argv entries, never concatenated into a shell string
+    readonly property var financeCommand: ["bash", Quickshell.shellDir + "/scripts/fetch-quotes.sh",
+        Config.finance.ranges[financeRangeIdx].range, Config.finance.ranges[financeRangeIdx].interval]
+        .concat(financeSymbols)
     Process {
         id: financeProc
-        command: ["bash", Quickshell.env("HOME") + "/.config/quickshell/scripts/fetch-quotes.sh",
-                  Config.finance.ranges[dashboard.financeRangeIdx].range,
-                  Config.finance.ranges[dashboard.financeRangeIdx].interval]
-                 .concat(dashboard.financeSymbols)
         stdout: StdioCollector { id: financeOut }
         onExited: {
+            if (JSON.stringify(command) !== JSON.stringify(dashboard.financeCommand)) {
+                Qt.callLater(dashboard.refreshFinance)
+                return
+            }
             try {
                 const d = JSON.parse(financeOut.text)
                 dashboard.financeSeries = d.series
@@ -342,6 +345,7 @@ PanelWindow {
     function refreshFinance() {
         if (financeProc.running) return
         dashboard.financeLoading = true
+        financeProc.command = dashboard.financeCommand
         financeProc.running = true
     }
 

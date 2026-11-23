@@ -27,6 +27,7 @@ PillToggle PillToggle.qml
 Bar Bar.qml
 SidebarButton Bar/SidebarButton.qml
 Workspaces Bar/Workspaces.qml
+WorkspacePreview Bar/WorkspacePreview.qml
 WorkspaceApps Bar/WorkspaceApps.qml
 LayoutIndicator Bar/LayoutIndicator.qml
 LayoutMenu Bar/LayoutMenu.qml
@@ -38,6 +39,7 @@ Clock Bar/Clock.qml
 BluetoothIndicator Bar/BluetoothIndicator.qml
 NetworkIndicator Bar/NetworkIndicator.qml
 NetworkMenu Bar/NetworkMenu.qml
+MenuScrollColumn Bar/MenuScrollColumn.qml
 HostIndicator Bar/HostIndicator.qml
 HostMenu Bar/HostMenu.qml
 PowerButton Bar/PowerButton.qml

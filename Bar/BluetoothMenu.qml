@@ -16,9 +16,10 @@ PanelWindow {
     property bool open: false
     property bool closing: false
     property real targetY: 0
-    visible: open || closing
+    visible: ready && (open || closing)
     onOpenChanged: {
-        closing = !open
+        closing = !open && ready && panel.x > -panel.width
+        if (open && !ready) Qt.callLater(closeIfUnavailable)
         // Don't leave the radio scanning after the menu goes away
         if (!open && adapter) adapter.discovering = false
     }
@@ -35,6 +36,10 @@ PanelWindow {
 
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool ready: adapter !== null
+    function closeIfUnavailable() {
+        if (open && !ready) closeRequested()
+    }
+    onReadyChanged: if (!ready) Qt.callLater(closeIfUnavailable)
 
     MouseArea {
         anchors.fill: parent
@@ -45,7 +50,8 @@ PanelWindow {
         id: panel
         width: Config.bluetoothMenu.width
         // Height and vertical position snap instantly
-        height: column.implicitHeight + Config.bluetoothMenu.padding * 2
+        height: Math.min(column.implicitHeight + Config.bluetoothMenu.padding * 2,
+            Math.max(0, parent.height - 2 * (Config.frame.thin + Config.radius.fillet)))
 
         anchors.left: parent.left
         anchors.top: parent.top
@@ -89,7 +95,7 @@ PanelWindow {
             color: Colors.surface
             clip: true
 
-            ColumnLayout {
+            MenuScrollColumn {
                 id: column
                 anchors.fill: parent
                 anchors.margins: Config.bluetoothMenu.padding
@@ -169,7 +175,7 @@ PanelWindow {
                         required property var modelData
                         readonly property bool busy: pairedRow.modelData.state === BluetoothDeviceState.Connecting
                             || pairedRow.modelData.state === BluetoothDeviceState.Disconnecting
-                        visible: btMenu.adapter && btMenu.adapter.enabled && pairedRow.modelData.paired
+                        visible: !!btMenu.adapter && btMenu.adapter.enabled && pairedRow.modelData.paired
                         Layout.fillWidth: true
                         implicitHeight: visible ? Config.bluetoothMenu.rowHeight : 0
 
@@ -250,7 +256,7 @@ PanelWindow {
 
                 // -- Pair new device (scan toggle) --
                 Item {
-                    visible: btMenu.adapter && btMenu.adapter.enabled
+                    visible: !!btMenu.adapter && btMenu.adapter.enabled
                     Layout.fillWidth: true
                     implicitHeight: Config.bluetoothMenu.rowHeight
 
@@ -297,7 +303,7 @@ PanelWindow {
                     delegate: Item {
                         id: foundRow
                         required property var modelData
-                        visible: btMenu.adapter && btMenu.adapter.enabled && btMenu.adapter.discovering
+                        visible: !!btMenu.adapter && btMenu.adapter.enabled && btMenu.adapter.discovering
                             && !foundRow.modelData.paired && foundRow.modelData.deviceName !== ""
                         Layout.fillWidth: true
                         implicitHeight: visible ? Config.bluetoothMenu.rowHeight : 0

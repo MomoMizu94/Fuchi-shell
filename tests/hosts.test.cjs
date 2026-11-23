@@ -28,6 +28,8 @@ function menuFixture(privateSettings = { hosts }) {
         Qt: { openUrlExternally: url => { urls.push(url); return true; } },
         Quickshell: { shellDir: path.resolve(__dirname, '..') },
         hostMenu: { width: 1920, height: 1080 },
+        hostRows: { itemAt: index => hosts[index] },
+        column: { reveal(row) { this.visibleRow = row; } },
         launchProc: { running: false }, pendingHostId: '', errorText: '', selectedIndex: 0,
         closeRequested: () => closes++
     });
@@ -213,6 +215,7 @@ test('keyboard selection wraps and handles an empty host list', () => {
     const { context } = menuFixture();
     context.moveSelection(-1);
     assert.equal(context.selectedIndex, hosts.length - 1);
+    assert.equal(context.column.visibleRow, hosts.at(-1));
     context.moveSelection(1);
     assert.equal(context.selectedIndex, 0);
     context.hostMenu.hosts = [];

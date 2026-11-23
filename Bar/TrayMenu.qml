@@ -18,7 +18,7 @@ PanelWindow {
     property string itemId: ""
     property real targetY: 0
     visible: open || closing
-    onOpenChanged: closing = !open
+    onOpenChanged: closing = !open && dock.x > -dock.width
 
     anchors { left: true; right: true; top: true; bottom: true }
     color: "transparent"
@@ -37,40 +37,22 @@ PanelWindow {
         return null
     }
 
-    QsMenuOpener {
-        id: opener
-        menu: trayMenu.activeItem ? trayMenu.activeItem.menu : null
-    }
-
-    // The menu's entries load in the background and usually aren't ready the
-    // instant this opens. Wait for them before sliding in, otherwise the
-    // panel appears near-empty and visibly grows once the entries arrive.
-    readonly property bool ready: opener.children.values.length > 0
-
     MouseArea {
         anchors.fill: parent
         onClicked: trayMenu.closeRequested()
     }
 
-    Item {
-        id: panel
-        width: Config.trayMenu.width
-        // Height snaps instantly, not animated — animating it is what
-        // caused the growing/drifting panel described above.
-        height: column.implicitHeight + Config.trayMenu.padding * 2
+    Loader {
+        id: dock
+        readonly property bool docked: true
+        readonly property var menuHandle: trayMenu.visible && trayMenu.activeItem ? trayMenu.activeItem.menu : null
+        readonly property real edge: Config.frame.thin + Config.radius.fillet
+        width: Math.min(Config.trayMenu.width, Math.max(0, (parent.width - Config.frame.thick) / 2))
+        x: trayMenu.open && item && item.hasRows ? Config.frame.thick : -width
+        y: Math.max(edge, Math.min(trayMenu.targetY - height / 2, parent.height - edge - height))
+        sourceComponent: menuPanel
 
-        anchors.left: parent.left
-        anchors.top: parent.top
-        // Center on the clicked tray icon's y, clamped so the panel — plus
-        // its corner fillets — never runs off the top/bottom of the frame.
-        anchors.topMargin: Math.max(
-            Config.frame.thin + Config.radius.fillet,
-            Math.min(trayMenu.targetY - height / 2, parent.height - height - Config.frame.thin - Config.radius.fillet)
-        )
-        // Open: docked flush against the sidebar's inner edge (the left frame
-        // strip the tray lives in); closed: fully off-screen left.
-        anchors.leftMargin: trayMenu.open && trayMenu.ready ? Config.frame.thick : -width
-        Behavior on anchors.leftMargin {
+        Behavior on x {
             NumberAnimation {
                 duration: Settings.animationPopup
                 easing.type: Easing.OutCubic
@@ -78,10 +60,6 @@ PanelWindow {
             }
         }
 
-        MouseArea { anchors.fill: parent }
-
-        // Curves the panel's left corners inward so they blend into the
-        // sidebar's edge
         CornerFillet {
             anchors.left: parent.left
             anchors.bottom: parent.top
@@ -92,102 +70,145 @@ PanelWindow {
             anchors.top: parent.bottom
             solidCorner: "topLeft"
         }
+    }
 
+    // Each open branch gets its own opener so the tray app can populate it on demand
+    Component {
+        id: menuPanel
         Rectangle {
-            anchors.fill: parent
-            topLeftRadius: 0
-            bottomLeftRadius: 0
-            topRightRadius: Config.radius.hero
-            bottomRightRadius: Config.radius.hero
+            id: panel
+            readonly property bool hasRows: entries.count > 0
+            property Item branchRow: null
+            readonly property var branch: branchRow ? branchRow.modelData : null
+            readonly property bool canExpand: !!branch && branch.enabled && branch.hasChildren
+            implicitHeight: Math.min(rows.implicitHeight + Config.trayMenu.padding * 2,
+                trayMenu.height - (parent.docked ? dock.edge * 2 : Config.frame.thin * 2))
+            topLeftRadius: parent.docked ? 0 : Config.radius.lg
+            bottomLeftRadius: topLeftRadius
+            topRightRadius: parent.docked ? Config.radius.hero : Config.radius.lg
+            bottomRightRadius: topRightRadius
             color: Colors.surface
-            clip: true
 
-            ColumnLayout {
-                id: column
+            QsMenuOpener {
+                id: opener
+                menu: panel.parent.menuHandle
+                onMenuChanged: panel.branchRow = null
+            }
+            Connections {
+                target: trayMenu
+                function onOpenChanged() { panel.branchRow = null }
+            }
+            MouseArea { anchors.fill: parent }
+
+            Flickable {
+                id: viewport
                 anchors.fill: parent
                 anchors.margins: Config.trayMenu.padding
-                spacing: Config.trayMenu.gap
+                contentHeight: rows.implicitHeight
+                clip: true
+                interactive: contentHeight > height
+                boundsBehavior: Flickable.StopAtBounds
+                onContentYChanged: panel.branchRow = null
+                ScrollWheel { view: viewport }
 
-                Repeater {
-                    model: opener.children
-
-                    delegate: Item {
-                        id: entryItem
-                        required property var modelData
-                        Layout.fillWidth: true
-                        implicitHeight: entryItem.modelData.isSeparator
-                            ? (Config.gap.xs * 2 + 1)
-                            : Config.trayMenu.rowHeight
-
-                        Rectangle {
-                            visible: entryItem.modelData.isSeparator
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            height: 1
-                            color: Colors.border
-                        }
-
-                        Rectangle {
-                            visible: !entryItem.modelData.isSeparator
-                            anchors.fill: parent
+                Column {
+                    id: rows
+                    width: viewport.width
+                    spacing: Config.trayMenu.gap
+                    Repeater {
+                        id: entries
+                        model: opener.children
+                        delegate: Rectangle {
+                            id: row
+                            required property var modelData
+                            readonly property bool actionable: modelData.enabled && !modelData.isSeparator
+                            width: rows.width
+                            height: modelData.isSeparator ? Config.gap.xs * 2 + 1 : Config.trayMenu.rowHeight
                             radius: Config.radius.md
-                            color: rowHover.hovered && entryItem.modelData.enabled ? Colors.card : "transparent"
+                            color: actionable && (pointer.containsMouse || panel.branchRow === row)
+                                ? Colors.card : "transparent"
 
+                            Rectangle {
+                                visible: row.modelData.isSeparator
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: parent.width
+                                height: 1
+                                color: Colors.border
+                            }
                             RowLayout {
+                                visible: !row.modelData.isSeparator
                                 anchors.fill: parent
                                 anchors.leftMargin: Config.gap.sm
                                 anchors.rightMargin: Config.gap.sm
                                 spacing: Config.gap.sm
-
                                 IconImage {
-                                    visible: !!entryItem.modelData.icon
+                                    visible: !!row.modelData.icon
                                     Layout.preferredWidth: Config.type.md
                                     Layout.preferredHeight: Config.type.md
-                                    source: entryItem.modelData.icon ? Quickshell.iconPath(entryItem.modelData.icon, true) : ""
+                                    source: row.modelData.icon || ""
                                 }
-
                                 Text {
                                     Layout.fillWidth: true
-                                    text: entryItem.modelData.text
-                                    color: entryItem.modelData.enabled ? Colors.text : Colors.subtext
+                                    text: row.modelData.text
+                                    textFormat: Text.PlainText
+                                    color: row.modelData.enabled ? Colors.text : Colors.subtext
                                     font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                     elide: Text.ElideRight
                                 }
-
                                 Text {
-                                    visible: entryItem.modelData.buttonType !== QsMenuButtonType.None
-                                        && entryItem.modelData.checkState === Qt.Checked
-                                    text: entryItem.modelData.buttonType === QsMenuButtonType.RadioButton ? "●" : "✓"
+                                    visible: row.modelData.buttonType !== QsMenuButtonType.None
+                                        && row.modelData.checkState === Qt.Checked
+                                    text: row.modelData.buttonType === QsMenuButtonType.RadioButton ? "●" : "✓"
                                     color: Colors.accent
                                     font.pixelSize: Config.type.sm
                                 }
-
                                 Text {
-                                    visible: entryItem.modelData.hasChildren
+                                    visible: row.modelData.hasChildren
                                     text: "›"
                                     color: Colors.subtext
                                     font.pixelSize: Config.type.sm
                                 }
                             }
-
-                            HoverHandler {
-                                id: rowHover
-                                enabled: entryItem.modelData.enabled
-                            }
                             MouseArea {
+                                id: pointer
                                 anchors.fill: parent
-                                enabled: entryItem.modelData.enabled
-                                cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
+                                cursorShape: row.actionable ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onEntered: panel.branchRow = row.actionable && row.modelData.hasChildren ? row : null
                                 onClicked: {
-                                    entryItem.modelData.triggered()
-                                    trayMenu.closeRequested()
+                                    if (!row.actionable) return
+                                    if (row.modelData.hasChildren) {
+                                        panel.branchRow = row
+                                    } else {
+                                        row.modelData.triggered()
+                                        trayMenu.closeRequested()
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            }
+
+            Loader {
+                // Put each submenu in the overlay so hover hit testing reaches its rows
+                parent: trayMenu.contentItem
+                z: panel.parent.z + 1
+                readonly property bool docked: false
+                readonly property var menuHandle: panel.branch
+                active: trayMenu.open && panel.canExpand
+                visible: active && item && item.hasRows
+                width: dock.width
+                x: panel.parent.x + panel.width + width <= trayMenu.width
+                    ? panel.parent.x + panel.width : Math.max(0, panel.parent.x - width)
+                y: {
+                    const rowY = panel.branchRow ? panel.branchRow.y - viewport.contentY : 0
+                    const top = panel.parent.y
+                    return Math.max(Config.frame.thin,
+                        Math.min(top + rowY, trayMenu.height - Config.frame.thin - height))
+                }
+                sourceComponent: menuPanel
             }
         }
     }

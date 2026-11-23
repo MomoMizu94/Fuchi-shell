@@ -25,6 +25,7 @@ PanelWindow {
         closing = !open
         if (open) {
             selectedIndex = 0
+            column.contentY = 0
             errorText = ""
             panel.forceActiveFocus()
         }
@@ -90,8 +91,10 @@ PanelWindow {
 
     function moveSelection(delta) {
         const count = hostMenu.hosts.length
-        if (count)
+        if (count) {
             selectedIndex = (selectedIndex + delta + count) % count
+            column.reveal(hostRows.itemAt(selectedIndex))
+        }
     }
 
     // Prevent another launch while Kitty's Wayland window is being mapped.
@@ -125,7 +128,8 @@ PanelWindow {
     Item {
         id: panel
         width: Math.min(Config.hostMenu.width, parent.width - Config.frame.thick - Config.frame.thin)
-        height: column.implicitHeight + Config.hostMenu.padding * 2
+        height: Math.min(column.implicitHeight + Config.hostMenu.padding * 2,
+            Math.max(0, parent.height - 2 * (Config.frame.thin + Config.radius.fillet)))
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.topMargin: Math.max(Config.frame.thin + Config.radius.fillet,
@@ -174,13 +178,14 @@ PanelWindow {
             color: Colors.surface
             clip: true
 
-            ColumnLayout {
+            MenuScrollColumn {
                 id: column
                 anchors.fill: parent
                 anchors.margins: Config.hostMenu.padding
                 spacing: Config.hostMenu.gap
 
                 Repeater {
+                    id: hostRows
                     model: hostMenu.hosts
                     delegate: Rectangle {
                         id: hostRow

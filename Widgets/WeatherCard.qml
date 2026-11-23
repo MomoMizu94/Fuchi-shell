@@ -33,7 +33,7 @@ Rectangle {
             id: weatherGrid
             Layout.fillWidth: true
             Layout.fillHeight: true
-            columns: dashboard.weatherLat !== 0 ? 2 : 1
+            columns: dashboard.hasWeatherLocation ? 2 : 1
             columnSpacing: Config.gap.md
             rowSpacing: Config.gap.sm
 
@@ -119,7 +119,7 @@ Rectangle {
                     : Math.min(height, weatherContent.width * 0.48)
                 radius: Config.radius.lg
                 color: Colors.border
-                visible: dashboard.weatherLat !== 0
+                visible: dashboard.hasWeatherLocation
 
                 property real centerLat: dashboard.weatherLat
                 property real centerLon: dashboard.weatherLon
@@ -131,6 +131,9 @@ Rectangle {
                 property int prefetchStage: 0
 
                 // CARTO basemap, requires API key for no watermark; still works without a key
+                readonly property string basemapUrl: Colors.isLight
+                    ? "https://basemaps.cartocdn.com/rastertiles/voyager/"
+                    : "https://basemaps.cartocdn.com/dark_all/"
                 readonly property string basemapSuffix: Secrets.cartoApiKey
                     ? ".png?key=" + Secrets.cartoApiKey
                     : ".png"
@@ -229,8 +232,8 @@ Rectangle {
                             Image {
                                 anchors.fill: parent
                                 asynchronous: true
-                                source: parent.tileUrl("https://basemaps.cartocdn.com/rastertiles/voyager/", precipMap.basemapSuffix)
-                                opacity: 0.85
+                                source: parent.tileUrl(precipMap.basemapUrl, precipMap.basemapSuffix)
+                                opacity: Colors.isLight ? 0.85 : 1
                             }
                             Image {
                                 anchors.fill: parent
@@ -259,6 +262,7 @@ Rectangle {
 
                 MouseArea {
                     anchors.fill: parent
+                    preventStealing: true
                     property real pressXf: 0
                     property real pressYf: 0
                     property real pressX: 0
@@ -296,7 +300,7 @@ Rectangle {
                     anchors.left: parent.left
                     anchors.margins: Config.gap.sm
                     radius: Config.radius.md
-                    color: Qt.rgba(0, 0, 0, 0.45)
+                    color: Qt.alpha(Colors.surface, 0.92)
                     width: hudRow.implicitWidth + 16
                     height: hudRow.implicitHeight + 8
                     visible: precipMap.radarFrame !== null
@@ -306,7 +310,7 @@ Rectangle {
                         anchors.centerIn: parent
                         spacing: Config.gap.sm
                         Text {
-                            text: precipMap.radarPlaying ? "" : ""
+                            text: precipMap.radarPlaying ? "" : ""
                             color: Colors.text
                             font.family: Settings.fontFamily
                             font.pixelSize: Config.type.label
@@ -324,6 +328,7 @@ Rectangle {
 
                     MouseArea {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: precipMap.radarPlaying = !precipMap.radarPlaying
                     }
                 }

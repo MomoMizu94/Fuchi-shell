@@ -1003,9 +1003,14 @@ def import_download(stage, root, previous, checkpoint=None, *, source=None):
         pages.update({image.name: page_id for image, page_id in images})
         record = dict(version=1, identity=identity, pages=pages)
         # Validate before changing a published book. Never include partial files.
+        chapter_bytes = 0
         for image, _ in images:
-            if image.stat().st_size > MAX_ENTRY_BYTES:
+            page_bytes = image.stat().st_size
+            if page_bytes > MAX_ENTRY_BYTES:
                 raise ValueError("A downloaded image exceeds the 200 MiB page limit")
+            chapter_bytes += page_bytes
+            if chapter_bytes > MAX_CHAPTER_BYTES:
+                raise ValueError("Imported chapter exceeds the 2 GiB cache limit")
             try:
                 with bounded_image(image) as decoded:
                     decoded.verify()
@@ -1028,6 +1033,10 @@ def import_download(stage, root, previous, checkpoint=None, *, source=None):
                 with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_STORED) as output:
                     if target.exists():
                         with zipfile.ZipFile(target) as old:
+                            retained_bytes = sum(item.file_size for item in old.infolist()
+                                                 if item.filename in pages and item.filename not in replaced)
+                            if chapter_bytes + retained_bytes > MAX_CHAPTER_BYTES:
+                                raise ValueError("Imported chapter exceeds the 2 GiB cache limit")
                             for item in old.infolist():
                                 if item.filename not in replaced:
                                     with old.open(item) as source, output.open(item, "w") as destination:

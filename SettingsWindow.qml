@@ -344,7 +344,7 @@ FloatingWindow {
 
                     NumberPreference {
                         title: "Popup timeout"
-                        description: "How long ordinary notifications stay visible. Critical notifications stay until dismissed."
+                        description: "Default duration when the sender leaves the timeout to the shell. Critical notifications stay open by default."
                         settingKey: "notificationTimeout"
                         minimum: 1000
                         maximum: 60000

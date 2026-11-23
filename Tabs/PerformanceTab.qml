@@ -20,10 +20,10 @@ ColumnLayout {
 
         Repeater {
             model: [
-                { label: "CPU", icon: "󰍛" },
-                { label: "RAM", icon: "󰘚" },
-                { label: "GPU", icon: "󰢮" },
-                { label: "VRAM", icon: "󰢮" }
+                { label: "CPU", color: Colors.cpu, icon: "󰍛" },
+                { label: "RAM", color: Colors.ram, icon: "󰘚" },
+                { label: "GPU", color: Colors.gpu, icon: "󰢮" },
+                { label: "VRAM", color: Colors.gpu, icon: "󰢮" }
             ]
             delegate: Rectangle {
                 id: gaugeCard
@@ -70,7 +70,7 @@ ColumnLayout {
                             anchors.fill: parent
                             property real value: gaugeCard.value
                             property color trackColor: Colors.subtext
-                            property color fillColor: Colors.accent
+                            property color fillColor: gaugeCard.modelData.color
                             onTrackColorChanged: requestPaint()
                             onFillColorChanged: requestPaint()
                             onValueChanged: requestPaint()
@@ -123,13 +123,13 @@ ColumnLayout {
                         spacing: 8
                         Text {
                             text: gaugeCard.modelData.icon
-                            color: Colors.accent
+                            color: gaugeCard.modelData.color
                             font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 2
                         }
                         Text {
                             text: gaugeCard.modelData.label
-                            color: Colors.accent
+                            color: Colors.text
                             font.family: Settings.fontFamily
                             font.pixelSize: Config.bar.fontSize - 2
                             font.bold: true
@@ -242,12 +242,14 @@ ColumnLayout {
         }
 
         Rectangle {
+            Layout.minimumWidth: statsRows.implicitWidth + 2 * statsRows.anchors.margins
             Layout.preferredWidth: Math.round(root.width * 0.26)
             Layout.fillHeight: true
             radius: Config.radius.xl
             color: Colors.inset
 
             ColumnLayout {
+                id: statsRows
                 anchors.fill: parent
                 anchors.margins: 16
                 spacing: 0

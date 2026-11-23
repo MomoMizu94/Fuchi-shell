@@ -36,6 +36,17 @@ Scope {
     // the layout menu read it
     property string currentLayout: ""
 
+    // Let the newly opened menu receive keys as soon as the launcher starts closing
+    onCenterOpenChanged: if (centerOpen) launcherOpen = false
+    onPowerMenuOpenChanged: if (powerMenuOpen) launcherOpen = false
+    onTrayMenuOpenChanged: if (trayMenuOpen) launcherOpen = false
+    onBluetoothMenuOpenChanged: if (bluetoothMenuOpen) launcherOpen = false
+    onLayoutMenuOpenChanged: if (layoutMenuOpen) launcherOpen = false
+    onCalendarMenuOpenChanged: if (calendarMenuOpen) launcherOpen = false
+    onNetworkMenuOpenChanged: if (networkMenuOpen) launcherOpen = false
+    onHostMenuOpenChanged: if (hostMenuOpen) launcherOpen = false
+    onUpdatesMenuOpenChanged: if (updatesMenuOpen) launcherOpen = false
+
     UpdateService { id: updateService }
 
     // Notification history
@@ -129,7 +140,7 @@ Scope {
     // and appends each one to the history
     NotificationServer {
         id: server
-        actionsSupported: true
+        actionsSupported: false
         bodySupported: true
         imageSupported: true
 
