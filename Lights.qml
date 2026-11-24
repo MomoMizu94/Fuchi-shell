@@ -6,6 +6,8 @@ import "config.js" as Config
 
 FocusScope {
     id: root
+
+    readonly property int buttonFontSize: Config.launcherFontSize(Config.type.sm)
     property bool active: false
     signal closeRequested()
     property alias controller: hue
@@ -47,7 +49,7 @@ FocusScope {
                     text: "󰌵  Hue Go"
                     color: Colors.text
                     font.family: Settings.fontFamily
-                    font.pixelSize: Config.type.md
+                    font.pixelSize: Config.launcherFontSize(Config.type.md)
                     font.bold: true
                 }
                 Text {
@@ -57,10 +59,11 @@ FocusScope {
                         : hue.state.address ? "Disconnected" : "Choose a nearby lamp"
                     color: Colors.subtext
                     font.family: Settings.fontFamily
-                    font.pixelSize: Config.type.sm
+                    font.pixelSize: Config.launcherFontSize(Config.type.sm)
                     elide: Text.ElideRight
                 }
                 SettingsButton {
+                    font.pixelSize: root.buttonFontSize
                     id: powerButton
                     objectName: "huePower"
                     visible: hue.connected
@@ -69,6 +72,7 @@ FocusScope {
                     onClicked: hue.send({op: "power", value: !hue.state.power})
                 }
                 SettingsButton {
+                    font.pixelSize: root.buttonFontSize
                     id: reconnectButton
                     text: "Reconnect"
                     visible: !!hue.state.address && !hue.connected && hue.ready
@@ -76,6 +80,7 @@ FocusScope {
                     onClicked: hue.send({op: "refresh"})
                 }
                 SettingsButton {
+                    font.pixelSize: root.buttonFontSize
                     objectName: "hueForget"
                     text: "Forget"
                     visible: !!hue.state.address
@@ -83,6 +88,7 @@ FocusScope {
                     onClicked: hue.send({op: "forget"})
                 }
                 SettingsButton {
+                    font.pixelSize: root.buttonFontSize
                     id: scanButton
                     objectName: "hueScan"
                     text: hue.ready ? "Scan for lamps" : "Retry"
@@ -100,7 +106,7 @@ FocusScope {
                     text: "Brightness"
                     color: Colors.text
                     font.family: Settings.fontFamily
-                    font.pixelSize: Config.type.sm
+                    font.pixelSize: Config.launcherFontSize(Config.type.sm)
                 }
                 Slider {
                     id: brightness
@@ -141,7 +147,7 @@ FocusScope {
                     text: Math.round(brightness.value) + "%"
                     color: Colors.text
                     font.family: Settings.fontFamily
-                    font.pixelSize: Config.type.sm
+                    font.pixelSize: Config.launcherFontSize(Config.type.sm)
                 }
             }
 
@@ -150,6 +156,7 @@ FocusScope {
                 visible: hue.connected
                 spacing: Config.gap.md
                 SettingsButton {
+                    font.pixelSize: root.buttonFontSize
                     text: "Warm white"
                     visible: !!hue.state.temperature
                     enabled: !hue.busy
@@ -185,7 +192,7 @@ FocusScope {
                     color: Colors.text
                     placeholderTextColor: Colors.subtext
                     font.family: Settings.fontFamily
-                    font.pixelSize: Config.type.sm
+                    font.pixelSize: Config.launcherFontSize(Config.type.sm)
                     validator: RegularExpressionValidator { regularExpression: /#[0-9a-fA-F]{6}/ }
                     background: Rectangle {
                         color: Colors.inset; radius: Config.radius.lg
@@ -195,6 +202,7 @@ FocusScope {
                     onAccepted: if (acceptableInput && !hue.busy) hue.send({op: "color", value: text})
                 }
                 SettingsButton {
+                    font.pixelSize: root.buttonFontSize
                     text: "Apply color"
                     visible: !!hue.state.color
                     enabled: colorInput.acceptableInput && !hue.busy
@@ -209,6 +217,7 @@ FocusScope {
                 Repeater {
                     model: hue.connected ? [] : (hue.state.devices || [])
                     delegate: SettingsButton {
+                        font.pixelSize: root.buttonFontSize
                         required property var modelData
                         text: "Connect " + modelData.name + " (" + modelData.address + ")"
                         enabled: !hue.busy
@@ -223,7 +232,7 @@ FocusScope {
                 wrapMode: Text.Wrap
                 color: Colors.error
                 font.family: Settings.fontFamily
-                font.pixelSize: Config.type.sm
+                font.pixelSize: Config.launcherFontSize(Config.type.sm)
             }
         }
     }

@@ -109,6 +109,7 @@ const anim = {
 // App launcher (command-palette) sizing
 const launcher = {
     scale: 1.5,
+    fontScale: 0.8, // Adjust launcher text size (1.0 uses the base sizes)
     width: 820,
     maxVisibleRows: 8,
     rowHeight: 56,
@@ -120,6 +121,10 @@ const launcher = {
     galleryLabelHeight: 56,
     // Wallpaper picker's source folder, relative to $HOME
     wallpaperFolder: "Pictures/Wallpapers",
+}
+
+function launcherFontSize(size) {
+    return Math.max(1, Math.round(size * launcher.fontScale))
 }
 
 // The user's folder is stored as a private override by the Settings window.

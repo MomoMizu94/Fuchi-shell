@@ -435,7 +435,7 @@ PanelWindow {
                             anchors.fill: parent
                             color: Colors.text
                             font.family: Settings.fontFamily
-                            font.pixelSize: Config.type.base
+                            font.pixelSize: Config.launcherFontSize(Config.type.base)
                             verticalAlignment: TextInput.AlignVCenter
                             clip: true
                             text: launcher.query
@@ -480,7 +480,7 @@ PanelWindow {
                         text: launcher.commandPrefix + " commands"
                         color: Colors.subtext
                         font.family: Settings.fontFamily
-                        font.pixelSize: Config.type.label
+                        font.pixelSize: Config.launcherFontSize(Config.type.label)
                     }
                 }
             }
@@ -558,7 +558,7 @@ PanelWindow {
                                     color: Colors.textStrong
                                     font.bold: true
                                     font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.base
+                                    font.pixelSize: Config.launcherFontSize(Config.type.base)
                                     elide: Text.ElideRight
                                 }
 
@@ -568,7 +568,7 @@ PanelWindow {
                                     visible: text !== ""
                                     color: Colors.subtext
                                     font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.sm
+                                    font.pixelSize: Config.launcherFontSize(Config.type.sm)
                                     elide: Text.ElideRight
                                 }
                             }
@@ -643,7 +643,7 @@ PanelWindow {
                                 text: card.modelData.name
                                 color: Colors.textStrong
                                 font.family: Settings.fontFamily
-                                font.pixelSize: Config.type.base
+                                font.pixelSize: Config.launcherFontSize(Config.type.base)
                                 elide: Text.ElideRight
                             }
 
@@ -654,7 +654,7 @@ PanelWindow {
                                 text: card.modelData.resolution || ""
                                 color: Colors.subtext
                                 font.family: Settings.fontFamily
-                                font.pixelSize: Config.type.sm
+                                font.pixelSize: Config.launcherFontSize(Config.type.sm)
                                 elide: Text.ElideRight
                             }
                         }
@@ -699,7 +699,7 @@ PanelWindow {
                     text: launcher.emptyStateText
                     color: Colors.subtext
                     font.family: Settings.fontFamily
-                    font.pixelSize: Config.type.base
+                    font.pixelSize: Config.launcherFontSize(Config.type.base)
                 }
             }
         }
