@@ -99,8 +99,97 @@ if (Path(os.environ["HOME"]) / "online").exists():
     } }
 ''', imports='import "preview" as Preview\nimport QtTest')
 
-    def test_dashboard_sizes_input_and_palette(self):
+    def test_finance_candle_tints_follow_palette(self):
         self.prepare_dashboard()
+        self.run_qml('''
+    FloatingWindow {
+        visible: true
+        implicitWidth: 200
+        implicitHeight: 100
+        Preview.PriceChart {
+            id: chart
+            anchors.fill: parent
+            mode: "candle"
+            series: ({ok: true, t: [1, 2], o: [10, 20], c: [20, 10], h: [21, 21], l: [9, 9]})
+        }
+    }
+    TestCase { id: input; when: false }
+    Timer { interval: 100; running: true; onTriggered: {
+        for (const [up, down] of [["#60a075", "#c77573"], ["#d09f45", "#cd843a"],
+                                  ["#ed4040", "#40c060"], ["#888888", "#888888"]]) {
+            const slots = {}
+            for (let i = 0; i < 16; i++) slots["color" + i] = "#888888"
+            slots.color1 = down
+            slots.color2 = up
+            Preview.Colors.wal = {special: {background: "#181818", foreground: "#eeeeee"}, colors: slots}
+            input.wait(60)
+            const image = input.grabImage(chart)
+            const rise = image.pixel(50, 50)
+            const fall = image.pixel(150, 50)
+            check(rise.g > Math.max(rise.r, rise.b) + 0.05, "rising candle reads green with " + up)
+            check(fall.r > Math.max(fall.g, fall.b) + 0.05, "falling candle reads red with " + down)
+            check(fall.hslHue < 20 / 360 || fall.hslHue > 335 / 360, "warm palettes produce a red-toned candle")
+            if (up === "#60a075") {
+                for (const [painted, base] of [[rise, Preview.Colors.ok], [fall, Preview.Colors.error]]) {
+                    for (const channel of ["r", "g", "b"])
+                        check(Math.abs(painted[channel] - base[channel]) < 0.05, "matching colors keep a light tint")
+                }
+            }
+        }
+        console.log("TEST_PASSED")
+        Qt.quit()
+    } }
+''', imports='import "preview" as Preview\nimport QtTest')
+
+    def test_storage_refreshes_on_open(self):
+        commands = self.prepare_dashboard()
+        df = commands / "df"
+        df.write_text("""#!/bin/sh
+if [ -e "$HOME/detached" ]; then exit 1; fi
+if [ -e "$HOME/attached" ]; then touch "$HOME/detached"; exit 0; fi
+touch "$HOME/attached"
+echo '/dev/sdb1 ext4 1024 256 75% /mnt/usb'
+""")
+        df.chmod(0o755)
+        self.run_qml('''
+    FloatingWindow {
+        visible: true
+        Preview.StorageCard { id: card; active: false }
+    }
+    TestCase { id: input; when: false }
+    Timer { interval: 80; running: true; onTriggered: {
+        check(card.status === "Reading disks…", "inactive card has not queried disk usage")
+        card.active = true
+        input.tryVerify(() => card.volumes.length === 1, 1000)
+        check(card.volumes[0].mount === "/mnt/usb", "mounted drive is visible")
+        card.active = false
+        card.active = true
+        input.tryVerify(() => card.status === "No mounted local disks", 1000)
+        check(card.volumes.length === 0, "detached drive is removed")
+        card.active = false
+        card.active = true
+        input.tryVerify(() => card.status === "Disk usage unavailable", 1000)
+        check(card.status === "Disk usage unavailable", "failed read has an error state")
+        console.log("TEST_PASSED")
+        Qt.quit()
+    } }
+''', imports='import "preview" as Preview\nimport QtTest')
+
+    def test_dashboard_sizes_input_and_palette(self):
+        commands = self.prepare_dashboard()
+        df = commands / "df"
+        df.write_text("""#!/bin/sh
+cat <<'DISKS'
+Filesystem Type 1B-blocks Avail Use% Mounted on
+/dev/sda1 ext4 2147483648 536870912 75% /
+tmpfs tmpfs 1073741824 1073741824 0% /run
+/dev/mapper/Media Disk fuseblk 1099511627776 0 100% /mnt/Media Disk
+/dev/sda2 ext4 2147483648 536870912 75% /home
+/dev/sdb1 vfat 2147483648 536870912 75% /boot
+tank/archive zfs 2147483648 536870912 75% /mnt/archive-with-a-very-long-mount-name
+DISKS
+""")
+        df.chmod(0o755)
         checks = '''
     function findText(item, value) {
         if (item.text === value) return item
@@ -324,17 +413,38 @@ if (Path(os.environ["HOME"]) / "online").exists():
             input.mouseClick(label)
             const tabIndex = (index + 1) % 4
             check(preview.activeTab === tabIndex, "label selects " + tabs[index])
+            if (tabs[index] === "Performance") {
+                input.tryVerify(() => findText(performance, "/Media Disk") !== null, 1000)
+                const name = findText(performance, "/Media Disk")
+                check(findText(name.parent, "100%"), "full disk shows its percentage")
+                check(findText(name.parent.parent, "0 B free of 1.0 TiB"), "disk capacity uses binary units")
+                check(!findText(performance, "/run"), "memory filesystems are filtered out")
+                const first = findText(performance, "/")
+                const last = findText(performance, "/archive-with-a-very-long-mount-name")
+                check(name.mapToItem(performance, 0, 0).y > first.mapToItem(performance, 0, 0).y
+                      || last.mapToItem(performance, 0, 0).y > first.mapToItem(performance, 0, 0).y,
+                      "extra disks wrap to another row")
+                const page = viewport.parent.children[tabIndex]
+                const card = findText(performance, "DISK USAGE").parent.parent.parent
+                for (const label of [name, last]) {
+                    const percent = label.parent.children[1]
+                    check(percent.mapToItem(performance, percent.width, 0).x <= page.contentWidth,
+                          "disk usage fits the scrollable page")
+                    const detail = label.parent.parent.children[1]
+                    check(detail.mapToItem(card, 0, detail.height).y <= card.height,
+                          "capacity reading fits inside the storage card")
+                }
+            }
             if (expectedColumns === 1 && tabIndex !== 0) {
                 input.wait(650)
                 const page = viewport.parent.children[tabIndex]
                 check(page.contentHeight > page.height, tabs[index] + " can scroll on a short screen")
                 if (tabs[index] === "Performance") {
-                    preview.diskUsedGb = 714
-                    preview.diskTotalGb = 1907
+                    preview.netDownMbs = 1234.5
                     input.wait(30)
-                    const reading = findText(page.contentItem, "714 / 1907 GB")
+                    const reading = findText(page.contentItem, "1234.5 MB/s")
                     const right = reading.mapToItem(page.contentItem, reading.implicitWidth, 0).x
-                    check(right <= page.contentWidth, "the entire disk reading fits the scrollable page")
+                    check(right <= page.contentWidth, "the entire network reading fits the scrollable page")
                 }
                 input.mouseWheel(page, 10, 10, 0, -120)
                 check(page.contentY > 0, "wheel scrolls " + tabs[index])

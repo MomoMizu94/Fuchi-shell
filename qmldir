@@ -53,6 +53,7 @@ SystemInfoCard Widgets/SystemInfoCard.qml
 QuickTogglesCard Widgets/QuickTogglesCard.qml
 MusicMiniCard Widgets/MusicMiniCard.qml
 HardwareCard Widgets/HardwareCard.qml
+StorageCard Widgets/StorageCard.qml
 WeatherCard Widgets/WeatherCard.qml
 NotificationHistoryCard Widgets/NotificationHistoryCard.qml
 PriceChart Widgets/PriceChart.qml

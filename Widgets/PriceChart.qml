@@ -43,9 +43,25 @@ Item {
     readonly property bool zoomed: vCount < count
 
     // Palette pulled out as properties so a pywal retheme repaints the canvas
-    readonly property color upColor: Colors.ok
-    readonly property color downColor: Colors.error
+    readonly property color upColor: trendTint(Colors.ok, true)
+    readonly property color downColor: trendTint(Colors.error, false)
     readonly property color axisColor: Colors.subtext
+
+    function trendTint(base: color, rising: bool): color {
+        const lightness = Math.max(0.25, Math.min(0.75, base.hslLightness))
+        const tint = Qt.hsla((rising ? 142 : 356) / 360, 0.55, lightness, 1)
+
+        // Start with a light wash. Opposing hues need more tint to show the direction
+        for (let percent = 15; percent < 100; percent += 5) {
+            const mixed = Qt.tint(base, Qt.alpha(tint, percent / 100))
+            const lead = rising ? mixed.g - Math.max(mixed.r, mixed.b)
+                                : mixed.r - Math.max(mixed.g, mixed.b)
+            const hue = mixed.hslHue * 360
+            const aligned = rising ? hue >= 85 && hue <= 165 : hue <= 18 || hue >= 337
+            if (aligned && lead >= 0.06) return mixed
+        }
+        return tint
+    }
 
     function resetView() {
         viewStart = 0

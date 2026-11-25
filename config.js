@@ -225,6 +225,7 @@ const timer = {
     interval: 1000,              // general UI tick (clock, progress displays)
     weatherRefresh: 600000,      // 10 min
     hardwareRefresh: 2000,       // Tab 0 hardware mini-chart polling
+    storageRefresh: 30000,       // Mounted filesystem usage on the Performance tab
     uptimeRefresh: 60000,        // SystemInfoCard uptime poll (1 min, gated on tab 0 being open)
     mapSettle: 500,              // precip map: pause after pan/zoom before prefetching
     mapPrefetchStagger: 1200,    // precip map: gap between warming each radar frame

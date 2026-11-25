@@ -3,8 +3,6 @@ import QtQuick.Layouts
 import "../"
 import "../config.js" as Config
 
-// Performance tab: CPU/RAM/GPU/VRAM donut gauges, per-core bars, and
-// network/disk/process stats
 ColumnLayout {
     id: root
     required property var dashboard
@@ -14,7 +12,7 @@ ColumnLayout {
     // -- Top: CPU / RAM / GPU / VRAM donut gauges --
     RowLayout {
         Layout.fillWidth: true
-        Layout.minimumHeight: 220
+        Layout.minimumHeight: 180
         uniformCellSizes: true
         spacing: 14
 
@@ -50,7 +48,7 @@ ColumnLayout {
 
                 ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: 10
+                    spacing: Config.gap.sm
 
                     Item {
                         id: gauge
@@ -149,7 +147,11 @@ ColumnLayout {
         }
     }
 
-    // -- Bottom: per-core bars + network/disk/process info --
+    StorageCard {
+        Layout.fillWidth: true
+        active: dashboard.open && dashboard.activeTab === 3
+    }
+
     RowLayout {
         Layout.fillWidth: true
         Layout.minimumHeight: 240
@@ -258,7 +260,6 @@ ColumnLayout {
                     model: [
                         { icon: "", label: "upload" },
                         { icon: "", label: "download" },
-                        { icon: "", label: "disk /" },
                         { icon: "", label: "processes" }
                     ]
                     delegate: RowLayout {
@@ -267,7 +268,6 @@ ColumnLayout {
                         required property int index
                         property string value: index === 0 ? dashboard.netUpMbs.toFixed(1) + " MB/s"
                                              : index === 1 ? dashboard.netDownMbs.toFixed(1) + " MB/s"
-                                             : index === 2 ? Math.round(dashboard.diskUsedGb) + " / " + Math.round(dashboard.diskTotalGb) + " GB"
                                              : "" + dashboard.processCount
 
                         Layout.fillWidth: true

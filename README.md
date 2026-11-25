@@ -16,7 +16,8 @@ pywal.
   a tray icon and hover over an arrow to open its submenu.
 - A slide-out dashboard with weather, music, todos, a calendar, a stock
   watchlist, and system statistics. Hover over a hardware gauge to see its
-  temperature or used and total capacity.
+  temperature or used and total capacity. The Performance tab shows a usage
+  bar and available space for each mounted local disk filesystem.
 - An app launcher with wallpaper selection, calculations, and shortcut search.
 - Notifications with history and Do Not Disturb, plus audio and power menus.
   Text-only popups use a compact card. Popups with an image or app icon use a
