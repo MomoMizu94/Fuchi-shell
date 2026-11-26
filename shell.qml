@@ -48,6 +48,25 @@ Scope {
     onUpdatesMenuOpenChanged: if (updatesMenuOpen) launcherOpen = false
 
     UpdateService { id: updateService }
+    ColorPicker { id: colorPicker }
+    readonly property bool otherMenuOpen: launcherOpen || centerOpen || powerMenuOpen || trayMenuOpen
+        || bluetoothMenuOpen || calendarMenuOpen || networkMenuOpen || layoutMenuOpen || hostMenuOpen || updatesMenuOpen
+    onOtherMenuOpenChanged: if (otherMenuOpen) clipboardMenu.open = false
+
+    function showClipboard(y) {
+        launcherOpen = false
+        centerOpen = false
+        powerMenuOpen = false
+        trayMenuOpen = false
+        bluetoothMenuOpen = false
+        calendarMenuOpen = false
+        networkMenuOpen = false
+        layoutMenuOpen = false
+        hostMenuOpen = false
+        updatesMenuOpen = false
+        clipboardMenu.targetY = y
+        clipboardMenu.open = true
+    }
 
     // Notification history
     ListModel { id: history }
@@ -62,18 +81,23 @@ Scope {
         function onHistoryLimitChanged() { root.trimHistory() }
     }
 
-    function showSettings() {
+    function dismissKeyboardOverlays() {
         root.launcherOpen = false
+        clipboardMenu.open = false
+    }
+
+    function showSettings() {
+        dismissKeyboardOverlays()
         Qt.callLater(function() { settingsWindow.showSettings() })
     }
 
     function showLibrary() {
-        root.launcherOpen = false
+        dismissKeyboardOverlays()
         Qt.callLater(function() { libraryWindow.showLibrary() })
     }
 
     function showOceanus(action) {
-        root.launcherOpen = false
+        dismissKeyboardOverlays()
         if (oceanusLauncher.running) return
         oceanusLauncher.command = ["python3", Quickshell.shellDir + "/scripts/oceanus.py", action,
             "--state", Quickshell.statePath("oceanus.json"),
@@ -171,6 +195,17 @@ Scope {
     }
 
     // IPC handlers
+    IpcHandler {
+        target: "colorpicker"
+        function pick(): void { colorPicker.pick() }
+    }
+    IpcHandler {
+        target: "clipboard"
+        function toggle(): void {
+            if (clipboardMenu.open) clipboardMenu.open = false
+            else root.showClipboard((clipboardMenu.screen?.height ?? clipboardMenu.height) / 2)
+        }
+    }
     IpcHandler {
         target: "oceanus"
         function show(): void { root.showOceanus("open") }
@@ -424,6 +459,7 @@ Scope {
         targetY: root.updatesMenuTargetY
         onCloseRequested: root.updatesMenuOpen = false
     }
+    ClipboardMenu { id: clipboardMenu }
 
     // Reserved screen-edge space, the hover-sensitive frame,
     // and the bar itself
@@ -438,8 +474,14 @@ Scope {
         }
     }
     Bar {
+        pickedColor: colorPicker.lastColor
         currentLayout: root.currentLayout
         updates: updateService
+        onClipboardRequested: y => root.showClipboard(y)
+        onColorRequested: reuse => {
+            if (reuse && colorPicker.lastColor) colorPicker.copyColor(colorPicker.lastColor)
+            else colorPicker.pick()
+        }
         onTrayMenuRequested: (itemId, y) => trayMenuIpc.open(itemId, String(y))
         onLayoutMenuRequested: y => layoutMenuIpc.toggle(String(y))
         onCalendarMenuRequested: y => calendarMenuIpc.toggle(String(y))

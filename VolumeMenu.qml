@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Widgets
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import QtQuick
@@ -25,14 +26,20 @@ PanelWindow {
     color: "transparent"
     exclusionMode: ExclusionMode.Normal
 
-    // Only the panel's own on-screen rect is input-active — without this a
-    // PanelWindow captures full-screen input regardless of visible content
-    // (see FrameShape.qml's identical technique/comment)
+    // Leave the desktop clickable above and below the open drawer
     mask: Region {
-        x: panel.x - 2
-        y: panel.y
-        width: panel.width + 2
-        height: panel.height
+        Region {
+            x: panel.x + panel.width - panel.railWidth - 2
+            y: panel.y
+            width: panel.railWidth + 2
+            height: panel.height
+        }
+        Region {
+            x: panel.x
+            y: panel.y + drawer.y
+            width: drawer.visible ? drawer.width : 0
+            height: drawer.height
+        }
     }
 
     // A node's `.audio` volume/mute is only populated and writable while the
@@ -84,6 +91,29 @@ PanelWindow {
     function computeRecordingList() {
         return Pipewire.nodes.values.filter(n => n.isStream && n.type === PwNodeType.AudioInStream)
     }
+    function iconSource(name) {
+        if (!name) return ""
+        if (name.startsWith("/") || name.startsWith("file:")) return Qt.resolvedUrl(name).toString()
+        return Quickshell.iconPath(name, true)
+    }
+
+    function streamIcon(node) {
+        const props = node.properties || {}
+        const advertised = iconSource(props["application.icon-name"])
+        if (advertised) return advertised
+        const apps = DesktopEntries.applications.values
+        const binary = props["application.process.binary"]?.split("/").pop()
+        const identities = [props["application.id"], binary,
+                            props["application.name"], node.name, node.description]
+        for (const id of identities) {
+            if (!id) continue
+            const entry = DesktopEntries.heuristicLookup(id) ?? apps.find(app => app.name.toLowerCase() === id.toLowerCase())
+            const path = iconSource(entry?.icon) || Quickshell.iconPath(id, true)
+            if (path) return path
+        }
+        return ""
+    }
+
     function sectionLabel(section) {
         if (section.key === sectionKey) return section.label
         let node = null
@@ -167,14 +197,17 @@ PanelWindow {
             solidCorner: "topRight"
         }
 
-        Rectangle {
+        Item {
             anchors.fill: parent
-            topLeftRadius: Config.radius.hero
-            bottomLeftRadius: Config.radius.hero
-            topRightRadius: 0
-            bottomRightRadius: 0
-            color: Colors.surface
             clip: true
+
+            Rectangle {
+                anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+                width: panel.railWidth
+                topLeftRadius: Config.radius.hero
+                bottomLeftRadius: Config.radius.hero
+                color: Colors.surface
+            }
 
             ColumnLayout {
                 id: rail
@@ -329,6 +362,7 @@ PanelWindow {
                 }
 
                 Repeater {
+                    id: sectionButtons
                     model: volumeMenu.sections
                     delegate: Rectangle {
                         id: sectionButton
@@ -372,13 +406,24 @@ PanelWindow {
                 }
             }
 
+            Rectangle {
+                id: drawer
+                readonly property Item trigger: sectionButtons.itemAt(volumeMenu.sections.findIndex(section => section.key === volumeMenu.sectionKey))
+                width: Math.max(0, panel.width - panel.railWidth)
+                height: Math.min(panel.height, details.implicitHeight + 2 * Config.volumeMenu.padding)
+                y: trigger ? Math.max(0, Math.min(panel.height - height, rail.y + trigger.y + (trigger.height - height) / 2)) : 0
+                visible: volumeMenu.activeSection !== null && width > 0
+                topLeftRadius: Config.radius.xl
+                bottomLeftRadius: Config.radius.xl
+                color: Colors.card
+            }
+
             ColumnLayout {
                 id: details
-                anchors.left: parent.left
-                anchors.leftMargin: Config.volumeMenu.padding
-                width: Math.max(0, panel.width - panel.railWidth - Config.volumeMenu.padding)
-                anchors.verticalCenter: parent.verticalCenter
-                visible: volumeMenu.activeSection !== null && width > 0
+                anchors.fill: drawer
+                anchors.margins: Config.volumeMenu.padding
+                visible: drawer.visible
+                clip: true
                 spacing: Config.gap.md
 
                 Text {
@@ -401,7 +446,9 @@ PanelWindow {
                     id: nodes
                     readonly property int rowHeight: volumeMenu.showingDevices ? Config.volumeMenu.deviceRowHeight : Config.volumeMenu.appRowHeight
                     Layout.fillWidth: true
-                    Layout.preferredHeight: Math.min(count, Config.volumeMenu.maxVisibleAppRows) * rowHeight
+                    Layout.fillHeight: true
+                    Layout.preferredHeight: Math.min(count, Config.volumeMenu.maxVisibleAppRows) * (rowHeight + spacing) - (count ? spacing : 0)
+                    spacing: Config.gap.xs
                     visible: count > 0
                     clip: true
                     model: volumeMenu.sectionNodes
@@ -416,35 +463,71 @@ PanelWindow {
                         id: row
                         required property var modelData
                         readonly property var audio: modelData.audio
+                        readonly property string title: (!volumeMenu.showingDevices && modelData.properties?.["application.name"])
+                            || modelData.description || modelData.name || ""
+                        readonly property string streamDetail: {
+                            if (volumeMenu.showingDevices) return ""
+                            const labels = [modelData.properties?.["media.name"], modelData.description, modelData.name]
+                            return labels.find(label => label && label.toLowerCase() !== title.toLowerCase()) || ""
+                        }
                         readonly property var defaultDevice: volumeMenu.sectionKey === "output"
                             ? Pipewire.defaultAudioSink : Pipewire.defaultAudioSource
+                        readonly property bool selectedDevice: volumeMenu.showingDevices && defaultDevice?.id === modelData.id
                         width: ListView.view.width - (scrollBar.visible ? scrollBar.width + Config.gap.xs : 0)
                         height: nodes.rowHeight
                         radius: Config.radius.md
-                        color: deviceMouse.containsMouse ? Colors.card : "transparent"
+                        color: selectedDevice ? Qt.alpha(Colors.accent, 0.18)
+                            : deviceMouse.containsMouse ? Qt.alpha(Colors.accent, 0.10) : Colors.inset
+
+                        Item {
+                            id: identity
+                            anchors.left: parent.left
+                            anchors.leftMargin: Config.gap.sm
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: volumeMenu.showingDevices ? 24 : 32
+                            height: width
+                            IconImage {
+                                id: appIcon
+                                anchors.fill: parent
+                                source: volumeMenu.showingDevices ? "" : volumeMenu.streamIcon(row.modelData)
+                                visible: source.toString() !== "" && status === Image.Ready
+                            }
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !appIcon.visible
+                                text: volumeMenu.activeSection?.icon ?? ""
+                                color: row.selectedDevice ? Colors.accent : Colors.subtext
+                                font.family: Settings.fontFamily
+                                font.pixelSize: Config.type.lg
+                            }
+                        }
 
                         ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: Config.gap.xs
-                            spacing: 2
+                            anchors { left: identity.right; right: parent.right; verticalCenter: parent.verticalCenter }
+                            anchors.leftMargin: Config.gap.sm
+                            anchors.rightMargin: Config.gap.sm
+                            spacing: Config.gap.xs
 
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: Config.gap.sm
                                 Text {
-                                    visible: volumeMenu.showingDevices
-                                    text: row.defaultDevice?.id === row.modelData.id ? "●" : "○"
-                                    color: Colors.accent
+                                    Layout.fillWidth: true
+                                    text: row.title
+                                    textFormat: Text.PlainText
+                                    wrapMode: volumeMenu.showingDevices ? Text.Wrap : Text.NoWrap
+                                    maximumLineCount: volumeMenu.showingDevices ? 2 : 1
+                                    elide: Text.ElideRight
+                                    color: row.selectedDevice ? Colors.accent : Colors.text
                                     font.family: Settings.fontFamily
                                     font.pixelSize: Config.type.sm
                                 }
                                 Text {
-                                    Layout.fillWidth: true
-                                    text: row.modelData.description || row.modelData.name
-                                    elide: Text.ElideRight
-                                    color: Colors.text
+                                    visible: !volumeMenu.showingDevices || row.selectedDevice
+                                    text: volumeMenu.showingDevices ? "✓" : Math.round((row.audio?.volume ?? 0) * 100) + "%"
+                                    color: row.selectedDevice ? Colors.accent : Colors.subtext
                                     font.family: Settings.fontFamily
-                                    font.pixelSize: Config.type.sm
+                                    font.pixelSize: Config.type.label
                                 }
                                 Text {
                                     visible: !volumeMenu.showingDevices
@@ -458,6 +541,17 @@ PanelWindow {
                                         onClicked: if (row.audio) row.audio.muted = !row.audio.muted
                                     }
                                 }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                visible: row.streamDetail !== ""
+                                text: row.streamDetail
+                                textFormat: Text.PlainText
+                                elide: Text.ElideRight
+                                color: Colors.subtext
+                                font.family: Settings.fontFamily
+                                font.pixelSize: Config.type.label
                             }
 
                             Rectangle {
@@ -474,7 +568,7 @@ PanelWindow {
                                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                                     width: parent.width * Math.max(0, Math.min(1, row.audio?.volume ?? 0))
                                     radius: parent.radius
-                                    color: Colors.accent
+                                    color: row.audio?.muted ? Colors.subtext : Colors.accent
                                 }
                                 MouseArea {
                                     anchors.fill: parent

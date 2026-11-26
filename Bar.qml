@@ -13,11 +13,14 @@ PanelWindow {
 
     // Current tiling layout's dwm label, owned by shell.qml
     property string currentLayout: ""
+    property string pickedColor: ""
     required property var updates
 
     signal trayMenuRequested(string itemId, int centerY)
     signal layoutMenuRequested(int centerY)
     signal calendarMenuRequested(int centerY)
+    signal clipboardRequested(int centerY)
+    signal colorRequested(bool reuse)
     signal updatesMenuRequested(int centerY)
     signal bluetoothMenuRequested(int centerY)
     signal networkMenuRequested(int centerY)
@@ -32,59 +35,110 @@ PanelWindow {
 
     implicitWidth: Config.frame.thick
 
-    // Workspace icons
-    ColumnLayout {
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: Config.gap.sm
-        spacing: Config.gap.md
+    Flickable {
+        id: barView
+        anchors.fill: parent
+        contentWidth: width
+        // Keep one app reachable when the two control groups exceed the screen height
+        contentHeight: Math.max(height, upperControls.implicitHeight + lowerControls.implicitHeight
+            + 2 * (Config.gap.sm + Config.gap.md) + Math.min(apps.implicitHeight, Config.sidebar.targetSize))
+        interactive: contentHeight > height
+        boundsBehavior: Flickable.StopAtBounds
+        clip: true
+        ScrollWheel { view: barView }
 
-        Workspaces {}
-        LayoutIndicator {
-            layout: bar.currentLayout
-            onClicked: (button, centerY) => bar.layoutMenuRequested(centerY)
-        }
-    }
+        // Workspace icons
+        ColumnLayout {
+            id: upperControls
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: Config.gap.sm
+            spacing: Config.gap.md
 
-    // Apps launched in current workspace
-    WorkspaceApps {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-    }
+            Workspaces {}
+            LayoutIndicator {
+                layout: bar.currentLayout
+                onClicked: (button, centerY) => bar.layoutMenuRequested(centerY)
+            }
+        }
 
-    // Rest of the bar: tray, clock, bluetooth etc.
-    ColumnLayout {
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: Config.gap.sm
-        spacing: Config.gap.md
+        Flickable {
+            id: appView
+            readonly property real firstY: upperControls.y + upperControls.height + Config.gap.md
+            readonly property real lastY: lowerControls.y - Config.gap.md
+            width: bar.width
+            height: Math.min(apps.implicitHeight, Math.max(0, lastY - firstY))
+            y: Math.max(firstY, Math.min((bar.height - height) / 2, lastY - height))
+            contentWidth: width
+            contentHeight: apps.implicitHeight
+            interactive: contentHeight > height
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollWheel { view: appView }
 
-        Tray {
-            id: tray
-            onMenuRequested: (itemId, centerY) => bar.trayMenuRequested(itemId, centerY)
+            WorkspaceApps {
+                id: apps
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
         }
-        Clock {
-            Layout.topMargin: tray.visible ? Config.gap.sm : 0
-            Layout.bottomMargin: Config.gap.sm
-            onClicked: (button, centerY) => bar.calendarMenuRequested(centerY)
-        }
-        UpdateIndicator {
-            service: bar.updates
-            onClicked: (button, centerY) => bar.updatesMenuRequested(centerY)
-        }
-        BluetoothIndicator {
-            onClicked: (button, centerY) => bar.bluetoothMenuRequested(centerY)
-        }
-        NetworkIndicator {
-            onClicked: (button, centerY) => bar.networkMenuRequested(centerY)
-        }
-        HostIndicator {
-            onClicked: (button, centerY) => bar.hostMenuRequested(centerY)
-        }
-        PowerButton {
-            onClicked: bar.powerMenuRequested()
+
+        // Rest of the bar: tray, clock, bluetooth etc.
+        ColumnLayout {
+            id: lowerControls
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: Config.gap.sm
+            spacing: Config.gap.md
+
+            Tray {
+                onMenuRequested: (itemId, centerY) => bar.trayMenuRequested(itemId, centerY)
+            }
+            Clock {
+                Layout.topMargin: Config.gap.sm
+                Layout.bottomMargin: Config.gap.sm
+                onClicked: (button, centerY) => bar.calendarMenuRequested(centerY)
+            }
+            SidebarButton {
+                glyph: "󰅌"
+                glyphColor: Colors.accent
+                Accessible.name: "Clipboard history"
+                onClicked: (button, centerY) => bar.clipboardRequested(centerY)
+            }
+            SidebarButton {
+                glyph: "󰈋"
+                glyphColor: Colors.accent
+                Accessible.name: "Pick a screen color"
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: (button, centerY) => bar.colorRequested(button === Qt.RightButton)
+                Rectangle {
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    width: 11
+                    height: width
+                    radius: width / 2
+                    visible: bar.pickedColor !== ""
+                    color: bar.pickedColor || "transparent"
+                    border.color: Colors.text
+                }
+            }
+            UpdateIndicator {
+                service: bar.updates
+                onClicked: (button, centerY) => bar.updatesMenuRequested(centerY)
+            }
+            BluetoothIndicator {
+                onClicked: (button, centerY) => bar.bluetoothMenuRequested(centerY)
+            }
+            NetworkIndicator {
+                onClicked: (button, centerY) => bar.networkMenuRequested(centerY)
+            }
+            HostIndicator {
+                onClicked: (button, centerY) => bar.hostMenuRequested(centerY)
+            }
+            PowerButton {
+                onClicked: bar.powerMenuRequested()
+            }
         }
     }
 }

@@ -20,6 +20,50 @@ class SidebarHoverTest(unittest.TestCase):
         return "\n".join(line for line in source.splitlines() if not line.startswith(
             ("    anchors {", "    exclusionMode:", "    WlrLayershell.keyboardFocus:")))
 
+    def test_workspace_apps_fit_between_sidebar_controls(self):
+        source = (settings_tests.REPO / "Bar.qml").read_text()
+        source = source.replace('import "config.js"', 'import "source"\nimport "source/config.js"')
+        source = source.replace("PanelWindow {", "FloatingWindow {", 1)
+        start = source.index("    anchors {")
+        source = source[:start] + source[source.index("    implicitWidth:", start):]
+        source = source.replace("    exclusionMode: ExclusionMode.Ignore", "")
+        source = source.replace("Workspaces {}", "Item { implicitHeight: 190 }")
+        source = source.replace("WorkspaceApps {", 'Item { implicitWidth: 34; implicitHeight: harness.appsHeight;')
+        source = source.replace("Tray {", 'Item { implicitHeight: 76; signal menuRequested(string itemId, int centerY);')
+        for name in ["upperControls", "lowerControls", "appView", "barView"]:
+            source = source.replace("id: " + name, f'id: {name}; objectName: "{name}"')
+        (self.directory / "Sidebar.qml").write_text(source)
+        self.run_qml('''
+    property int appsHeight: 34
+    Sidebar {
+        id: sidebar; implicitHeight: 1080; visible: true
+        updates: ({busy: false, count: 0, hasError: false, complete: true, summary: ""})
+    }
+    Sidebar { id: small; implicitHeight: 480; visible: true; updates: sidebar.updates }
+    TestCase { id: input; when: false }
+    Timer { interval: 120; running: true; onTriggered: {
+        const upper = findItem(sidebar.contentItem, "upperControls")
+        const lower = findItem(sidebar.contentItem, "lowerControls")
+        const view = findItem(sidebar.contentItem, "appView")
+        const bar = findItem(sidebar.contentItem, "barView")
+        check(view.height === 34 && view.y + view.height <= lower.y, "tray clears the app")
+        appsHeight = 900
+        input.wait(50)
+        check(view.y >= upper.y + upper.height && view.y + view.height <= lower.y, "apps fit between controls")
+        input.mouseWheel(view, 10, 10, 0, -120)
+        check(view.contentY > 0 && bar.atYBeginning, "the app list scrolls independently")
+        const smallBar = findItem(small.contentItem, "barView")
+        const smallApps = findItem(small.contentItem, "appView")
+        const smallControls = findItem(small.contentItem, "lowerControls")
+        check(smallApps.height >= 34 && smallBar.contentHeight > smallBar.height, "short screens keep an app target")
+        smallBar.contentY = smallBar.contentHeight - smallBar.height
+        const bottom = smallControls.mapToItem(small.contentItem, 0, smallControls.height).y
+        check(bottom <= small.height && bottom > 0, "bottom controls remain reachable")
+        console.log("TEST_PASSED")
+        Qt.quit()
+    } }
+''', imports="import QtTest")
+
     def test_adapter_selection_and_scrollable_device_menu(self):
         source = self.floating_menu("BluetoothMenu")
         source = source.replace("Bluetooth.defaultAdapter", "harness.adapter")

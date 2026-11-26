@@ -14,6 +14,11 @@ pywal.
   visited workspace in memory and refreshes visible workspaces every eight
   seconds. A dot marks an inactive workspace that needs attention. Right-click
   a tray icon and hover over an arrow to open its submenu.
+- Click the eyedropper to copy a screen color as a hex code. The sidebar dot
+  and notification show the color. Right-click the eyedropper to copy it again,
+  or bind `qs ipc call -- colorpicker pick` to pick a new color.
+- The clipboard button between the clock and eyedropper opens
+  [clipboard history](#clipboard-history) with search and image previews.
 - A slide-out dashboard with weather, music, todos, a calendar, a stock
   watchlist, and system statistics. Hover over a hardware gauge to see its
   temperature or used and total capacity. The Performance tab shows a usage
@@ -26,8 +31,8 @@ pywal.
   Popups honor the sender's timeout. A zero timeout keeps the popup open until
   dismissed. With the default timeout, critical notifications stay open and
   other notifications use the duration in Settings.
-  In the mixer, click a device or stream category to open its list beside the
-  master slider.
+  In the mixer, select a category beside the master slider to see its devices
+  or streams. Playback and recording streams show their app icons when available.
 - A CBZ/CBR library and reader with optional background downloads.
 
 ## Setup
@@ -86,13 +91,15 @@ Install these for the optional features you use:
 | `mpc` | Pausing MPD before suspend |
 | ImageMagick's `identify` | Wallpaper dimensions |
 | `grim` and Python 3 | Workspace hover snapshots |
+| `hyprpicker` and `wl-copy` | Screen color picker |
+| `cliphist`, `wl-clipboard`, Python 3 and Pillow | Clipboard history and image previews |
 | Python 3.10+ and Bleak | Hue Go controls |
 | Python 3, `checkupdates` from pacman-contrib, and `yay` | Arch and AUR update checks |
 | Python 3 and Pillow | Library indexing, covers, and CBZ reading |
 | gallery-dl | Library downloads |
 | libarchive with `bsdtar` and its shared library | CBR reading |
 | `gio` from GLib | Library Trash |
-| `notify-send` from libnotify | Library download notifications and Oceanus launch errors |
+| `notify-send` from libnotify | Color picker swatches, Library download notifications, and Oceanus launch errors |
 
 ## Using the launcher
 
@@ -140,6 +147,23 @@ Covers use `cover.*`, artwork in `covers/`, or a thumbnail from a page.
 </details>
 
 ## Optional setup
+
+### Clipboard history
+
+The sidebar reads the same history as `cliphist`. If you already run watchers
+for text and images, the sidebar uses their entries. Otherwise, add these
+commands to your existing Hyprland startup callback:
+
+```lua
+hl.exec_cmd("wl-paste --type text --watch cliphist store")
+hl.exec_cmd("wl-paste --type image --watch cliphist store")
+```
+
+Click the clipboard button or bind `qs ipc call -- clipboard toggle` to a key.
+Type to search, then click an entry or use the arrow keys and Enter to copy its
+original text or image. History survives a reboot. By default, cliphist keeps
+the most recent 750 entries. Choose **Clear**, then **Clear all** to erase the
+saved history. The current clipboard contents are still available to paste.
 
 ### Oceanus
 
@@ -189,7 +213,7 @@ make the lamp discoverable.
 
 ### Package updates
 
-Click the icon below the clock to see Arch repository and AUR updates. Checks
+Click the update indicator below the eyedropper to see Arch repository and AUR updates. Checks
 run at startup and hourly. Install updates yourself, then press Check now.
 Failed checks retain the last known results. Change the schedule under
 `updates` in `config.js`.
